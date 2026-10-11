@@ -193,7 +193,7 @@ function SaleBanner(){return <section className="sale-banner relative overflow-h
 function HomeDeals(){
   const { applyCoupon } = useVelouraStore();
   const [selected, setSelected] = useState(false);
-  return <section className="home-deals border-b border-border bg-secondary"><div className="store-section grid gap-8 md:grid-cols-[1fr_1fr]"><div><p className="editorial-label">YOUR FIRST LOOK</p><h2 className="mt-3 font-display text-4xl">Make it yours. Save 10%.</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">Use WELCOME10 on your next bag. One code per order.</p><Button variant="outline" className="mt-5" onClick={()=>{applyCoupon('WELCOME10');setSelected(true);}}>{selected ? <Check /> : <Plus />}{selected ? 'WELCOME10 applied' : 'Apply WELCOME10'}</Button><p className="sr-only" role="status">{selected ? '10% discount applied to your bag.' : ''}</p></div><div className="border-t border-border pt-7 md:border-l md:border-t-0 md:pl-9 md:pt-0"><p className="editorial-label">EASY ON THE BUDGET</p><h2 className="mt-3 font-display text-4xl">Essentials under Rs. 5,000.</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">Everyday tees and finishing touches, without the extra spend.</p><Button asChild className="mt-5"><Link to="/shop" search={{category:'T-Shirts'}}>Shop everyday tees <ArrowRight /></Link></Button></div></div></section>;
+  return <section className="home-deals border-b border-border bg-secondary"><div className="store-section grid gap-8 md:grid-cols-[1fr_1fr]"><div><p className="editorial-label">YOUR FIRST LOOK</p><h2 className="mt-3 font-display text-4xl">Make it yours. Save 10%.</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">Use WELCOME10 on your next bag. One code per order.</p><Button variant="outline" className="mt-5" onClick={()=>{ void applyCoupon('WELCOME10').then(ok=>{ if(ok) setSelected(true); }); }}>{selected ? <Check /> : <Plus />}{selected ? 'WELCOME10 applied' : 'Apply WELCOME10'}</Button><p className="sr-only" role="status">{selected ? '10% discount applied to your bag.' : ''}</p></div><div className="border-t border-border pt-7 md:border-l md:border-t-0 md:pl-9 md:pt-0"><p className="editorial-label">EASY ON THE BUDGET</p><h2 className="mt-3 font-display text-4xl">Essentials under Rs. 5,000.</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">Everyday tees and finishing touches, without the extra spend.</p><Button asChild className="mt-5"><Link to="/shop" search={{category:'T-Shirts'}}>Shop everyday tees <ArrowRight /></Link></Button></div></div></section>;
 }
 
 export function Reveal({ children, className = "", as = "div" }: { children: React.ReactNode; className?: string; as?: "div" | "section" }) {
@@ -1201,7 +1201,16 @@ export function WishlistPage() {
 export function CheckoutPage() {
   const navigate = useNavigate();
   const { cart, cartSubtotal, shipping, cartTotal, discount, coupon, deliveryMethod, setDeliveryMethod, createOrder } = useVelouraStore();
-  const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery");
+  const { data: settingsData } = useSettings();
+
+  const paymentMethods: string[] = [];
+  if (settingsData?.payment?.cod_enabled !== false) paymentMethods.push('Cash on Delivery');
+  if (settingsData?.payment?.easypaisa_enabled) paymentMethods.push(`EasyPaisa · ${settingsData.payment.easypaisa_number ?? ''}`);
+  if (settingsData?.payment?.jazzcash_enabled) paymentMethods.push(`JazzCash · ${settingsData.payment.jazzcash_number ?? ''}`);
+  if (settingsData?.payment?.bank_enabled) paymentMethods.push(`Bank Transfer · ${settingsData.payment.bank_name ?? ''}`);
+  if (!paymentMethods.length) paymentMethods.push('Cash on Delivery', 'Card — Demo', 'Online Payment — Demo');
+
+  const [paymentMethod, setPaymentMethod] = useState(paymentMethods[0] ?? "Cash on Delivery");
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -1264,10 +1273,11 @@ export function CheckoutPage() {
           <CheckoutGroup title="Delivery method"><div className="flex flex-wrap gap-3">{["Standard","Express"].map(method=><Button type="button" key={method} variant={deliveryMethod===method?"editorial":"outline"} onClick={()=>setDeliveryMethod(method)}>{method} Â· {method==="Express"?"1â€“2 days":"3â€“5 days"}</Button>)}</div></CheckoutGroup>
           <CheckoutGroup title="Payment">
             <div className="grid gap-3 sm:grid-cols-2">
-              {["Cash on Delivery", "Card â€” Demo", "Online Payment â€” Demo"].map((method) => (
+              {paymentMethods.map((method) => (
                 <button key={method} type="button" onClick={() => setPaymentMethod(method)} className={`rounded-sm border border-border p-4 text-left text-sm focus-veloura ${paymentMethod === method ? "bg-secondary ring-2 ring-sage" : "bg-transparent"}`}>{method}</button>
               ))}
             </div>
+            {settingsData?.payment?.payment_note ? <p className="mt-3 text-sm text-muted-foreground">{settingsData.payment.payment_note}</p> : null}
           </CheckoutGroup>
         </div>
         <OrderSummary cart={cart} subtotal={cartSubtotal} shipping={shipping} total={cartTotal} actionLabel="Place Order" />

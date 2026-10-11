@@ -1,0 +1,21 @@
+import { useState } from 'react';
+import { Star, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useVelouraStore } from '@/lib/veloura-store';
+import { formatPrice, productPrice, type Product } from '@/lib/veloura-data';
+export function Price({ product }: { product: Product }) {
+ return <span className="flex flex-wrap items-center gap-2 text-sm font-semibold"><span>{formatPrice(productPrice(product))}</span>{product.salePrice ? <><del className="font-normal text-muted-foreground">{formatPrice(product.price)}</del><span className="text-xs text-sage">−{Math.round((1-product.salePrice/product.price)*100)}%</span></> : null}</span>;
+}
+export function Rating({ product }: { product: Product }) {
+ return <span className="flex items-center gap-1 text-xs text-muted-foreground"><Star className="size-3 fill-current text-sage" />{product.rating} <span>({product.reviewCount} demo reviews)</span></span>;
+}
+export function CouponInput() {
+ const { coupon, discount, applyCoupon, removeCoupon } = useVelouraStore();
+ const [code,setCode]=useState(''); const [error,setError]=useState('');
+ return <div className="my-4"><label htmlFor="coupon-code" className="text-xs font-semibold uppercase">Coupon code</label>{coupon ? <div className="mt-2 flex items-center justify-between gap-2"><span className="text-sm text-sage">✓ {coupon} · Saved {formatPrice(discount)}</span><Button type="button" variant="ghost" size="icon" aria-label="Remove coupon" onClick={removeCoupon}><X /></Button></div> : <><div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] gap-2"><input id="coupon-code" value={code} onChange={e=>setCode(e.target.value)} placeholder="WELCOME10" className="min-w-0 rounded-sm border border-input bg-background px-3 py-2 text-sm" /><Button type="button" variant="outline" size="sm" onClick={()=>{ void applyCoupon(code).then(ok => setError(ok ? '' : 'Invalid or expired coupon.')); }}>Apply</Button></div>{error ? <p role="alert" className="mt-2 text-xs text-destructive">{error}</p> : null}</>}</div>;
+}
+export function QuickAdd({ product, onClose }: { product: Product; onClose: () => void }) {
+ const {addToCart}=useVelouraStore(); const [size,setSize]=useState(product.sizes.length===1 ? product.sizes[0] ?? '' : ''); const [color,setColor]=useState(product.colors[0] ?? ''); const [quantity,setQuantity]=useState(1);const [error,setError]=useState('');
+ return <Dialog open onOpenChange={open=>{if(!open)onClose();}}><DialogContent className="max-h-[90svh] w-[calc(100%-2rem)] overflow-y-auto"><DialogTitle className="font-display text-3xl">Quick Add</DialogTitle><DialogDescription>{product.name}</DialogDescription><div className="grid grid-cols-[100px_minmax(0,1fr)] gap-4"><img src={product.images[0]} width={200} height={250} alt={product.name} className="aspect-[4/5] w-full object-cover" /><div><Price product={product} /><p className="mt-3 text-sm text-muted-foreground">{product.category}</p></div></div><fieldset><legend className="mb-2 text-sm">Color</legend><div className="flex flex-wrap gap-2">{product.colors.map(value=><Button type="button" key={value} variant={color===value?'editorial':'outline'} size="chip" onClick={()=>setColor(value)}><span className={`swatch swatch-${value.toLowerCase()}`} />{value}</Button>)}</div></fieldset><fieldset><legend className="mb-2 text-sm">Size</legend><div className="flex flex-wrap gap-2">{product.sizes.map(value=><Button type="button" key={value} aria-pressed={size===value} variant={size===value?'editorial':'outline'} size="chip" onClick={()=>{setSize(value);setError('');}}>{value}</Button>)}</div></fieldset><label className="text-sm">Quantity<input aria-label="Quick add quantity" type="number" min={1} max={product.stock} value={quantity} onChange={e=>setQuantity(Math.max(1,Math.min(product.stock,Number(e.target.value)||1)))} className="ml-4 w-20 rounded-sm border border-input p-2" /></label>{error?<p role="alert" className="text-sm text-destructive">{error}</p>:null}<Button disabled={product.stock<=0} onClick={()=>{if(!size){setError('Please select a size.');return;}addToCart(product,size,color,quantity);onClose();}}>Add to Cart</Button></DialogContent></Dialog>;
+}
