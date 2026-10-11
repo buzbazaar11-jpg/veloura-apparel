@@ -2,7 +2,7 @@
 import { MobileShoppingNav } from "./mobile-shopping-nav";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CustomerExtras, ShoppingConfidence } from "./customer-confidence";
-import { CouponInput, Price, Rating, QuickAdd } from "./shopping-ui";
+import { CouponInput, Price, Rating, QuickAdd, LiveReviews, ReviewForm } from "./shopping-ui";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   UserRound,
@@ -878,7 +878,7 @@ export function ProductDetailPage({ product }: { product: Product }) {
           </div>
         </div>
       </section>
-      <section className="mt-16"><SectionHeader label="Reviews" title="Worn. Loved. Repeated." /><Rating product={product} /><div className="mt-6 grid gap-6 sm:grid-cols-2">{["Beautifully cut, and the fabric feels excellent.","An easy addition to my everyday wardrobe."].map((review,i)=><blockquote key={review} className="border-t border-border pt-5"><p className="text-sm">{review}</p><footer className="mt-3 text-xs text-muted-foreground">{i===0?"Ayesha":"Hamza"} Â· Sample review</footer></blockquote>)}</div></section>
+      <section className="mt-16"><SectionHeader label="Reviews" title="Worn. Loved. Repeated." /><Rating product={product} /><LiveReviews productId={product.id} fallbackCount={product.reviewCount} /><div className="mt-10 border-t border-border pt-8"><h3 className="font-display text-3xl">Leave a Review</h3><ReviewForm productId={product.id} /></div></section>
       {recentlyViewed.filter(id=>id!==product.id).length ? <section className="mt-16"><SectionHeader label="Recently viewed" title="Another look." /><ProductGrid products={products.filter(p=>recentlyViewed.includes(p.id)&&p.id!==product.id).slice(0,4)} /></section>:null}
       {sizeGuideOpen ? <SizeGuide onClose={() => setSizeGuideOpen(false)} /> : null}
     </main>
