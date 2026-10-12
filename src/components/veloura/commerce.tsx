@@ -47,9 +47,9 @@ import {
   type Product,
 } from "@/lib/veloura-data";
 import { useVelouraStore, type CartItem, type Order } from "@/lib/veloura-store";
-import { useSettings, useHeroSlides, useBlogPosts, useProducts, useCollections } from "@/lib/api";
+import { useSettings, useHeroSlides, useBlogPosts, useProducts, useCollections, useDeals, useCoupons, apiEnabled } from "@/lib/api";
 import { assetUrl, fromBackend, LiveDeals } from "@/lib/live-catalog";
-import { api, apiEnabled } from "@/lib/api";
+import { api } from "@/lib/api";
 
 export function SiteChrome() {
   return (
@@ -80,16 +80,26 @@ export function Footer() {
       <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[1.4fr_2fr_1.2fr] lg:px-12">
         <div>
           <Link to="/" aria-label="VEL0URA APPAREL home"><Logo className="size-28" /></Link>
-          <p className="mt-5 max-w-sm text-sm leading-7 text-muted-foreground">
-            {data?.settings?.brand_tagline ?? 'Modern essentials focused on clean silhouettes, thoughtful details and effortless style.'}
-          </p>
+          {data?.settings?.brand_tagline ? (
+            <p className="mt-5 max-w-sm text-sm leading-7 text-muted-foreground">
+              {data.settings.brand_tagline}
+            </p>
+          ) : apiEnabled ? null : (
+            <p className="mt-5 max-w-sm text-sm leading-7 text-muted-foreground">
+              Modern essentials focused on clean silhouettes, thoughtful details and effortless style.
+            </p>
+          )}
           <div className="mt-8 flex flex-wrap gap-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-            <a className="focus-veloura" href={data?.settings?.instagram_url ?? 'https://instagram.com'} target="_blank" rel="noreferrer">
-              Instagram
-            </a>
-            <a className="focus-veloura" href={data?.settings?.tiktok_url ?? 'https://tiktok.com'} target="_blank" rel="noreferrer">
-              TikTok
-            </a>
+            {(!apiEnabled || data?.settings?.instagram_url) ? (
+              <a className="focus-veloura" href={data?.settings?.instagram_url ?? 'https://instagram.com'} target="_blank" rel="noreferrer">
+                Instagram
+              </a>
+            ) : null}
+            {(!apiEnabled || data?.settings?.tiktok_url) ? (
+              <a className="focus-veloura" href={data?.settings?.tiktok_url ?? 'https://tiktok.com'} target="_blank" rel="noreferrer">
+                TikTok
+              </a>
+            ) : null}
             <a className="focus-veloura" href="https://pinterest.com" target="_blank" rel="noreferrer">
               Pinterest
             </a>
@@ -184,21 +194,41 @@ function Navbar() {
 export function HomePage() {
   const { data: productsData } = useProducts();
   const liveProducts = productsData?.products?.length ? productsData.products.map(fromBackend) : products;
+  const newArrivalItems = liveProducts.filter(p => p.newArrival).slice(0, 4);
+  const signatureItems = liveProducts.filter(p => p.bestSeller || p.featured).slice(0, 4);
   return <main><HeroCarousel /><TrustStrip /><CategorySection liveProducts={liveProducts} />
-    <section className="store-section"><SectionHeader label="THE EVERYDAY LINEUP" title="Men's essentials. Sorted." action={<LinkText to="/shop">Shop all menswear</LinkText>} /><p className="mb-7 max-w-lg text-sm leading-6 text-muted-foreground">Start with a clean tee, add an easy shirt, finish with your favorite trousers.</p><ProductGrid products={liveProducts.filter(p=>p.newArrival).slice(0,4)} /></section>
+    {newArrivalItems.length > 0 && <section className="store-section"><SectionHeader label="THE EVERYDAY LINEUP" title="Men's essentials. Sorted." action={<LinkText to="/shop">Shop all menswear</LinkText>} /><p className="mb-7 max-w-lg text-sm leading-6 text-muted-foreground">Start with a clean tee, add an easy shirt, finish with your favorite trousers.</p><ProductGrid products={newArrivalItems} /></section>}
     <SaleBanner /><LiveDeals /><HomeDeals />
-    <section className="store-section"><SectionHeader label="THE SIGNATURE EDIT" title="Your next go-to pieces." action={<LinkText to="/best-sellers">Explore the edit</LinkText>} /><ProductGrid products={liveProducts.filter(p=>p.bestSeller).slice(0,4)} /></section>
+    {signatureItems.length > 0 && <section className="store-section"><SectionHeader label="THE SIGNATURE EDIT" title="Your next go-to pieces." action={<LinkText to="/best-sellers">Explore the edit</LinkText>} /><ProductGrid products={signatureItems} /></section>}
     <EditorialBanner /><ShoppingConfidence /><BuildYourLook liveProducts={liveProducts} /><NewsletterBand />
   </main>;
 }
 function TrustStrip(){const { data } = useSettings();const freeAbove = data?.payment?.free_delivery_above ?? storeConfig.freeShippingThreshold;return <section aria-label="Shopping benefits" className="border-b border-border bg-secondary"><div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-5 px-5 py-5 md:grid-cols-4">{[[Truck,`Free delivery from ${formatPrice(freeAbove)}`],[RotateCcw,"Find your fit \u00b7 size guides"],[ShieldCheck,"Cash on Delivery \u00b7 demo"],[Sparkles,"WELCOME10 \u00b7 save 10%"]].map(([Icon,label])=>{const Symbol=Icon as typeof Truck; return <div key={String(label)} className="flex items-center justify-center gap-2 text-xs"><Symbol className="size-5 shrink-0 text-sage" /><span>{String(label)}</span></div>;})}</div></section>;}
-function SaleBanner(){return <section className="sale-banner relative overflow-hidden bg-primary"><img src={bannerDrop} alt="Men wearing relaxed shirts and everyday trousers" width={1536} height={1024} loading="lazy" className="absolute inset-0 h-full w-full object-cover" /><div className="hero-shade absolute inset-0" /><div className="relative mx-auto max-w-[1500px] px-6 py-20 text-primary-foreground sm:px-12"><p className="text-xs uppercase">THE MEN'S SALE EDIT</p><h2 className="mt-4 max-w-lg font-display text-5xl sm:text-7xl">Great fits.<br />Up to 30% less.</h2><p className="mt-5 max-w-sm text-sm leading-6">Jackets, tees and trousers. Selected styles, with every saving shown.</p><Button asChild variant="secondary" className="mt-7"><Link to="/sale">Shop the deals <ArrowRight /></Link></Button></div></section>;}
+function SaleBanner(){
+  const { data: dealsData } = useDeals();
+  const deal = dealsData?.deals?.[0];
+  if (apiEnabled && !deal) return null;
+  const title = deal?.title ?? "Great fits.";
+  const subtitle = deal?.subtitle ?? "Up to 30% less.";
+  const desc = deal?.description ?? "Jackets, tees and trousers. Selected styles, with every saving shown.";
+  const ctaLabel = deal?.cta_label ?? "Shop the deals";
+  const ctaHref = (deal?.cta_href ?? "/sale") as "/sale";
+  const img = deal?.image_url ? assetUrl(deal.image_url) : bannerDrop;
+  return <section className="sale-banner relative overflow-hidden bg-primary"><img src={img} alt="Men wearing relaxed shirts and everyday trousers" width={1536} height={1024} loading="lazy" className="absolute inset-0 h-full w-full object-cover" /><div className="hero-shade absolute inset-0" /><div className="relative mx-auto max-w-[1500px] px-6 py-20 text-primary-foreground sm:px-12"><p className="text-xs uppercase">THE MEN'S SALE EDIT</p><h2 className="mt-4 max-w-lg font-display text-5xl sm:text-7xl">{title}<br />{subtitle}</h2><p className="mt-5 max-w-sm text-sm leading-6">{desc}</p><Button asChild variant="secondary" className="mt-7"><Link to={ctaHref}>{ctaLabel} <ArrowRight /></Link></Button></div></section>;
+}
 function HomeDeals(){
   const { applyCoupon } = useVelouraStore();
+  const { data: couponsData } = useCoupons();
+  const liveCoupons = couponsData?.coupons ?? [];
+  const firstCoupon = apiEnabled ? liveCoupons[0] : { code: 'WELCOME10', discount_value: 10, discount_type: 'percent', description: 'Save 10% on your next order.', id: 'offline' };
   const [selected, setSelected] = useState(false);
-  return <section className="home-deals border-b border-border bg-secondary"><div className="store-section grid gap-8 md:grid-cols-[1fr_1fr]"><div><p className="editorial-label">YOUR FIRST LOOK</p><h2 className="mt-3 font-display text-4xl">Make it yours. Save 10%.</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">Use WELCOME10 on your next bag. One code per order.</p><Button variant="outline" className="mt-5" onClick={()=>{ void applyCoupon('WELCOME10').then(ok=>{ if(ok) setSelected(true); }); }}>{selected ? <Check /> : <Plus />}{selected ? 'WELCOME10 applied' : 'Apply WELCOME10'}</Button><p className="sr-only" role="status">{selected ? '10% discount applied to your bag.' : ''}</p></div><div className="border-t border-border pt-7 md:border-l md:border-t-0 md:pl-9 md:pt-0"><p className="editorial-label">EASY ON THE BUDGET</p><h2 className="mt-3 font-display text-4xl">Essentials under Rs. 5,000.</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">Everyday tees and finishing touches, without the extra spend.</p><Button asChild className="mt-5"><Link to="/shop" search={{category:'T-Shirts'}}>Shop everyday tees <ArrowRight /></Link></Button></div></div></section>;
+  if (apiEnabled && !firstCoupon) return null;
+  const code = firstCoupon?.code ?? 'WELCOME10';
+  const desc = firstCoupon?.description ?? `Use ${code} on your next bag. One code per order.`;
+  const discVal = firstCoupon?.discount_value ?? 10;
+  const headline = firstCoupon?.discount_type === 'percent' ? `Make it yours. Save ${discVal}%.` : `Make it yours. Save ${discVal} off.`;
+  return <section className="home-deals border-b border-border bg-secondary"><div className="store-section grid gap-8 md:grid-cols-[1fr_1fr]"><div><p className="editorial-label">YOUR FIRST LOOK</p><h2 className="mt-3 font-display text-4xl">{headline}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{desc}</p><Button variant="outline" className="mt-5" onClick={()=>{ void applyCoupon(code).then(ok=>{ if(ok) setSelected(true); }); }}>{selected ? <Check /> : <Plus />}{selected ? `${code} applied` : `Apply ${code}`}</Button><p className="sr-only" role="status">{selected ? `${discVal}${firstCoupon?.discount_type === 'percent' ? '%' : ''} discount applied to your bag.` : ''}</p></div><div className="border-t border-border pt-7 md:border-l md:border-t-0 md:pl-9 md:pt-0"><p className="editorial-label">EASY ON THE BUDGET</p><h2 className="mt-3 font-display text-4xl">Essentials under Rs. 5,000.</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">Everyday tees and finishing touches, without the extra spend.</p><Button asChild className="mt-5"><Link to="/shop" search={{category:'T-Shirts'}}>Shop everyday tees <ArrowRight /></Link></Button></div></div></section>;
 }
-
 export function Reveal({ children, className = "", as = "div" }: { children: React.ReactNode; className?: string; as?: "div" | "section" }) {
   const ref = useRef<HTMLElement | null>(null);
   const [visible, setVisible] = useState(false);
@@ -284,9 +314,8 @@ export function Magnetic({ children, className = "" }: { children: React.ReactNo
 
 function MarqueeStrip() {
   const { data } = useSettings();
-  const items = data?.settings?.marquee_items?.length
-    ? data.settings.marquee_items
-    : ["New Season AW26", "Complimentary delivery over Rs. 15,000", "The Signature Jacket â€” back in stock", "Easy returns within 14 days", "Limited Edition Drop 03"];
+  const items = data?.settings?.marquee_items ?? [];
+  if (!items.length) return null;
   const row = [...items, ...items];
   return (
     <div className="overflow-hidden border-y border-border bg-primary py-4 text-primary-foreground" aria-label="VEL0URA APPAREL announcements">
@@ -303,23 +332,28 @@ function MarqueeStrip() {
 }
 
 function DropBanner() {
+  const { data: dealsData } = useDeals();
+  const deal = dealsData?.deals?.[1];
+  if (apiEnabled && !deal) return null;
+  const img = deal?.image_url ? assetUrl(deal.image_url) : bannerDrop;
+  const ctaHref = (deal?.cta_href ?? "/collections") as "/collections";
   return (
     <Reveal as="section" className="px-5 sm:px-8 lg:px-12">
-      <Link to="/collections" className="group relative mx-auto block h-[78vh] min-h-[520px] max-w-[1500px] overflow-hidden rounded-sm focus-veloura">
+      <Link to={ctaHref} className="group relative mx-auto block h-[78vh] min-h-[520px] max-w-[1500px] overflow-hidden rounded-sm focus-veloura">
         <Parallax className="absolute inset-0" speed={0.1}>
-          <img src={bannerDrop} alt="VEL0URA APPAREL Drop 03 olive wool overcoat" width={1600} height={912} loading="lazy" className="h-full w-full scale-110 object-cover transition-transform duration-[1500ms] ease-out group-hover:scale-[1.16]" />
+          <img src={img} alt={deal?.title ?? "VEL0URA APPAREL Drop"} width={1600} height={912} loading="lazy" className="h-full w-full scale-110 object-cover transition-transform duration-[1500ms] ease-out group-hover:scale-[1.16]" />
         </Parallax>
         <div className="absolute inset-0 bg-gradient-to-r from-primary/60 via-primary/15 to-transparent" />
         <div className="relative flex h-full flex-col justify-between p-8 text-primary-foreground sm:p-12 lg:p-16">
-          <span className="glass-panel inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-foreground">
-            <span className="pulse-dot h-2 w-2 rounded-full bg-sage" /> Just dropped
-          </span>
+          {deal?.badge && <span className="glass-panel inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-foreground">
+            <span className="pulse-dot h-2 w-2 rounded-full bg-sage" /> {deal.badge}
+          </span>}
           <div className="max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary-foreground/80">Limited Edition â€” Drop 03</p>
-            <h2 className="mt-4 font-display text-6xl leading-[0.9] sm:text-8xl">Quiet<br />Structure.</h2>
-            <p className="mt-5 max-w-sm text-base leading-7 text-primary-foreground/85">Double-faced wool, olive tones and a longer line. Made in small numbers for the season ahead.</p>
+            {deal?.subtitle && <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary-foreground/80">{deal.subtitle}</p>}
+            <h2 className="mt-4 font-display text-6xl leading-[0.9] sm:text-8xl">{deal?.title ?? ''}</h2>
+            {deal?.description && <p className="mt-5 max-w-sm text-base leading-7 text-primary-foreground/85">{deal.description}</p>}
             <span className="mt-8 inline-flex items-center gap-3 border-b border-primary-foreground pb-1 text-xs font-semibold uppercase tracking-[0.24em]">
-              Shop the drop <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1.5" />
+              {deal?.cta_label ?? 'Shop the drop'} <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1.5" />
             </span>
           </div>
         </div>
@@ -327,7 +361,6 @@ function DropBanner() {
     </Reveal>
   );
 }
-
 function SplitBanners() {
   return (
     <section className="mx-auto grid max-w-[1500px] gap-5 px-5 py-20 sm:px-8 md:grid-cols-[1.1fr_0.9fr] lg:px-12">
@@ -368,20 +401,24 @@ function SplitBanners() {
 function HeroCarousel() {
  const [index,setIndex]=useState(0);const [paused,setPaused]=useState(false);const touchStart=useRef<number|null>(null);
  const { data: heroData } = useHeroSlides();
- const slides = heroData?.slides?.length
-   ? heroData.slides.map(s => ({
-       label: s.eyebrow ?? '',
-       headline: s.title ?? '',
-       text: s.description ?? '',
-       cta: s.cta_label ?? 'Shop now',
-       ctaPath: (s.cta_href ?? '/shop') as '/shop' | '/collections' | '/new-arrivals',
-       image: s.image_url ? assetUrl(s.image_url) : heroSlides[0]?.image ?? '',
-       product: s.title ?? '',
-     }))
+ const slides = apiEnabled
+   ? (heroData?.slides?.length
+       ? heroData.slides.map(s => ({
+           label: s.eyebrow ?? '',
+           headline: s.title ?? '',
+           text: s.description ?? '',
+           cta: s.cta_label ?? 'Shop now',
+           ctaPath: (s.cta_href ?? '/shop') as '/shop' | '/collections' | '/new-arrivals',
+           image: s.image_url ? assetUrl(s.image_url) : '',
+           product: s.title ?? '',
+         }))
+       : [])
    : heroSlides;
  const slide = slides[index] ?? slides[0];
  useEffect(()=>{if(paused || prefersReducedMotion())return;const timer=window.setInterval(()=>setIndex(i=>(i+1)%slides.length),6500);return()=>window.clearInterval(timer);},[paused, slides.length]);
- const go=(direction:number)=>setIndex(i=>(i+direction+slides.length)%slides.length); if(!slide)return null;
+ const go=(direction:number)=>setIndex(i=>(i+direction+slides.length)%slides.length);
+ if (apiEnabled && !slides.length) return <div className='veloura-hero relative overflow-hidden bg-primary animate-pulse' style={{minHeight:'70vh'}} aria-hidden='true' />;
+ if(!slide)return null;
  return <section id="hero" aria-roledescription="carousel" aria-label="VEL0URA APPAREL campaign" className="veloura-hero relative overflow-hidden bg-primary" onMouseEnter={()=>setPaused(true)} onMouseLeave={()=>setPaused(false)} onTouchStart={e=>{touchStart.current=e.touches[0]?.clientX??null;}} onTouchEnd={e=>{const start=touchStart.current;if(start===null)return;const end=e.changedTouches[0]?.clientX??start;if(start-end>40)go(1);if(end-start>40)go(-1);touchStart.current=null;}}>
  {slides.map((hero,i)=><img key={hero.headline || i} src={hero.image} alt={i===index ? `${hero.product ?? ''} seasonal campaign` : ""} aria-hidden={i!==index} width={1600} height={1200} loading={i===0?'eager':'lazy'} fetchPriority={i===0?'high':'auto'} className={`hero-image absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${i===index?'opacity-100':'opacity-0'}`} />)}
  <div className="hero-shade absolute inset-0" />
@@ -483,7 +520,7 @@ function CategorySection({ liveProducts }: { liveProducts: Product[] }) {
   const uniform = [tee, trouser].filter(Boolean) as typeof liveProducts;
   return <section className="category-section store-section"><SectionHeader label="BUILT FOR YOUR EVERYDAY" title="Find your kind of fit." />
     <div className="bento-grid">
-      <BentoTile className="bento-hero" to="/shop" search={{category:"Jackets"}} img={campaignImages.one} alt="Men's jacket campaign" tag="01 / Outerwear" title="The Jacket Edit" note="Layers made for every season." />
+      <BentoTile className="bento-hero" to="/shop" search={{category:"Jackets"}} img={jacket?.images[0] ?? campaignImages.one} alt="Men's jacket campaign" tag="01 / Outerwear" title="The Jacket Edit" note="Layers made for every season." />
       <BentoTile className="bento-tall" to="/shop" search={{category:"T-Shirts"}} img={tee?.images[0]} alt="Men's tees" tag="02 / Tees" title="Core Tees" note="Clean everyday cotton." />
       <BentoTile className="bento-square" to="/shop" search={{category:"Accessories"}} img={acc?.images[0]} alt="Men's accessories" tag="03 / Finish" title="Accessories" />
       <BentoTile className="bento-square" to="/shop" search={{category:"Shirts"}} img={shirt?.images[0] ?? jacket?.images[0]} alt="Men's shirts" tag="04 / Shirts" title="Easy Shirts" />
@@ -496,9 +533,13 @@ function CategorySection({ liveProducts }: { liveProducts: Product[] }) {
 }
 
 function EditorialBanner() {
-  return <section className="mens-editorial relative overflow-hidden bg-primary"><img src={campaignImages.one} alt="Men's signature jacket with everyday trousers" width={1536} height={1024} loading="lazy" className="absolute inset-0 h-full w-full object-cover" /><div className="hero-shade absolute inset-0" /><div className="relative mx-auto max-w-[1500px] px-6 py-20 text-primary-foreground sm:px-12"><p className="text-xs uppercase">ONE WARDROBE. MORE POSSIBILITIES.</p><h2 className="mt-4 max-w-lg font-display text-5xl sm:text-7xl">From workday<br />to weekend.</h2><p className="mt-5 max-w-sm text-sm leading-6">Start with the essentials. Build a look that feels like you.</p><Button asChild variant="secondary" className="mt-7"><Link to="/collections">Find your look <ArrowRight /></Link></Button></div></section>;
+  const { data: dealsData } = useDeals();
+  const deal = dealsData?.deals?.[2];
+  if (apiEnabled && !deal) return null;
+  const img = deal?.image_url ? assetUrl(deal.image_url) : campaignImages.one;
+  const ctaHref = (deal?.cta_href ?? "/collections") as "/collections";
+  return <section className="mens-editorial relative overflow-hidden bg-primary"><img src={img} alt={deal?.title ?? "Men's signature jacket with everyday trousers"} width={1536} height={1024} loading="lazy" className="absolute inset-0 h-full w-full object-cover" /><div className="hero-shade absolute inset-0" /><div className="relative mx-auto max-w-[1500px] px-6 py-20 text-primary-foreground sm:px-12"><p className="text-xs uppercase">{deal?.subtitle ?? "ONE WARDROBE. MORE POSSIBILITIES."}</p><h2 className="mt-4 max-w-lg font-display text-5xl sm:text-7xl">{deal?.title ?? "From workday to weekend."}</h2><p className="mt-5 max-w-sm text-sm leading-6">{deal?.description ?? "Start with the essentials. Build a look that feels like you."}</p><Button asChild variant="secondary" className="mt-7"><Link to={ctaHref}>{deal?.cta_label ?? "Find your look"} <ArrowRight /></Link></Button></div></section>;
 }
-
 function FeaturedProducts() {
   const featured = products.filter((product) => product.featured).slice(0, 4);
   const large = featured[0];

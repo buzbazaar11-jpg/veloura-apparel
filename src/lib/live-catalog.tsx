@@ -71,7 +71,7 @@ export function fromBackend(b: BackendProductPayload): Product {
     reviewCount: base?.reviewCount ?? Number(b.reviews ?? 0),
     audience: "Men",
     featured: b.featured ?? base?.featured ?? false,
-    newArrival: base?.newArrival ?? !base,
+    newArrival: b.new_arrival ?? base?.newArrival ?? false,
     bestSeller: base?.bestSeller ?? false,
     mood: base?.mood ?? "Everyday",
     fit: base?.fit ?? "",
