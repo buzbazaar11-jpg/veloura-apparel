@@ -1,6 +1,7 @@
 import { toast } from "sonner";
 import { api, apiEnabled, useSettings } from "./api";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCatalogVersion } from "@/lib/live-catalog";
 import { getProductBySlug, products, productPrice, coupons, storeConfig, type Product } from "@/lib/veloura-data";
 
 export type CartItem = {
@@ -104,7 +105,7 @@ export function VelouraProvider({ children }: { children: ReactNode }) {
       try {
         const result = await api.validateCoupon(normalized, cartSubtotalRef.current);
         if (!result.ok) { toast.error(result.error ?? "Invalid or expired coupon."); return false; }
-        setDiscountPercent(result.discount ?? coupons[normalized] ?? 0);
+        const sub = cartSubtotalRef.current; setDiscountPercent(result.discount != null && sub > 0 ? (result.discount / sub) * 100 : coupons[normalized] ?? 0);
         setCoupon(normalized); toast.success("Coupon applied successfully"); return true;
       } catch {
         // Fall through to local validation on network error
@@ -229,9 +230,10 @@ export function VelouraProvider({ children }: { children: ReactNode }) {
 
   const findOrder = useCallback((id: string) => orders.find((order) => order.id.toUpperCase() === id.toUpperCase()), [orders]);
 
+  const catalogV = useCatalogVersion();
   const cartSubtotal = useMemo(
     () => cart.reduce((sum, item) => sum + (productPrice(products.find((product) => product.id === item.productId) ?? products[0] as Product)) * item.quantity, 0),
-    [cart],
+    [cart, catalogV],
   );
   const cartSubtotalRef = useRef(cartSubtotal);
   cartSubtotalRef.current = cartSubtotal;

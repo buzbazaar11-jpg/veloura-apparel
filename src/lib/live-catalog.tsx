@@ -1,9 +1,29 @@
 // Live catalog helpers — converts backend product rows to the frontend Product shape.
 // Products/collections are now fetched via useProducts()/useCollections() React Query hooks
 // in src/lib/api.ts. This file keeps fromBackend(), assetUrl(), and deals polling.
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { API_URL, apiEnabled, type BackendProductPayload } from "./api";
+import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { API_URL, apiEnabled, useProducts, type BackendProductPayload } from "./api";
 import { products, type Product } from "./veloura-data";
+
+// ── Live catalog store: the exported `products` array is replaced in place with
+// database rows whenever they change; components subscribe via useCatalogVersion().
+let catalogVersion = 0;
+const listeners = new Set<() => void>();
+const subscribe = (fn: () => void) => { listeners.add(fn); return () => { listeners.delete(fn); }; };
+export function useCatalogVersion() {
+  return useSyncExternalStore(subscribe, () => catalogVersion, () => 0);
+}
+export function LiveProductSync() {
+  const { data, isSuccess } = useProducts();
+  const rows = data?.products;
+  useEffect(() => {
+    if (!apiEnabled || !isSuccess || !rows) return;
+    products.splice(0, products.length, ...rows.map(fromBackend));
+    catalogVersion += 1;
+    listeners.forEach((fn) => fn());
+  }, [rows, isSuccess]);
+  return null;
+}
 
 export type LiveDeal = {
   id: string;
@@ -109,7 +129,7 @@ export function LiveCatalogProvider({ children }: { children: ReactNode }) {
     };
 
     void sync();
-    const timer = window.setInterval(sync, 30_000);
+    const timer = window.setInterval(sync, 1_000);
     const onFocus = () => void sync();
     window.addEventListener("focus", onFocus);
     return () => {
@@ -169,7 +189,7 @@ export function LiveDeals() {
               </p>
               {deal.cta_href ? (
                 <a
-                  href={deal.cta_href}
+                  href={deal.cta_href.startsWith("/") || deal.cta_href.startsWith("http") ? deal.cta_href : "/shop"}
                   className="mt-4 inline-block text-xs font-semibold uppercase underline underline-offset-4"
                 >
                   {deal.cta_label || "Shop the deal"}

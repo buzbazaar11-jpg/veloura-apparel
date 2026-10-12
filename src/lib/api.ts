@@ -129,7 +129,8 @@ export function useSettings() {
     queryKey: ["settings"],
     queryFn: () =>
       request<{ ok: boolean; settings: SiteSettingsPayload; payment: PaymentSettingsPayload }>("/settings"),
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchInterval: apiEnabled ? 1_000 : false,
     refetchOnWindowFocus: true,
     enabled: apiEnabled,
     placeholderData: { ok: true, settings: {} as SiteSettingsPayload, payment: {} as PaymentSettingsPayload },
@@ -140,7 +141,8 @@ export function useHeroSlides() {
   return useQuery({
     queryKey: ["hero-slides"],
     queryFn: () => request<{ ok: boolean; slides: HeroSlidePayload[] }>("/hero-slides"),
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchInterval: apiEnabled ? 1_000 : false,
     refetchOnWindowFocus: true,
     enabled: apiEnabled,
     placeholderData: { ok: true, slides: [] as HeroSlidePayload[] },
@@ -151,7 +153,8 @@ export function useCategories() {
   return useQuery({
     queryKey: ["categories"],
     queryFn: () => request<{ ok: boolean; categories: CategoryPayload[] }>("/categories"),
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchInterval: apiEnabled ? 1_000 : false,
     refetchOnWindowFocus: true,
     enabled: apiEnabled,
     placeholderData: { ok: true, categories: [] as CategoryPayload[] },
@@ -162,7 +165,8 @@ export function useBlogPosts() {
   return useQuery({
     queryKey: ["blog"],
     queryFn: () => request<{ ok: boolean; posts: BlogPostPayload[] }>("/blog"),
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchInterval: apiEnabled ? 1_000 : false,
     refetchOnWindowFocus: true,
     enabled: apiEnabled,
     placeholderData: { ok: true, posts: [] as BlogPostPayload[] },
@@ -173,7 +177,8 @@ export function useBlogPost(slug: string) {
   return useQuery({
     queryKey: ["blog", slug],
     queryFn: () => request<{ ok: boolean; post: BlogPostPayload }>(`/blog/${encodeURIComponent(slug)}`),
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchInterval: apiEnabled ? 1_000 : false,
     enabled: apiEnabled,
     placeholderData: { ok: true, post: null as unknown as BlogPostPayload },
   });
@@ -189,7 +194,8 @@ export function useReviews(productId?: string) {
       }
       return result;
     },
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchInterval: apiEnabled ? 1_000 : false,
     refetchOnWindowFocus: true,
     enabled: apiEnabled,
     placeholderData: { ok: true, reviews: [] as ReviewPayload[] },
@@ -200,7 +206,8 @@ export function usePopups() {
   return useQuery({
     queryKey: ["popups"],
     queryFn: () => request<{ ok: boolean; popups: PopupPayload[] }>("/popups"),
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchInterval: apiEnabled ? 1_000 : false,
     enabled: apiEnabled,
     placeholderData: { ok: true, popups: [] as PopupPayload[] },
   });
@@ -243,7 +250,8 @@ export function useProducts() {
   return useQuery({
     queryKey: ["products"],
     queryFn: () => request<{ ok: boolean; products: BackendProductPayload[] }>("/products"),
-    staleTime: 30_000,
+    staleTime: 0,
+    refetchInterval: apiEnabled ? 1_000 : false,
     refetchOnWindowFocus: true,
     enabled: apiEnabled,
     placeholderData: { ok: true, products: [] as BackendProductPayload[] },
@@ -254,7 +262,8 @@ export function useCollections() {
   return useQuery({
     queryKey: ["collections"],
     queryFn: () => request<{ ok: boolean; collections: CollectionPayload[] }>("/collections"),
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchInterval: apiEnabled ? 1_000 : false,
     refetchOnWindowFocus: true,
     enabled: apiEnabled,
     placeholderData: { ok: true, collections: [] as CollectionPayload[] },
