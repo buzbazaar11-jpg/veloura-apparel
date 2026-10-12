@@ -88,7 +88,7 @@ def create_order(body: OrderIn, request: Request, bg: BackgroundTasks, db: Sessi
     total = float(subtotal) - discount + shipping
     a = body.attribution or {}
     now = datetime.now(timezone.utc)
-    o = Order(order_number="TM" + now.strftime("%y%m%d") + secrets.token_hex(2).upper(),
+    o = Order(order_number="VA" + now.strftime("%y%m%d") + secrets.token_hex(2).upper(),
               user_id=user.id if user else None, customer_name=body.customer_name.strip()[:120],
               customer_email=body.customer_email.lower(), customer_phone=body.customer_phone[:30],
               shipping_address=body.shipping_address[:500], city=body.city, payment_method=body.payment_method,

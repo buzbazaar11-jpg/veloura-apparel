@@ -1,128 +1,299 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Veloura Apparel Admin</title>
+<title>Veloura Apparel — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0e0e10;--card:#17171a;--line:#2a2a2f;--fg:#eee;--mut:#999;--acc:#c9a24a}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,Arial;background:var(--bg);color:var(--fg)}
-a{color:var(--acc)}button{background:var(--acc);color:#000;border:0;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600}
-button.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}button.danger{background:#b33;color:#fff}
-input,select,textarea{width:100%;background:#0b0b0d;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px}
-textarea{min-height:70px;font-family:monospace;font-size:12px}
-.wrap{display:flex;min-height:100vh}nav{width:220px;background:var(--card);border-right:1px solid var(--line);padding:16px;flex-shrink:0}
-nav a{display:block;padding:7px 10px;border-radius:6px;color:var(--fg);text-decoration:none;font-size:14px}nav a.on,nav a:hover{background:#26262b;color:var(--acc)}
-main{flex:1;padding:24px;overflow:auto}h1{margin:0 0 16px;font-size:22px}
-table{width:100%;border-collapse:collapse;font-size:13px}td,th{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}.kpi b{font-size:24px;display:block}
-.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}.form label{font-size:12px;color:var(--mut)}
-.bar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}.mut{color:var(--mut)}
-#modal{position:fixed;inset:0;background:#000a;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:30px}
-#modal .card{width:min(1000px,100%)}img.th{width:44px;height:44px;object-fit:cover;border-radius:4px}
-@media(max-width:800px){.wrap{flex-direction:column}nav{width:100%}}
+:root{--bg:#F8FAFC;--card:#FFFFFF;--line:#E2E8F0;--ink:#0F172A;--mut:#64748B;--soft:#F1F5F9;
+--em:#10B981;--em2:#059669;--co:#3B82F6;--in:#6366F1;--am:#F59E0B;--pk:#EC4899;--cr:#EF4444;--vi:#8B5CF6;--r:18px;
+--sh:0 1px 2px rgba(15,23,42,.04),0 8px 24px -12px rgba(15,23,42,.10)}
+*{box-sizing:border-box}html,body{margin:0}body{font-family:Manrope,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font:inherit;font-weight:700;background:var(--ink);color:#fff;border:0;padding:9px 16px;border-radius:12px;cursor:pointer;transition:.2s transform,.2s box-shadow,.2s background}
+button:hover{transform:translateY(-1px);box-shadow:0 6px 16px -6px rgba(15,23,42,.35)}
+button.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}button.ghost:hover{background:var(--soft)}
+button.danger{background:var(--cr)}button.sm{padding:6px 11px;font-size:12px;border-radius:10px}
+input,select,textarea{width:100%;font:inherit;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px 12px;outline:none;transition:.15s border,.15s box-shadow}
+input:focus,select:focus,textarea:focus{border-color:var(--co);box-shadow:0 0 0 4px rgba(59,130,246,.12)}
+textarea{min-height:80px;font-size:13px}
+.app{display:grid;grid-template-columns:248px 1fr;min-height:100vh;transition:grid-template-columns .25s}
+.app.col{grid-template-columns:76px 1fr}
+aside{background:var(--card);border-right:1px solid var(--line);padding:18px 12px;position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 10px 18px}.logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--in),var(--pk));color:#fff;display:grid;place-items:center;font-weight:800;flex-shrink:0}
+.brand b{font-size:15px;letter-spacing:.02em}.brand small{display:block;color:var(--mut);font-size:11px;font-weight:600}
+.grp{font-size:10px;font-weight:800;letter-spacing:.12em;color:#94A3B8;padding:14px 12px 6px;text-transform:uppercase}
+aside a{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:12px;color:#334155;font-weight:600;font-size:13.5px;white-space:nowrap}
+aside a .ic{width:20px;text-align:center;flex-shrink:0}aside a:hover{background:var(--soft)}
+aside a.on{background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(236,72,153,.08));color:var(--in)}
+.app.col .brand div,.app.col aside a span,.app.col .grp{display:none}
+main{min-width:0}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:14px 28px;background:rgba(248,250,252,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.top h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em;flex:1;text-transform:capitalize}
+.pulse{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--em2);background:#ECFDF5;padding:6px 10px;border-radius:999px}
+.pulse:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--em);box-shadow:0 0 0 0 rgba(16,185,129,.6);animation:p 1.8s infinite}
+@keyframes p{70%{box-shadow:0 0 0 8px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+.body{padding:24px 28px 100px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--sh)}
+.card h3{margin:0 0 14px;font-size:15px;font-weight:800}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.kpi{position:relative;overflow:hidden}.kpi:after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:var(--g);opacity:.14}
+.kpi .l{color:var(--mut);font-weight:700;font-size:12px;display:flex;align-items:center;gap:8px}
+.kpi .dot{width:30px;height:30px;border-radius:10px;background:var(--g);display:grid;place-items:center;color:#fff;font-size:14px}
+.kpi b{display:block;font-size:26px;font-weight:800;margin:12px 0 4px;letter-spacing:-.02em}.kpi small{font-weight:700;font-size:12px;color:var(--mut)}
+.up{color:var(--em2)!important}.dn{color:var(--cr)!important}
+.g2{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:800;text-transform:capitalize;background:var(--cb);color:var(--cf)}
+.s-pending{--cb:#FEF3C7;--cf:#B45309}.s-confirmed{--cb:#DBEAFE;--cf:#1D4ED8}.s-processing{--cb:#EDE9FE;--cf:#6D28D9}
+.s-shipped{--cb:#E0E7FF;--cf:#4338CA}.s-delivered{--cb:#D1FAE5;--cf:#047857}.s-cancelled{--cb:#FEE2E2;--cf:#B91C1C}
+.s-on{--cb:#D1FAE5;--cf:#047857}.s-off{--cb:#F1F5F9;--cf:#64748B}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.tabs button{background:var(--card);color:var(--mut);border:1px solid var(--line);padding:7px 13px;font-size:12.5px}
+.tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tw{overflow:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--card);box-shadow:var(--sh)}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:720px}
+th{background:var(--soft);color:var(--mut);font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:800;text-align:left;padding:11px 14px}
+td{border-top:1px solid var(--line);padding:12px 14px;vertical-align:top}tr:hover td{background:#FAFBFD}
+.mut{color:var(--mut)}.bar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}.bar input,.bar select{max-width:260px}
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}.form label{font-size:12px;font-weight:700;color:var(--mut);display:block;margin-bottom:6px}
+#modal{position:fixed;inset:0;background:rgba(15,23,42,.42);backdrop-filter:blur(6px);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:4vh 16px;z-index:50}
+#modal .card{width:min(980px,100%);animation:in .25s ease}@keyframes in{from{opacity:0;transform:translateY(12px) scale(.98)}}
+img.th{width:46px;height:46px;object-fit:cover;border-radius:12px;background:var(--soft)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+.pc{padding:0;overflow:hidden}.pc img{width:100%;aspect-ratio:4/5;object-fit:cover;background:var(--soft);display:block}.pc .pb{padding:14px}
+.coupon{border:2px dashed var(--line);position:relative}.coupon b.code{font-size:20px;letter-spacing:.08em;font-weight:800;background:linear-gradient(135deg,var(--am),var(--pk));-webkit-background-clip:text;color:transparent}
+.tog{width:42px;height:24px;border-radius:999px;background:#CBD5E1;position:relative;cursor:pointer;border:0;padding:0;flex-shrink:0}.tog:after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+.tog.on{background:var(--em)}.tog.on:after{left:21px}.tog:hover{transform:none;box-shadow:none}
+.legend{display:flex;flex-direction:column;gap:8px;margin-top:12px}.legend div{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600}.legend i{width:10px;height:10px;border-radius:3px}
+.empty{padding:40px;text-align:center;color:var(--mut)}
+.login{min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 20% 10%,rgba(99,102,241,.14),transparent 40%),radial-gradient(circle at 80% 90%,rgba(236,72,153,.12),transparent 40%),var(--bg);padding:16px}
+.login .card{width:min(400px,100%);padding:32px}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:14px;font-weight:700;transition:.3s;z-index:60}
+#toast.on{transform:translateX(-50%) translateY(0)}
+.mnav{display:none}.burger{display:none}.scrim{display:none}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr}}
+@media(max-width:820px){.app,.app.col{grid-template-columns:1fr}aside{position:fixed;left:0;top:0;bottom:0;width:270px;z-index:40;transform:translateX(-100%);transition:.25s;box-shadow:var(--sh)}
+ .app.open aside{transform:none}.app.open .scrim{display:block}.scrim{display:none;position:fixed;inset:0;background:rgba(15,23,42,.3);z-index:30}
+ .burger{display:inline-block}.colbtn{display:none}.top{padding:12px 16px}.body{padding:16px 16px 100px}.kpi b{font-size:21px}
+ .mnav{display:flex;position:fixed;bottom:12px;left:12px;right:12px;z-index:20;background:rgba(255,255,255,.9);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:22px;box-shadow:var(--sh);padding:6px;justify-content:space-around}
+ .mnav a{display:flex;flex-direction:column;align-items:center;font-size:10.5px;font-weight:700;color:var(--mut);padding:6px 10px;border-radius:14px}.mnav a.on{color:var(--in);background:#EEF2FF}.mnav a span:first-child{font-size:17px}}
+@media(max-width:480px){.kpis{gap:10px}.card{padding:16px}}
 </style></head><body>
 <div id="app"></div>
 <div id="modal"><div class="card" id="mbody"></div></div>
+<div id="toast"></div>
 <script>
 const API = location.origin + "/api/v1";
-let TOKEN = localStorage.getItem("tm_admin_token"), SCHEMA = null;
-const $ = s => document.querySelector(s);
+let TOKEN = localStorage.getItem("va_admin_token") || localStorage.getItem("tm_admin_token"), SCHEMA = null, COL = localStorage.getItem("va_col")==="1";
+const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s);
 const esc = v => String(v ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const rs = n => "Rs " + Math.round(Number(n)||0).toLocaleString();
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("on"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("on"),2200); }
 async function api(path, opt = {}) {
   const r = await fetch(API + path, {...opt, headers: {...(opt.body instanceof FormData ? {} : {"Content-Type":"application/json"}), ...(TOKEN ? {Authorization:"Bearer "+TOKEN} : {}), ...(opt.headers||{})}});
   const j = await r.json().catch(() => ({}));
-  if (r.status === 401 || r.status === 403) { if (TOKEN) { logout(); } throw new Error(j.detail || "Not allowed"); }
+  if (r.status === 401 || r.status === 403) { if (TOKEN) logout(); throw new Error(j.detail || "Not allowed"); }
   if (!r.ok) throw new Error(typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail || j));
   return j;
 }
-function logout(){ TOKEN=null; localStorage.removeItem("tm_admin_token"); render(); }
+function logout(){ TOKEN=null; localStorage.removeItem("va_admin_token"); localStorage.removeItem("tm_admin_token"); render(); }
 
-const MENU = [["dashboard","Dashboard"],["orders","Orders"],["products","Products"],["collections","Collections"],["categories","Categories"],
- ["deals","Deals"],["coupons","Coupons"],["hero_slides","Hero slides"],["popups","Popups"],["reviews","Reviews"],["blog_posts","Blog"],
- ["faqs","FAQs"],["trust_sections","Trust"],["cart_leads","Leads"],["order_emails","Emails sent"],["analytics_events","Analytics events"],
- ["meta_event_log","Meta events"],["profiles","Customers"],["users","Users & roles"],["site_settings","Site settings"],
- ["payment_settings","Payment settings"],["meta_settings","Meta settings"]];
+const MENU = [["Overview",[["dashboard","Dashboard","◎"],["orders","Orders","▤"],["cart_leads","Leads","◌"]]],
+ ["Catalog",[["products","Products","▦"],["collections","Collections","◫"],["categories","Categories","⌗"]]],
+ ["Marketing",[["hero_slides","Hero slides","▭"],["deals","Deals","✦"],["coupons","Coupons","%"],["popups","Popups","◳"]]],
+ ["Content",[["reviews","Reviews","★"],["blog_posts","Journal","✎"],["faqs","FAQs","?"],["trust_sections","Trust","◇"]]],
+ ["Insights",[["order_emails","Emails sent","✉"],["analytics_events","Analytics","∿"],["meta_event_log","Meta events","ⓜ"],["profiles","Customers","☺"],["users","Users & roles","⚑"]]],
+ ["Settings",[["site_settings","Store settings","⚙"],["payment_settings","Payments","₨"],["meta_settings","Meta pixel","◈"]]]];
+const LABEL = Object.fromEntries(MENU.flatMap(g=>g[1]).map(([k,l])=>[k,l]));
 
 function loginView(){
-  $("#app").innerHTML = `<div style="max-width:360px;margin:12vh auto" class="card"><h1>Veloura Apparel Admin</h1>
-  <p><input id="em" placeholder="Email"></p><p><input id="pw" type="password" placeholder="Password"></p>
-  <button id="go">Sign in</button><p id="err" style="color:#e66"></p></div>`;
-  $("#go").onclick = async () => {
+  $("#app").innerHTML = `<div class="login"><div class="card"><div class="brand" style="padding:0 0 22px"><div class="logo">VA</div><div><b>VELOURA APPAREL</b><small>Admin console</small></div></div>
+  <h2 style="margin:0 0 6px;font-size:22px;font-weight:800">Welcome back</h2><p class="mut" style="margin:0 0 20px">Sign in to manage your store.</p>
+  <p><input id="em" placeholder="Email" autocomplete="username"></p><p><input id="pw" type="password" placeholder="Password" autocomplete="current-password"></p>
+  <button id="go" style="width:100%;padding:12px">Sign in</button><p id="err" style="color:var(--cr);font-weight:600"></p></div></div>`;
+  const go = async () => {
     try { const j = await api("/auth/login",{method:"POST",body:JSON.stringify({email:$("#em").value,password:$("#pw").value})});
       if (!j.roles.some(r => r==="admin"||r==="staff")) throw new Error("This account is not an admin");
-      TOKEN=j.token; localStorage.setItem("tm_admin_token",TOKEN); render();
+      TOKEN=j.token; localStorage.setItem("va_admin_token",TOKEN); render();
     } catch(e){ $("#err").textContent = e.message; }
   };
+  $("#go").onclick = go; $("#pw").onkeydown = e => e.key==="Enter" && go();
 }
+let LIVE = null;
 async function render(){
+  clearInterval(LIVE);
   if (!TOKEN) return loginView();
   if (!SCHEMA) { try { SCHEMA = (await api("/admin/schema")).schema; } catch(e){ return; } }
-  const page = location.hash.slice(1) || "dashboard";
-  $("#app").innerHTML = `<div class="wrap"><nav><h3 style="color:var(--acc)">Veloura Apparel</h3>${MENU.map(([k,l])=>`<a href="#${k}" class="${k===page?"on":""}">${l}</a>`).join("")}
-  <p><button class="ghost" onclick="logout()">Sign out</button></p></nav><main id="main">Loading…</main></div>`;
+  const page = location.hash.slice(1).split("?")[0] || "dashboard";
+  $("#app").innerHTML = `<div class="app ${COL?"col":""}" id="shell"><div class="scrim" onclick="$('#shell').classList.remove('open')"></div>
+  <aside><div class="brand"><div class="logo">VA</div><div><b>VELOURA</b><small>Apparel · Admin</small></div></div>
+  ${MENU.map(([g,items])=>`<div class="grp">${g}</div>${items.map(([k,l,i])=>`<a href="#${k}" class="${k===page?"on":""}" title="${l}"><span class="ic">${i}</span><span>${l}</span></a>`).join("")}`).join("")}
+  <div style="flex:1"></div><a href="#" onclick="logout();return false"><span class="ic">⏻</span><span>Sign out</span></a></aside>
+  <main><div class="top"><button class="ghost sm burger" onclick="$('#shell').classList.add('open')">☰</button>
+  <button class="ghost sm colbtn" id="colb" title="Collapse">⇤</button><h1>${esc(LABEL[page]||page.replace(/_/g," "))}</h1><span class="pulse">Live</span></div>
+  <div class="body" id="main"><div class="empty">Loading…</div></div></main>
+  <nav class="mnav">${[["dashboard","◎","Home"],["orders","▤","Orders"],["products","▦","Products"],["coupons","%","Coupons"],["site_settings","⚙","Settings"]].map(([k,i,l])=>`<a href="#${k}" class="${k===page?"on":""}"><span>${i}</span><span>${l}</span></a>`).join("")}</nav></div>`;
+  $("#colb").onclick = () => { COL=!COL; localStorage.setItem("va_col",COL?"1":"0"); $("#shell").classList.toggle("col",COL); };
   try {
-    if (page==="dashboard") await dashboard();
+    if (page==="dashboard") { await dashboard(); LIVE=setInterval(()=>document.hidden||dashboard().catch(()=>{}),5000); }
     else if (page==="orders") await orders();
     else if (page==="users") await users();
+    else if (page==="products") await products();
+    else if (page==="coupons") await coupons();
+    else if (page==="reviews") await reviews();
     else if (SCHEMA[page]?.singleton) await singleton(page);
     else await crud(page);
-  } catch(e){ $("#main").innerHTML = `<p style="color:#e66">${esc(e.message)}</p>`; }
+  } catch(e){ $("#main").innerHTML = `<div class="card" style="color:var(--cr);font-weight:600">${esc(e.message)}</div>`; }
 }
 window.onhashchange = render;
 
+/* ---------- charts (pure SVG) ---------- */
+function areaChart(trend){
+  const W=640,H=220,P=28, n=trend.length, maxR=Math.max(1,...trend.map(t=>t.revenue)), maxO=Math.max(1,...trend.map(t=>t.orders));
+  const x=i=>P+(W-2*P)*(n<2?0:i/(n-1)), yR=v=>H-P-(H-2*P)*v/maxR, yO=v=>H-P-(H-2*P)*v/maxO;
+  const smooth=pts=>pts.map((p,i)=>i?`C${(pts[i-1][0]+p[0])/2},${pts[i-1][1]} ${(pts[i-1][0]+p[0])/2},${p[1]} ${p[0]},${p[1]}`:`M${p[0]},${p[1]}`).join(" ");
+  const pr=trend.map((t,i)=>[x(i),yR(t.revenue)]), po=trend.map((t,i)=>[x(i),yO(t.orders)]);
+  const grid=[0,.25,.5,.75,1].map(f=>`<line x1="${P}" x2="${W-P}" y1="${P+(H-2*P)*f}" y2="${P+(H-2*P)*f}" stroke="#EEF2F7"/>`).join("");
+  const labels=trend.filter((_,i)=>i%Math.ceil(n/6)===0).map(t=>{const i=trend.indexOf(t);return `<text x="${x(i)}" y="${H-6}" font-size="10" fill="#94A3B8" text-anchor="middle">${t.date.slice(5)}</text>`}).join("");
+  const dots=trend.map((t,i)=>`<circle cx="${x(i)}" cy="${yR(t.revenue)}" r="9" fill="transparent"><title>${t.date} — ${rs(t.revenue)} · ${t.orders} orders</title></circle>`).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block"><defs><linearGradient id="ga" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#10B981" stop-opacity=".35"/><stop offset="1" stop-color="#10B981" stop-opacity="0"/></linearGradient></defs>
+  ${grid}<path d="${smooth(pr)} L${x(n-1)},${H-P} L${P},${H-P} Z" fill="url(#ga)"/><path d="${smooth(pr)}" fill="none" stroke="#10B981" stroke-width="2.6"/>
+  <path d="${smooth(po)}" fill="none" stroke="#6366F1" stroke-width="2.2" stroke-dasharray="5 4"/>${labels}${dots}</svg>
+  <div style="display:flex;gap:16px;font-size:12px;font-weight:700;margin-top:6px"><span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#10B981"></i> Revenue</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#6366F1"></i> Orders</span></div>`;
+}
+const PAL=["#6366F1","#EC4899","#10B981","#F59E0B","#3B82F6","#8B5CF6","#EF4444","#14B8A6"];
+function donut(obj){
+  const e=Object.entries(obj).sort((a,b)=>b[1]-a[1]), tot=e.reduce((s,[,v])=>s+v,0);
+  if(!tot) return `<div class="empty">No sales yet</div>`;
+  let a=0; const R=70,C=2*Math.PI*R;
+  const segs=e.map(([k,v],i)=>{const l=C*v/tot, s=`<circle r="${R}" cx="90" cy="90" fill="none" stroke="${PAL[i%8]}" stroke-width="22" stroke-dasharray="${l} ${C-l}" stroke-dashoffset="${-a}" transform="rotate(-90 90 90)"><title>${esc(k)}: ${rs(v)}</title></circle>`; a+=l; return s;}).join("");
+  return `<svg viewBox="0 0 180 180" width="180" style="display:block;margin:auto">${segs}<text x="90" y="86" text-anchor="middle" font-size="11" fill="#64748B" font-weight="700">Total</text><text x="90" y="104" text-anchor="middle" font-size="15" font-weight="800" fill="#0F172A">${rs(tot)}</text></svg>
+  <div class="legend">${e.slice(0,6).map(([k,v],i)=>`<div><i style="background:${PAL[i%8]}"></i>${esc(k)}<span style="margin-left:auto" class="mut">${Math.round(v/tot*100)}%</span></div>`).join("")}</div>`;
+}
+const SCOL={pending:"#F59E0B",confirmed:"#3B82F6",processing:"#8B5CF6",shipped:"#6366F1",delivered:"#10B981",cancelled:"#EF4444"};
+function stacked(by){
+  const tot=Object.values(by).reduce((s,v)=>s+v,0);
+  if(!tot) return `<div class="empty">No orders yet</div>`;
+  return `<div style="display:flex;height:16px;border-radius:999px;overflow:hidden;margin:6px 0 16px">${STATUSES.filter(s=>by[s]).map(s=>`<div title="${s}: ${by[s]}" style="width:${by[s]/tot*100}%;background:${SCOL[s]}"></div>`).join("")}</div>
+  ${STATUSES.map(s=>`<div style="display:flex;align-items:center;gap:10px;margin:9px 0"><span class="chip s-${s}" style="min-width:92px">${s}</span>
+  <div style="flex:1;height:8px;background:var(--soft);border-radius:9px;overflow:hidden"><div style="height:100%;width:${(by[s]||0)/tot*100}%;background:${SCOL[s]};border-radius:9px;transition:width .6s"></div></div><b style="width:28px;text-align:right">${by[s]||0}</b></div>`).join("")}`;
+}
+
 async function dashboard(){
-  const s = await api("/admin/stats?days=30");
-  const k = (l,v) => `<div class="card kpi"><span class="mut">${l}</span><b>${v}</b></div>`;
-  $("#main").innerHTML = `<h1>Dashboard (last 30 days)</h1><div class="grid">
-   ${k("Revenue","Rs "+Math.round(s.revenue).toLocaleString())}${k("Orders",s.orders)}${k("Avg order","Rs "+Math.round(s.aov).toLocaleString())}
-   ${k("Products",s.products)}${k("Customers",s.customers)}${k("Open leads",s.leads)}</div>
-   <h3>Orders by status</h3><div class="grid">${Object.entries(s.by_status).map(([a,b])=>k(a,b)).join("")||"<span class='mut'>No orders yet</span>"}</div>
-   <h3>Funnel</h3><div class="grid">${Object.entries(s.funnel).map(([a,b])=>k(a,b)).join("")}</div>`;
+  const [s,{orders:os}] = await Promise.all([api("/admin/stats?days=30"),api("/admin/orders")]);
+  const ch = s.prev_week_revenue ? (s.week_revenue-s.prev_week_revenue)/s.prev_week_revenue*100 : (s.week_revenue?100:0);
+  const b = s.by_status||{};
+  const k = (l,v,sub,g,i) => `<div class="card kpi" style="--g:${g}"><div class="l"><span class="dot">${i}</span>${l}</div><b>${v}</b><small>${sub}</small></div>`;
+  $("#main").innerHTML = `<div class="kpis">
+   ${k("Total revenue · 30d",rs(s.revenue),`<span class="${ch>=0?"up":"dn"}">${ch>=0?"▲":"▼"} ${Math.abs(ch).toFixed(1)}%</span> vs last week`,"linear-gradient(135deg,#10B981,#059669)","₨")}
+   ${k("Total orders",s.orders,`${b.confirmed||0} confirmed · ${b.shipped||0} shipped · ${b.delivered||0} delivered · ${b.cancelled||0} cancelled`,"linear-gradient(135deg,#3B82F6,#6366F1)","▤")}
+   ${k("Active products",s.active_products,`<span class="${s.low_stock?"dn":"up"}">${s.low_stock} low stock</span> (≤5 left)`,"linear-gradient(135deg,#EF4444,#8B5CF6)","▦")}
+   ${k("Conversion",s.conversion.toFixed(2)+"%",`${s.coupons_used} coupons used · ${s.active_coupons} active`,"linear-gradient(135deg,#F59E0B,#EC4899)","%")}</div>
+   <div class="g2"><div class="card"><h3>Revenue & orders trend <span class="mut" style="font-weight:600">· last 30 days</span></h3>${areaChart(s.trend||[])}</div>
+   <div class="card"><h3>Sales by category</h3>${donut(s.by_category||{})}</div></div>
+   <div class="g2"><div class="card"><h3 style="display:flex;justify-content:space-between">Recent orders <a href="#orders" class="mut" style="font-size:12px">View all →</a></h3>${orderTable(os.slice(0,6),true)}</div>
+   <div class="card"><h3>Order status</h3>${stacked(b)}<h3 style="margin-top:22px">Funnel</h3>
+   ${Object.entries(s.funnel).map(([a,v],i)=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--line)"><span style="text-transform:capitalize;font-weight:600">${a.replace(/_/g," ")}</span><b style="color:${PAL[i]}">${v}</b></div>`).join("")}</div></div>`;
+  bindOrders();
 }
 
 const STATUSES = ["pending","confirmed","processing","shipped","delivered","cancelled"];
+function orderTable(list, compact){
+  if(!list.length) return `<div class="empty">No orders yet</div>`;
+  return `<div style="overflow:auto"><table><tr><th>Order</th><th>Customer</th>${compact?"":"<th>Items</th>"}<th>Total</th><th>Status</th>${compact?"":"<th></th>"}</tr>
+  ${list.map(o=>`<tr><td><b>${esc(o.order_number)}</b><br><span class="mut">${new Date(o.created_at).toLocaleString()}</span>${o.tracking_number?`<br><span class="chip s-shipped" style="margin-top:4px">${esc(o.courier||"Courier")} · ${esc(o.tracking_number)}</span>`:""}</td>
+   <td><b>${esc(o.customer_name)}</b><br><span class="mut">${esc(o.customer_email)}<br>${esc(o.customer_phone)}${compact?"":`<br>${esc(o.shipping_address)} ${esc(o.city)}`}</span></td>
+   ${compact?"":`<td>${(o.items||[]).map(i=>`<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">${i.image_url?`<img class="th" style="width:34px;height:34px" src="${esc(i.image_url)}">`:""}<span>${esc(i.name)} × ${i.quantity}<br><span class="mut">${esc([i.size,i.color].filter(Boolean).join(" · "))}</span></span></div>`).join("")}</td>`}
+   <td><b>${rs(o.total)}</b><br><span class="chip s-off" style="margin-top:4px">${esc(o.payment_method)}</span>${o.coupon_code?`<br><span class="chip s-pending" style="margin-top:4px">${esc(o.coupon_code)}</span>`:""}</td>
+   <td><select data-id="${o.id}" class="st" style="min-width:130px">${STATUSES.map(s=>`<option ${s===o.status?"selected":""}>${s}</option>`).join("")}</select>
+   ${compact?"":`<input placeholder="Courier" value="${esc(o.courier)}" data-c="${o.id}" style="margin-top:6px"><input placeholder="Tracking #" value="${esc(o.tracking_number)}" data-t="${o.id}" style="margin-top:6px">`}</td>
+   ${compact?"":`<td><button class="sm" data-save="${o.id}">Save</button><br><br><button class="ghost sm" data-mail="${o.id}">Resend email</button></td>`}</tr>`).join("")}</table></div>`;
+}
+function bindOrders(){
+  $$(".st").forEach(sel=>sel.onchange=async()=>{ if(document.querySelector(`[data-save="${sel.dataset.id}"]`)) return;
+    try{ await api("/admin/orders/"+sel.dataset.id,{method:"PATCH",body:JSON.stringify({status:sel.value})}); toast("Status updated → "+sel.value);}catch(e){toast(e.message);} });
+  $$("[data-save]").forEach(b=>b.onclick=async()=>{ const id=b.dataset.save;
+    try{ await api("/admin/orders/"+id,{method:"PATCH",body:JSON.stringify({status:$(`.st[data-id="${id}"]`).value,courier:$(`[data-c="${id}"]`).value,tracking_number:$(`[data-t="${id}"]`).value})});
+    toast("Saved — customer emailed on confirmed / shipped / delivered / cancelled"); }catch(e){toast(e.message);} });
+  $$("[data-mail]").forEach(b=>b.onclick=async()=>{ const t = prompt("Template (placed, confirmed, processing, shipped, delivered, cancelled)","placed"); if(!t) return;
+    await api(`/admin/orders/${b.dataset.mail}/email`,{method:"POST",body:JSON.stringify({template:t})}); toast("Email queued"); });
+}
+let OF="";
 async function orders(){
-  const f = new URLSearchParams(location.search).get("s") || "";
-  const {orders} = await api("/admin/orders");
-  $("#main").innerHTML = `<h1>Orders (${orders.length})</h1><table><tr><th>#</th><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th></th></tr>
-  ${orders.map(o=>`<tr><td>${esc(o.order_number)}</td><td>${new Date(o.created_at).toLocaleString()}</td>
-   <td>${esc(o.customer_name)}<br><span class="mut">${esc(o.customer_email)}<br>${esc(o.customer_phone)}<br>${esc(o.shipping_address)} ${esc(o.city)}</span></td>
-   <td>${(o.items||[]).map(i=>esc(i.name)+" × "+i.quantity).join("<br>")}</td><td>Rs ${Math.round(o.total).toLocaleString()}<br><span class="mut">${esc(o.payment_method)}</span></td>
-   <td><select data-id="${o.id}" class="st">${STATUSES.map(s=>`<option ${s===o.status?"selected":""}>${s}</option>`).join("")}</select>
-   <input placeholder="Courier" value="${esc(o.courier)}" data-c="${o.id}" style="margin-top:4px"><input placeholder="Tracking #" value="${esc(o.tracking_number)}" data-t="${o.id}" style="margin-top:4px"></td>
-   <td><button data-save="${o.id}">Save</button><br><br><button class="ghost" data-mail="${o.id}">Resend email</button></td></tr>`).join("")}</table>`;
-  document.querySelectorAll("[data-save]").forEach(b=>b.onclick=async()=>{
-    const id=b.dataset.save;
-    await api("/admin/orders/"+id,{method:"PATCH",body:JSON.stringify({status:$(`.st[data-id="${id}"]`).value,courier:$(`[data-c="${id}"]`).value,tracking_number:$(`[data-t="${id}"]`).value})});
-    alert("Saved. Customer email is sent automatically for confirmed / shipped / delivered / cancelled.");
-  });
-  document.querySelectorAll("[data-mail]").forEach(b=>b.onclick=async()=>{
-    const t = prompt("Template (placed, confirmed, processing, shipped, delivered, cancelled)","placed"); if(!t) return;
-    await api(`/admin/orders/${b.dataset.mail}/email`,{method:"POST",body:JSON.stringify({template:t})}); alert("Email queued — check 'Emails sent'.");
-  });
+  const {orders:all} = await api("/admin/orders");
+  const draw=()=>{ const q=($("#oq")?.value||"").toLowerCase(); const list=all.filter(o=>(!OF||o.status===OF)&&(!q||JSON.stringify(o).toLowerCase().includes(q)));
+    $("#otbl").innerHTML = `<div class="tw" style="border:0;box-shadow:none">${orderTable(list)}</div>`; bindOrders(); };
+  $("#main").innerHTML = `<div class="bar"><input id="oq" placeholder="Search order #, name, phone…"></div><div class="tabs">${["",...STATUSES].map(s=>`<button data-f="${s}" class="${s===OF?"on":""}">${s||"All"} · ${s?all.filter(o=>o.status===s).length:all.length}</button>`).join("")}</div><div class="tw" id="otbl"></div>`;
+  $$("[data-f]").forEach(b=>b.onclick=()=>{OF=b.dataset.f;$$("[data-f]").forEach(x=>x.classList.toggle("on",x===b));draw();});
+  $("#oq").oninput=draw; draw();
 }
 
-const LISTCOLS = ["image_url","name","title","code","question","heading","customer_name","event_name","email","recipient","subject","stage","status","price","active","approved","created_at"];
+async function toggleRow(name,row,key){ await api(`/admin/r/${name}/${row.id}`,{method:"PUT",body:JSON.stringify({[key]:!row[key]})}); toast("Updated — live on store"); render(); }
+
+let PV=localStorage.getItem("va_pv")||"grid";
+async function products(){
+  const {rows} = await api("/admin/r/products"); const cats=[...new Set(rows.map(r=>r.category).filter(Boolean))];
+  $("#main").innerHTML = `<div class="bar"><button id="add">+ Add product</button><input id="q" placeholder="Search products…"><select id="cf"><option value="">All categories</option>${cats.map(c=>`<option>${esc(c)}</option>`).join("")}</select>
+   <div class="tabs" style="margin:0 0 0 auto"><button data-v="grid" class="${PV==="grid"?"on":""}">▦ Grid</button><button data-v="table" class="${PV==="table"?"on":""}">☰ Table</button></div></div><div id="plist"></div>`;
+  const draw=()=>{ const q=$("#q").value.toLowerCase(), c=$("#cf").value; const list=rows.map((r,i)=>[r,i]).filter(([r])=>(!c||r.category===c)&&(!q||(r.name||"").toLowerCase().includes(q)));
+    if(!list.length){$("#plist").innerHTML=`<div class="card empty">No products</div>`;return;}
+    $("#plist").innerHTML = PV==="grid" ? `<div class="pgrid">${list.map(([r,i])=>`<div class="card pc"><img src="${esc(r.image_url||"")}" loading="lazy"><div class="pb">
+      <div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(r.name)}</b><button class="tog ${r.active?"on":""}" data-tg="${i}" title="Active"></button></div>
+      <div class="mut" style="margin:4px 0 10px">${esc(r.category||"—")}</div><div style="display:flex;justify-content:space-between;align-items:center"><b>${rs(r.sale_price||r.price)}</b>
+      <span class="chip ${r.stock<=5?"s-cancelled":"s-on"}">${r.stock} in stock</span></div><button class="ghost sm" style="width:100%;margin-top:12px" data-i="${i}">Edit</button></div></div>`).join("")}</div>`
+     : `<div class="tw"><table><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Active</th><th></th></tr>${list.map(([r,i])=>`<tr><td><img class="th" src="${esc(r.image_url||"")}"></td><td><b>${esc(r.name)}</b></td><td>${esc(r.category)}</td><td>${rs(r.sale_price||r.price)}</td>
+      <td><input type="number" value="${r.stock}" data-stk="${i}" style="width:90px"></td><td><button class="tog ${r.active?"on":""}" data-tg="${i}"></button></td><td><button class="ghost sm" data-i="${i}">Edit</button></td></tr>`).join("")}</table></div>`;
+    $$("[data-i]").forEach(b=>b.onclick=()=>editor("products",rows[b.dataset.i]));
+    $$("[data-tg]").forEach(b=>b.onclick=()=>toggleRow("products",rows[b.dataset.tg],"active"));
+    $$("[data-stk]").forEach(inp=>inp.onchange=async()=>{await api(`/admin/r/products/${rows[inp.dataset.stk].id}`,{method:"PUT",body:JSON.stringify({stock:Number(inp.value)})});toast("Stock updated");});
+  };
+  $("#q").oninput=draw; $("#cf").onchange=draw; $("#add").onclick=()=>editor("products",{});
+  $$("[data-v]").forEach(b=>b.onclick=()=>{PV=b.dataset.v;localStorage.setItem("va_pv",PV);$$("[data-v]").forEach(x=>x.classList.toggle("on",x===b));draw();});
+  draw();
+}
+async function coupons(){
+  const {rows} = await api("/admin/r/coupons");
+  $("#main").innerHTML = `<div class="bar"><button id="add">+ New coupon</button></div>${rows.length?`<div class="pgrid">${rows.map((r,i)=>`<div class="card coupon">
+   <div style="display:flex;justify-content:space-between;align-items:center"><b class="code">${esc(r.code)}</b><button class="tog ${r.active?"on":""}" data-tg="${i}"></button></div>
+   <div style="font-size:24px;font-weight:800;margin:10px 0">${r.discount_type==="percent"?`${Number(r.discount_value)}% OFF`:`${rs(r.discount_value)} OFF`}</div>
+   <div class="mut">${esc(r.description||"")}</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:12px 0">
+   <span class="chip s-confirmed">${r.discount_type==="percent"?"Percentage":"Flat"}</span>${r.min_order?`<span class="chip s-pending">Min ${rs(r.min_order)}</span>`:""}
+   ${r.usage_limit!=null?`<span class="chip s-processing">${r.used_count||0}/${r.usage_limit} used</span>`:""}${r.expires_at?`<span class="chip s-cancelled">Exp ${new Date(r.expires_at).toLocaleDateString()}</span>`:""}</div>
+   <button class="ghost sm" style="width:100%" data-i="${i}">Edit</button></div>`).join("")}</div>`:`<div class="card empty">No coupons yet</div>`}`;
+  $("#add").onclick=()=>editor("coupons",{}); $$("[data-i]").forEach(b=>b.onclick=()=>editor("coupons",rows[b.dataset.i]));
+  $$("[data-tg]").forEach(b=>b.onclick=()=>toggleRow("coupons",rows[b.dataset.tg],"active"));
+}
+async function reviews(){
+  const {rows} = await api("/admin/r/reviews"); let F="pending";
+  const draw=()=>{ const list=rows.map((r,i)=>[r,i]).filter(([r])=>F==="all"||(F==="pending"?!r.approved:r.approved));
+    $("#rl").innerHTML = list.length?`<div class="pgrid">${list.map(([r,i])=>`<div class="card"><div style="color:var(--am);font-size:16px">${"★".repeat(r.rating||0)}<span style="color:#E2E8F0">${"★".repeat(5-(r.rating||0))}</span></div>
+     <b style="display:block;margin:8px 0 4px">${esc(r.title||"")}</b><p class="mut" style="margin:0 0 12px">${esc(r.body||"")}</p><div style="font-weight:700;font-size:12px">— ${esc(r.customer_name)}</div>
+     <div style="display:flex;gap:8px;margin-top:14px">${r.approved?`<button class="ghost sm" data-ap="${i}">Unpublish</button>`:`<button class="sm" style="background:var(--em)" data-ap="${i}">Approve</button>`}<button class="ghost sm" data-i="${i}">Edit</button></div></div>`).join("")}</div>`:`<div class="card empty">Nothing here</div>`;
+    $$("[data-ap]").forEach(b=>b.onclick=()=>toggleRow("reviews",rows[b.dataset.ap],"approved")); $$("[data-i]").forEach(b=>b.onclick=()=>editor("reviews",rows[b.dataset.i])); };
+  $("#main").innerHTML = `<div class="tabs">${["pending","approved","all"].map(f=>`<button data-f="${f}" class="${f===F?"on":""}">${f} · ${f==="all"?rows.length:rows.filter(r=>f==="pending"?!r.approved:r.approved).length}</button>`).join("")}</div><div id="rl"></div>`;
+  $$("[data-f]").forEach(b=>b.onclick=()=>{F=b.dataset.f;$$("[data-f]").forEach(x=>x.classList.toggle("on",x===b));draw();}); draw();
+}
+
+const LISTCOLS = ["image_url","name","title","eyebrow","code","question","heading","customer_name","event_name","email","recipient","subject","stage","status","price","sort_order","active","approved","created_at"];
 async function crud(name){
   const meta = SCHEMA[name]; const {rows} = await api("/admin/r/"+name);
   const cols = LISTCOLS.filter(c => meta.columns.some(x=>x.name===c)).slice(0,6);
-  $("#main").innerHTML = `<h1>${esc(name.replace(/_/g," "))} (${rows.length})</h1>
-   <div class="bar">${meta.readonly?"":`<button id="add">+ Add new</button>`}<input id="q" placeholder="Search…" style="max-width:260px"></div>
-   <table id="tbl"><tr>${cols.map(c=>`<th>${c}</th>`).join("")}<th></th></tr>
-   ${rows.map((r,i)=>`<tr data-txt="${esc(JSON.stringify(r).toLowerCase())}">${cols.map(c=>`<td>${c==="image_url"&&r[c]?`<img class="th" src="${esc(r[c])}">`:esc(typeof r[c]==="object"?JSON.stringify(r[c]):r[c]).slice(0,80)}</td>`).join("")}
-   <td><button class="ghost" data-i="${i}">${meta.readonly?"View":"Edit"}</button></td></tr>`).join("")}</table>`;
-  $("#q").oninput = e => document.querySelectorAll("#tbl tr[data-txt]").forEach(tr=>tr.style.display=tr.dataset.txt.includes(e.target.value.toLowerCase())?"":"none");
+  const cell=(c,v)=> c==="image_url"? (v?`<img class="th" src="${esc(v)}">`:"") : typeof v==="boolean"? `<span class="chip ${v?"s-on":"s-off"}">${v?"Active":"Off"}</span>` : c==="created_at"&&v? `<span class="mut">${new Date(v).toLocaleDateString()}</span>` : esc(typeof v==="object"&&v?JSON.stringify(v):v).slice(0,80);
+  $("#main").innerHTML = `<div class="bar">${meta.readonly?"":`<button id="add">+ Add new</button>`}<input id="q" placeholder="Search…"><span class="mut" style="margin-left:auto;font-weight:700">${rows.length} records</span></div>
+   ${rows.length?`<div class="tw"><table id="tbl"><tr>${cols.map(c=>`<th>${c.replace(/_/g," ")}</th>`).join("")}<th></th></tr>
+   ${rows.map((r,i)=>`<tr data-txt="${esc(JSON.stringify(r).toLowerCase())}">${cols.map(c=>`<td>${cell(c,r[c])}</td>`).join("")}
+   <td style="text-align:right"><button class="ghost sm" data-i="${i}">${meta.readonly?"View":"Edit"}</button></td></tr>`).join("")}</table></div>`:`<div class="card empty">No records yet</div>`}`;
+  if ($("#q")) $("#q").oninput = e => $$("#tbl tr[data-txt]").forEach(tr=>tr.style.display=tr.dataset.txt.includes(e.target.value.toLowerCase())?"":"none");
   if ($("#add")) $("#add").onclick = () => editor(name, {});
-  document.querySelectorAll("[data-i]").forEach(b=>b.onclick=()=>editor(name, rows[b.dataset.i]));
+  $$("[data-i]").forEach(b=>b.onclick=()=>editor(name, rows[b.dataset.i]));
 }
 function field(c, v, ro){
   const id = "f_"+c.name, dis = ro || ["id","created_at","updated_at"].includes(c.name) ? "disabled" : "";
   let inp;
-  if (c.kind==="bool") inp = `<select id="${id}" ${dis}><option value="true" ${v?"selected":""}>true</option><option value="false" ${!v?"selected":""}>false</option></select>`;
+  if (c.kind==="bool") inp = `<select id="${id}" ${dis}><option value="true" ${v?"selected":""}>Yes</option><option value="false" ${!v?"selected":""}>No</option></select>`;
   else if (c.kind==="json") inp = `<textarea id="${id}" ${dis}>${esc(v==null?"":JSON.stringify(v,null,1))}</textarea>`;
   else if (["description","content","body","answer","message","notes","excerpt"].includes(c.name)) inp = `<textarea id="${id}" ${dis}>${esc(v)}</textarea>`;
   else inp = `<input id="${id}" ${dis} value="${esc(v)}" type="${c.kind==="int"||c.kind==="num"?"number":"text"}" step="any">`;
-  const up = !dis && /(image|logo|_url)$/.test(c.name) ? `<input type="file" data-up="${id}" style="margin-top:4px">` : "";
-  return `<div><label>${c.name}${c.required?" *":""}</label>${inp}${up}</div>`;
+  const isImg = /(image|logo|_url)$/.test(c.name), up = !dis && (isImg || c.name==="gallery") ? `<input type="file" accept="image/*,video/*" ${c.name==="gallery"?"multiple":""} data-up="${id}" data-multi="${c.name==="gallery"?1:""}" style="margin-top:6px">` : "";
+  const prev = isImg && v && /\.(jpe?g|png|webp|gif|avif)/i.test(v) ? `<img src="${esc(v)}" style="margin-top:8px;width:72px;height:72px;object-fit:cover;border-radius:12px">` : "";
+  return `<div><label>${c.name.replace(/_/g," ")}${c.required?" *":""}</label>${inp}${up}${prev}</div>`;
 }
 function collect(cols){
   const out = {};
@@ -133,37 +304,39 @@ function collect(cols){
   return out;
 }
 function bindUploads(){
-  document.querySelectorAll("[data-up]").forEach(f=>f.onchange=async()=>{
-    const fd = new FormData(); fd.append("file", f.files[0]); f.disabled = true;
-    try { const j = await api("/admin/upload",{method:"POST",body:fd}); $("#"+f.dataset.up).value = j.url; } catch(e){ alert(e.message); }
+  $$("[data-up]").forEach(f=>f.onchange=async()=>{
+    f.disabled = true; const target=$("#"+f.dataset.up);
+    try { const urls=[]; for (const file of f.files){ const fd=new FormData(); fd.append("file",file); urls.push((await api("/admin/upload",{method:"POST",body:fd})).url); }
+      if (f.dataset.multi){ let cur=[]; try{cur=JSON.parse(target.value||"[]")}catch{}; target.value=JSON.stringify([...cur,...urls],null,1); } else target.value=urls[0];
+      toast("Uploaded"); } catch(e){ toast(e.message); }
     f.disabled = false;
   });
 }
 function editor(name, row){
   const meta = SCHEMA[name], ro = meta.readonly;
-  $("#mbody").innerHTML = `<h2>${row.id?(ro?"View":"Edit"):"New"} — ${esc(name)}</h2><div class="form">${meta.columns.map(c=>field(c,row[c.name],ro)).join("")}</div>
-   <div class="bar" style="margin-top:16px">${ro?"":`<button id="sv">Save</button>`}${row.id&&!ro?`<button class="danger" id="del">Delete</button>`:""}<button class="ghost" id="cl">Close</button></div>`;
+  $("#mbody").innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px"><h2 style="margin:0;font-size:19px;font-weight:800">${row.id?(ro?"View":"Edit"):"New"} · ${esc(LABEL[name]||name)}</h2><button class="ghost sm" id="cl">✕</button></div>
+   <div class="form">${meta.columns.map(c=>field(c,row[c.name],ro)).join("")}</div>
+   <div class="bar" style="margin:20px 0 0">${ro?"":`<button id="sv">Save changes</button>`}${row.id&&!ro?`<button class="danger" id="del">Delete</button>`:""}</div>`;
   $("#modal").style.display="flex"; bindUploads();
   $("#cl").onclick = () => $("#modal").style.display="none";
   if ($("#sv")) $("#sv").onclick = async () => { try {
-      const body = collect(meta.columns);
-      await api("/admin/r/"+name+(row.id?"/"+row.id:""),{method:row.id?"PUT":"POST",body:JSON.stringify(body)});
-      $("#modal").style.display="none"; render(); } catch(e){ alert(e.message); } };
-  if ($("#del")) $("#del").onclick = async () => { if(!confirm("Delete?")) return; await api(`/admin/r/${name}/${row.id}`,{method:"DELETE"}); $("#modal").style.display="none"; render(); };
+      await api("/admin/r/"+name+(row.id?"/"+row.id:""),{method:row.id?"PUT":"POST",body:JSON.stringify(collect(meta.columns))});
+      $("#modal").style.display="none"; toast("Saved — live on store"); render(); } catch(e){ toast(e.message); } };
+  if ($("#del")) $("#del").onclick = async () => { if(!confirm("Delete?")) return; await api(`/admin/r/${name}/${row.id}`,{method:"DELETE"}); $("#modal").style.display="none"; toast("Deleted"); render(); };
 }
 async function singleton(name){
   const {row} = await api("/admin/settings/"+name); const cols = SCHEMA[name].columns;
-  $("#main").innerHTML = `<h1>${esc(name.replace(/_/g," "))}</h1><div class="form">${cols.map(c=>field(c,row[c.name])).join("")}</div><p><button id="sv">Save settings</button></p>`;
+  $("#main").innerHTML = `<div class="card"><div class="form">${cols.map(c=>field(c,row[c.name])).join("")}</div><p style="margin:20px 0 0"><button id="sv">Save settings</button></p></div>`;
   bindUploads();
-  $("#sv").onclick = async () => { try { await api("/admin/settings/"+name,{method:"PUT",body:JSON.stringify(collect(cols))}); alert("Saved"); } catch(e){ alert(e.message); } };
+  $("#sv").onclick = async () => { try { await api("/admin/settings/"+name,{method:"PUT",body:JSON.stringify(collect(cols))}); toast("Settings saved — live on store"); } catch(e){ toast(e.message); } };
 }
 async function users(){
   const {users} = await api("/admin/users");
-  $("#main").innerHTML = `<h1>Users & roles</h1><table><tr><th>Email</th><th>Joined</th><th>Roles</th><th></th></tr>
-  ${users.map(u=>`<tr><td>${esc(u.email)}</td><td>${new Date(u.created_at).toLocaleDateString()}</td><td>${u.roles.join(", ")}</td>
-  <td><button class="ghost" data-g="${u.id}">${u.roles.includes("admin")?"Remove admin":"Make admin"}</button></td></tr>`).join("")}</table>`;
-  document.querySelectorAll("[data-g]").forEach(b=>b.onclick=async()=>{ try {
-    await api(`/admin/users/${b.dataset.g}/role`,{method:"POST",body:JSON.stringify({role:"admin",grant:b.textContent==="Make admin"})}); render(); } catch(e){ alert(e.message); } });
+  $("#main").innerHTML = `<div class="tw"><table><tr><th>Email</th><th>Joined</th><th>Roles</th><th></th></tr>
+  ${users.map(u=>`<tr><td><b>${esc(u.email)}</b></td><td class="mut">${new Date(u.created_at).toLocaleDateString()}</td><td>${u.roles.map(r=>`<span class="chip ${r==="admin"?"s-processing":"s-off"}">${r}</span>`).join(" ")||"—"}</td>
+  <td style="text-align:right"><button class="ghost sm" data-g="${u.id}" data-on="${u.roles.includes("admin")?1:""}">${u.roles.includes("admin")?"Remove admin":"Make admin"}</button></td></tr>`).join("")}</table></div>`;
+  $$("[data-g]").forEach(b=>b.onclick=async()=>{ try {
+    await api(`/admin/users/${b.dataset.g}/role`,{method:"POST",body:JSON.stringify({role:"admin",grant:!b.dataset.on})}); render(); } catch(e){ toast(e.message); } });
 }
 render();
 </script></body></html>

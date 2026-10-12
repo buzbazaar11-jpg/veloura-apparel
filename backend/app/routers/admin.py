@@ -151,7 +151,34 @@ def stats(days: int = 30, db: Session = Depends(get_db)):
             "products": db.query(M.Product).count(), "customers": db.query(M.User).count(),
             "leads": db.query(M.CartLead).filter(M.CartLead.stage != "ordered").count(),
             "by_status": dict(db.query(M.Order.status, func.count()).group_by(M.Order.status).all()),
-            "funnel": {k: ev.get(k, 0) for k in ("page_view", "view_item", "add_to_cart", "begin_checkout", "purchase")}}
+            "funnel": {k: ev.get(k, 0) for k in ("page_view", "view_item", "add_to_cart", "begin_checkout", "purchase")},
+            **_extra(db, since, days)}
+
+
+def _extra(db, since, days):
+    rows = db.query(M.Order).filter(M.Order.created_at >= since).all()
+    today = datetime.now(timezone.utc).date()
+    trend = {(today - timedelta(days=i)).isoformat(): {"revenue": 0.0, "orders": 0} for i in range(days - 1, -1, -1)}
+    cats, prods = {}, {p.slug: (p.category or "Other") for p in db.query(M.Product).all()}
+    coupons_used = 0
+    for o in rows:
+        d = o.created_at.date().isoformat()
+        if o.status != "cancelled" and d in trend:
+            trend[d]["revenue"] += float(o.total); trend[d]["orders"] += 1
+        if o.coupon_code: coupons_used += 1
+        if o.status == "cancelled": continue
+        for it in o.items or []:
+            c = prods.get(it.get("slug"), "Other")
+            cats[c] = cats.get(c, 0) + float(it.get("price", 0)) * int(it.get("quantity", 1))
+    week = sum(v["revenue"] for k, v in list(trend.items())[-7:])
+    prev = sum(v["revenue"] for k, v in list(trend.items())[-14:-7])
+    pv = db.query(M.AnalyticsEvent).filter(M.AnalyticsEvent.created_at >= since, M.AnalyticsEvent.event_name == "page_view").count()
+    return {"trend": [{"date": k, **v} for k, v in trend.items()], "by_category": cats,
+            "week_revenue": week, "prev_week_revenue": prev, "coupons_used": coupons_used,
+            "low_stock": db.query(M.Product).filter(M.Product.stock <= 5).count(),
+            "active_products": db.query(M.Product).filter(M.Product.active == True).count(),  # noqa: E712
+            "active_coupons": db.query(M.Coupon).filter(M.Coupon.active == True).count(),  # noqa: E712
+            "conversion": (len(rows) / pv * 100) if pv else 0}
 
 
 # ---------- Uploads ----------
