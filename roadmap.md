@@ -7,3 +7,6 @@
 - [x] Order tracking reads live status from backend
 - [ ] KVM 2 deployment files (Docker + Nginx)
 - [ ] End-to-end test against a live backend URL (needs server address)
+- [x] Admin panel rebuilt: light theme, KPI cards, multi-color charts, order filters, product grid/table, coupon cards, review approvals, mobile nav
+- [x] Order numbers switched from TM to VA; old TIMERA names replaced
+- [ ] Homepage 100% from database (no static fallbacks) — next step
