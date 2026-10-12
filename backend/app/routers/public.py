@@ -24,12 +24,14 @@ def health():
 
 @router.get("/products")
 def products(type: str | None = None, collection: str | None = None, category: str | None = None,
-             featured: bool | None = None, q: str | None = None, db: Session = Depends(get_db)):
+             featured: bool | None = None, new_arrival: bool | None = None,
+             q: str | None = None, db: Session = Depends(get_db)):
     qs = db.query(Product).filter(Product.active.is_(True))
     if type: qs = qs.filter(Product.product_type == type)
     if collection: qs = qs.filter(Product.collection == collection)
     if category: qs = qs.filter(Product.category == category)
     if featured is not None: qs = qs.filter(Product.featured.is_(featured))
+    if new_arrival is not None: qs = qs.filter(Product.new_arrival.is_(new_arrival))
     if q: qs = qs.filter(or_(Product.name.ilike(f"%{q}%"), Product.description.ilike(f"%{q}%")))
     return {"ok": True, "products": [to_dict(p) for p in qs.order_by(Product.sort_order, Product.created_at.desc())]}
 
@@ -110,6 +112,16 @@ def site_settings(db: Session = Depends(get_db)):
     s = db.query(SiteSettings).first()
     p = db.query(PaymentSettings).first()
     return {"ok": True, "settings": to_dict(s) if s else {}, "payment": to_dict(p) if p else {}}
+
+
+@router.get("/coupons")
+def coupons(db: Session = Depends(get_db)):
+    rows = db.query(Coupon).filter(Coupon.active.is_(True)).order_by(Coupon.created_at).all()
+    return {"ok": True, "coupons": [
+        {"id": str(r.id), "code": r.code, "discount_type": r.discount_type,
+         "discount_value": float(r.discount_value), "description": r.description}
+        for r in rows
+    ]}
 
 
 @router.post("/coupons/validate")

@@ -89,6 +89,7 @@ class Product(Base):
     stock = Column(Integer, nullable=False, default=0)
     description = Column(Text, nullable=False, default="")
     featured = Column(Boolean, nullable=False, default=False)
+    new_arrival = Column(Boolean, nullable=False, default=False)
     active = Column(Boolean, nullable=False, default=True)
     sort_order = Column(Integer, nullable=False, default=0)
     deal_id = Column(Uuid)

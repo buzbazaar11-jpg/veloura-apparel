@@ -230,6 +230,7 @@ export type BackendProductPayload = {
   stock: number;
   description: string;
   featured?: boolean;
+  new_arrival?: boolean;
   active?: boolean;
   badge?: string | null;
   rating?: number;
@@ -295,3 +296,13 @@ function liveQuery<T>(key: string[], path: string, empty: T) {
 export const useFaqs = () => useQuery(liveQuery(["faqs"], "/faqs", { ok: true, faqs: [] as FaqPayload[] }));
 export const useTrust = () => useQuery(liveQuery(["trust"], "/trust", { ok: true, sections: [] as TrustPayload[] }));
 export const useDeals = () => useQuery(liveQuery(["deals-home"], "/deals", { ok: true, deals: [] as DealPayload[] }));
+
+export type CouponPublicPayload = {
+  id: string;
+  code: string;
+  discount_type: string;
+  discount_value: number;
+  description?: string | null;
+};
+
+export const useCoupons = () => useQuery(liveQuery(["coupons-public"], "/coupons", { ok: true, coupons: [] as CouponPublicPayload[] }));

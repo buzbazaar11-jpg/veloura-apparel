@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Admin panel completion: add 7d/30d/90d trend chart time selector, hero slides drag-to-reorder UI, remove tm_admin_token fallback, add new_arrival column to Product model and expose it through the backend, expose GET /api/v1/coupons (active) public endpoint.",
+  "status": "completed",
+  "steps": [
+    "1. In backend/app/models.py — add `new_arrival = Column(Boolean, nullable=False, default=False)` to the Product class, directly after the `featured` column (line ~92). This is the backend source of truth for the 'New Arrivals' shelf.",
+    "2. In backend/app/routers/public.py — add `new_arrival: bool | None = None` query param to the `products()` function, and filter `Product.new_arrival.is_(new_arrival)` when set. Also add a new GET /api/v1/coupons endpoint that returns active coupons with id, code, discount_type, discount_value, description fields only (no sensitive usage data). Pattern: `@router.get('/coupons') def coupons(db): rows = db.query(Coupon).filter(Coupon.active.is_(True)).order_by(Coupon.created_at).all(); return {'ok': True, 'coupons': [{'id': str(r.id), 'code': r.code, 'discount_type': r.discount_type, 'discount_value': float(r.discount_value), 'description': r.description} for r in rows]}`",
+    "3. In backend/app/admin_panel/index.html — (a) Remove the `localStorage.getItem('tm_admin_token')` fallback from the TOKEN initialization line (keep only 'va_admin_token'). Remove `localStorage.removeItem('tm_admin_token')` from the logout function. (b) In the `dashboard()` function, change the stats fetch to accept a `days` parameter controlled by three buttons (7d / 30d / 90d). Add three <button> elements to the dashboard top bar. The active button calls `dashboard(7)`, `dashboard(30)`, or `dashboard(90)`. Default is 30. Store the current selection in a local variable `let DAYS = 30`. Pass `?days=${DAYS}` to the `/admin/stats` call. (c) In the `hero_slides` section rendered by the generic `crud()` function, add a drag-to-reorder feature: when `name === 'hero_slides'`, render rows as draggable cards instead of the generic table. Each card has a drag handle (⠿), shows the image thumbnail, title, and active toggle. On dragend, PATCH the sort_order of all slides via the existing PUT /api/v1/admin/r/hero_slides/{id} endpoint in sorted order. Use native HTML5 drag-and-drop (dragstart/dragover/drop events on card elements).",
+    "4. In src/lib/api.ts — add `CouponPublicPayload` type `{ id: string; code: string; discount_type: string; discount_value: number; description?: string | null }` and add `useCoupons()` hook using the liveQuery helper pointing to `/coupons`. Add `new_arrival?: boolean` field to `BackendProductPayload` type."
+  ],
+  "acceptance_criteria": [
+    "npm run build completes with 0 TypeScript errors after adding new_arrival to BackendProductPayload and useCoupons hook",
+    "Admin panel loads without JS errors (verifiable by opening browser dev console after logging in)",
+    "Dashboard shows 7d/30d/90d selector buttons; clicking each re-fetches stats with the corresponding days param",
+    "Hero Slides admin page shows draggable cards; drag-and-drop reorders and saves sort_order via API",
+    "localStorage.getItem('tm_admin_token') no longer appears in admin panel source"
+  ],
+  "verification": [
+    "Run `npm run build` from workspace root — must complete with 0 errors",
+    "Run `python -m py_compile backend/app/models.py backend/app/routers/public.py` — must succeed with no output"
+  ],
+  "blocked_reason": null,
+  "findings": "Added new_arrival Boolean column to Product model in models.py after featured. Added new_arrival query param filter to products() in public.py, and new GET /api/v1/coupons endpoint returning active coupons (id, code, discount_type, discount_value, description only). Added CouponPublicPayload type, useCoupons() hook, and new_arrival?: boolean to BackendProductPayload in src/lib/api.ts. In admin panel: removed tm_admin_token fallback from TOKEN init and logout(); added DAYS global var and 7d/30d/90d selector buttons above KPI cards in dashboard() with live re-fetch on click; added heroSlides() function with HTML5 drag-and-drop reorder that PUTs sort_order updates on drop. All Python syntax checks passed. npm run build completed with 0 TypeScript errors."
+}
