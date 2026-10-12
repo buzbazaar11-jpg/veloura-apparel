@@ -269,3 +269,29 @@ export function useCollections() {
     placeholderData: { ok: true, collections: [] as CollectionPayload[] },
   });
 }
+
+// ─── Homepage content (all from the database, no fallbacks) ──────────────────
+
+export type FaqPayload = { id: string; question: string; answer: string; category?: string | null };
+export type TrustPayload = { id: string; group_name: string; heading: string; body?: string | null; bullets?: string[]; icon?: string | null };
+export type DealPayload = {
+  id: string; title: string; subtitle?: string | null; description?: string | null; badge?: string | null;
+  discount_percent?: number; code?: string | null; image_url?: string | null; cta_label?: string | null; cta_href?: string | null;
+  ends_at?: string | null;
+};
+
+function liveQuery<T>(key: string[], path: string, empty: T) {
+  return {
+    queryKey: key,
+    queryFn: () => request<T>(path),
+    staleTime: 0,
+    refetchInterval: apiEnabled ? 1_000 : (false as const),
+    refetchOnWindowFocus: true,
+    enabled: apiEnabled,
+    placeholderData: empty,
+  };
+}
+
+export const useFaqs = () => useQuery(liveQuery(["faqs"], "/faqs", { ok: true, faqs: [] as FaqPayload[] }));
+export const useTrust = () => useQuery(liveQuery(["trust"], "/trust", { ok: true, sections: [] as TrustPayload[] }));
+export const useDeals = () => useQuery(liveQuery(["deals-home"], "/deals", { ok: true, deals: [] as DealPayload[] }));
