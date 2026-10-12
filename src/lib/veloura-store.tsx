@@ -105,7 +105,7 @@ export function VelouraProvider({ children }: { children: ReactNode }) {
       try {
         const result = await api.validateCoupon(normalized, cartSubtotalRef.current);
         if (!result.ok) { toast.error(result.error ?? "Invalid or expired coupon."); return false; }
-        setDiscountPercent(result.discount ?? coupons[normalized] ?? 0);
+        const sub = cartSubtotalRef.current; setDiscountPercent(result.discount != null && sub > 0 ? (result.discount / sub) * 100 : coupons[normalized] ?? 0);
         setCoupon(normalized); toast.success("Coupon applied successfully"); return true;
       } catch {
         // Fall through to local validation on network error
