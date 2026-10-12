@@ -1,8 +1,11 @@
 """Admin API: generic CRUD for every table + orders, stats, emails, leads, uploads, settings."""
+import io
 import os
 import uuid
 from datetime import datetime, timedelta, timezone
 
+import cloudinary
+import cloudinary.uploader
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -15,6 +18,15 @@ from app import models as M
 from app.routers.orders import _email_bg
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin"], dependencies=[Depends(require_admin)])
+
+# Configure Cloudinary once at import time (no-op if credentials missing)
+if settings.cloudinary_configured:
+    cloudinary.config(
+        cloud_name=settings.CLOUDINARY_CLOUD_NAME,
+        api_key=settings.CLOUDINARY_API_KEY,
+        api_secret=settings.CLOUDINARY_API_SECRET,
+        secure=True,
+    )
 
 RESOURCES = {
     "products": M.Product, "collections": M.Collection, "categories": M.Category, "deals": M.Deal,
@@ -183,22 +195,51 @@ def _extra(db, since, days):
 
 # ---------- Uploads ----------
 ALLOWED = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif", ".mp4", ".webm", ".mov"}
+ALLOWED_MIME = {
+    "image/jpeg", "image/png", "image/webp", "image/gif", "image/avif",
+    "video/mp4", "video/webm", "video/quicktime",
+}
 
 
 @router.post("/upload")
 async def upload(file: UploadFile = File(...)):
     ext = os.path.splitext(file.filename or "")[1].lower()
-    if ext not in ALLOWED: raise HTTPException(400, "File type not allowed")
+    if ext not in ALLOWED:
+        raise HTTPException(400, "File type not allowed")
+
+    # Read full file into memory (respects MAX_UPLOAD_MB)
+    size, limit = 0, settings.MAX_UPLOAD_MB * 1024 * 1024
+    chunks: list[bytes] = []
+    while chunk := await file.read(1024 * 1024):
+        size += len(chunk)
+        if size > limit:
+            raise HTTPException(413, "File too large")
+        chunks.append(chunk)
+    data = b"".join(chunks)
+
+    # ── Cloudinary path ──────────────────────────────────────────────────────
+    if settings.cloudinary_configured:
+        resource_type = "video" if ext in {".mp4", ".webm", ".mov"} else "image"
+        public_id = f"{settings.CLOUDINARY_FOLDER}/{uuid.uuid4().hex}"
+        try:
+            result = cloudinary.uploader.upload(
+                io.BytesIO(data),
+                public_id=public_id,
+                resource_type=resource_type,
+                overwrite=False,
+                # Auto-optimize: convert to WebP for images, strip metadata
+                fetch_format="auto",
+                quality="auto:good",
+            )
+            return {"ok": True, "url": result["secure_url"]}
+        except Exception as exc:
+            raise HTTPException(500, f"Cloudinary upload failed: {exc}") from exc
+
+    # ── Local fallback (when Cloudinary not configured) ──────────────────────
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
     name = f"{uuid.uuid4().hex}{ext}"
-    size, limit = 0, settings.MAX_UPLOAD_MB * 1024 * 1024
     with open(os.path.join(settings.UPLOAD_DIR, name), "wb") as f:
-        while chunk := await file.read(1024 * 1024):
-            size += len(chunk)
-            if size > limit:
-                f.close(); os.remove(os.path.join(settings.UPLOAD_DIR, name))
-                raise HTTPException(413, "File too large")
-            f.write(chunk)
+        f.write(data)
     return {"ok": True, "url": f"{settings.PUBLIC_BASE_URL.rstrip('/')}/uploads/{name}"}
 
 
