@@ -1,0 +1,29 @@
+[
+  {
+    "id": "d8ac8f88-8ec8-4240-a5ec-3e0245aff6ee",
+    "code": "WELCOME10",
+    "description": "10% off",
+    "discount_type": "percent",
+    "discount_value": 10,
+    "min_order": 0,
+    "active": true
+  },
+  {
+    "id": "4586ec95-466a-4f83-ae29-4acc98cc61fa",
+    "code": "NEW20",
+    "description": "20% off",
+    "discount_type": "percent",
+    "discount_value": 20,
+    "min_order": 0,
+    "active": true
+  },
+  {
+    "id": "7761175d-acaa-4597-a0cd-6c11f83f1714",
+    "code": "VEL0URA15",
+    "description": "15% off",
+    "discount_type": "percent",
+    "discount_value": 15,
+    "min_order": 0,
+    "active": true
+  }
+]

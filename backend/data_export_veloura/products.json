@@ -1,0 +1,705 @@
+[
+  {
+    "id": "64f92828-dbf7-44ed-af61-8a57763112ad",
+    "slug": "veloura-signature-jacket",
+    "name": "VEL0URA APPAREL Signature Jacket",
+    "brand": "VEL0URA APPAREL",
+    "category": "Jackets",
+    "product_type": "apparel",
+    "price": 9890,
+    "sale_price": 6920,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Ivory",
+      "Black",
+      "Sage"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "features": [
+      "jacket",
+      "signature",
+      "outerwear",
+      "elevated",
+      "minimal"
+    ],
+    "stock": 12,
+    "active": true,
+    "description": "A refined VEL0URA APPAREL essential cut for everyday ease, built around clean lines and quiet detail."
+  },
+  {
+    "id": "b6775d0e-9a07-4668-af98-c372aadba178",
+    "slug": "veloura-essential-oversized-tee",
+    "name": "VEL0URA APPAREL Essential Oversized Tee",
+    "brand": "VEL0URA APPAREL",
+    "category": "T-Shirts",
+    "product_type": "apparel",
+    "price": 2690,
+    "sale_price": null,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Ivory",
+      "Sage",
+      "Black"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "features": [
+      "tee",
+      "t-shirt",
+      "essential",
+      "minimal",
+      "everyday"
+    ],
+    "stock": 30,
+    "active": true,
+    "description": "A breathable staple with a considered drape, designed to move between weekday and evening settings."
+  },
+  {
+    "id": "3ec60200-16e9-4c08-ab2e-7dc1ef9160a0",
+    "slug": "veloura-studio-shirt",
+    "name": "VEL0URA APPAREL Studio Shirt",
+    "brand": "VEL0URA APPAREL",
+    "category": "Shirts",
+    "product_type": "apparel",
+    "price": 5090,
+    "sale_price": null,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Ivory",
+      "Stone",
+      "Sage"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "features": [
+      "shirt",
+      "studio",
+      "work",
+      "minimal"
+    ],
+    "stock": 18,
+    "active": true,
+    "description": "A breathable staple with a considered drape, designed to move between weekday and evening settings."
+  },
+  {
+    "id": "7d93bd98-5bef-456b-ae5e-5f89112de89f",
+    "slug": "veloura-relaxed-cargo",
+    "name": "VEL0URA APPAREL Relaxed Cargo",
+    "brand": "VEL0URA APPAREL",
+    "category": "Trousers",
+    "product_type": "apparel",
+    "price": 6290,
+    "sale_price": 5030,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Black",
+      "Sage",
+      "Stone"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "features": [
+      "cargo",
+      "trouser",
+      "street",
+      "relaxed"
+    ],
+    "stock": 7,
+    "active": true,
+    "description": "Relaxed tailoring with a polished finish, made for modern wardrobes and effortless pairing."
+  },
+  {
+    "id": "2bf56416-386b-431c-a942-b0a81c5c67e2",
+    "slug": "veloura-core-hoodie",
+    "name": "VEL0URA APPAREL Core Hoodie",
+    "brand": "VEL0URA APPAREL",
+    "category": "Hoodies",
+    "product_type": "apparel",
+    "price": 5490,
+    "sale_price": null,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Black",
+      "Charcoal",
+      "Sage"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "features": [
+      "hoodie",
+      "core",
+      "street",
+      "everyday"
+    ],
+    "stock": 21,
+    "active": true,
+    "description": "A refined VEL0URA APPAREL essential cut for everyday ease, built around clean lines and quiet detail."
+  },
+  {
+    "id": "a2a26d71-0826-4a42-aa68-ca7ee7ea4af1",
+    "slug": "veloura-minimal-runner",
+    "name": "VEL0URA APPAREL Minimal Runner",
+    "brand": "VEL0URA APPAREL",
+    "category": "Sneakers",
+    "product_type": "apparel",
+    "price": 7290,
+    "sale_price": null,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Ivory",
+      "Stone",
+      "Black"
+    ],
+    "sizes": [
+      "36",
+      "37",
+      "38",
+      "39",
+      "40",
+      "41",
+      "42",
+      "43",
+      "44"
+    ],
+    "features": [
+      "sneaker",
+      "runner",
+      "minimal",
+      "shoe"
+    ],
+    "stock": 14,
+    "active": true,
+    "description": "A restrained VEL0URA APPAREL finishing piece with a premium hand feel and everyday utility."
+  },
+  {
+    "id": "b7f7c850-4118-417b-ac48-7246a0a6eefc",
+    "slug": "veloura-everyday-trouser",
+    "name": "VEL0URA APPAREL Everyday Trouser",
+    "brand": "VEL0URA APPAREL",
+    "category": "Trousers",
+    "product_type": "apparel",
+    "price": 5890,
+    "sale_price": 4120,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Stone",
+      "Black",
+      "Taupe"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "features": [
+      "trouser",
+      "everyday",
+      "tailored",
+      "elevated"
+    ],
+    "stock": 24,
+    "active": true,
+    "description": "Relaxed tailoring with a polished finish, made for modern wardrobes and effortless pairing."
+  },
+  {
+    "id": "640bdf09-fb2a-41e9-ad02-54115e6d3b01",
+    "slug": "veloura-essential-overshirt",
+    "name": "VEL0URA APPAREL Essential Overshirt",
+    "brand": "VEL0URA APPAREL",
+    "category": "Shirts",
+    "product_type": "apparel",
+    "price": 6990,
+    "sale_price": null,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Sage",
+      "Ivory",
+      "Charcoal"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "features": [
+      "overshirt",
+      "shirt",
+      "layer",
+      "minimal"
+    ],
+    "stock": 9,
+    "active": true,
+    "description": "A refined VEL0URA APPAREL essential cut for everyday ease, built around clean lines and quiet detail."
+  },
+  {
+    "id": "e850fe23-0317-4903-a020-3b705ce64bd9",
+    "slug": "veloura-studio-jacket",
+    "name": "VEL0URA APPAREL Studio Jacket",
+    "brand": "VEL0URA APPAREL",
+    "category": "Jackets",
+    "product_type": "apparel",
+    "price": 10690,
+    "sale_price": null,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Black",
+      "Stone"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "features": [
+      "jacket",
+      "studio",
+      "street",
+      "signature"
+    ],
+    "stock": 4,
+    "active": true,
+    "description": "A refined VEL0URA APPAREL essential cut for everyday ease, built around clean lines and quiet detail."
+  },
+  {
+    "id": "b3506460-1207-435f-a51d-bf5ce3afa02e",
+    "slug": "veloura-core-tee",
+    "name": "VEL0URA APPAREL Core Tee",
+    "brand": "VEL0URA APPAREL",
+    "category": "T-Shirts",
+    "product_type": "apparel",
+    "price": 2290,
+    "sale_price": 1830,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Ivory",
+      "Black",
+      "Taupe"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "features": [
+      "tee",
+      "core",
+      "minimal",
+      "basic"
+    ],
+    "stock": 36,
+    "active": true,
+    "description": "A breathable staple with a considered drape, designed to move between weekday and evening settings."
+  },
+  {
+    "id": "048f1591-a7ab-4f7a-a93e-823a464edd6c",
+    "slug": "veloura-relaxed-trouser",
+    "name": "VEL0URA APPAREL Relaxed Trouser",
+    "brand": "VEL0URA APPAREL",
+    "category": "Trousers",
+    "product_type": "apparel",
+    "price": 6190,
+    "sale_price": null,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Ivory",
+      "Stone",
+      "Black"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "features": [
+      "trouser",
+      "relaxed",
+      "signature",
+      "elevated"
+    ],
+    "stock": 16,
+    "active": true,
+    "description": "Relaxed tailoring with a polished finish, made for modern wardrobes and effortless pairing."
+  },
+  {
+    "id": "d5970dc9-266a-4a26-ad31-8a518aa00fe2",
+    "slug": "veloura-soft-rib-tank",
+    "name": "VEL0URA APPAREL Relaxed Cotton Tee",
+    "brand": "VEL0URA APPAREL",
+    "category": "T-Shirts",
+    "product_type": "apparel",
+    "price": 2090,
+    "sale_price": null,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Ivory",
+      "Black",
+      "Sage"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "features": [
+      "tee",
+      "cotton",
+      "minimal",
+      "summer"
+    ],
+    "stock": 28,
+    "active": true,
+    "description": "A breathable staple with a considered drape, designed to move between weekday and evening settings."
+  },
+  {
+    "id": "9449f655-48ea-4139-a797-87d1516c34cd",
+    "slug": "veloura-column-skirt",
+    "name": "VEL0URA APPAREL Straight Fit Trouser",
+    "brand": "VEL0URA APPAREL",
+    "category": "Trousers",
+    "product_type": "apparel",
+    "price": 5290,
+    "sale_price": 3700,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Black",
+      "Taupe"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "features": [
+      "trouser",
+      "straight",
+      "elevated",
+      "minimal"
+    ],
+    "stock": 10,
+    "active": true,
+    "description": "Relaxed tailoring with a polished finish, made for modern wardrobes and effortless pairing."
+  },
+  {
+    "id": "b0946d84-159c-4d5b-a36e-4565aafc9f1a",
+    "slug": "veloura-utility-tote",
+    "name": "VEL0URA APPAREL Utility Tote",
+    "brand": "VEL0URA APPAREL",
+    "category": "Accessories",
+    "product_type": "apparel",
+    "price": 4690,
+    "sale_price": null,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Sage",
+      "Black",
+      "Stone"
+    ],
+    "sizes": [
+      "ONE SIZE"
+    ],
+    "features": [
+      "tote",
+      "bag",
+      "accessory",
+      "everyday"
+    ],
+    "stock": 20,
+    "active": true,
+    "description": "A restrained VEL0URA APPAREL finishing piece with a premium hand feel and everyday utility."
+  },
+  {
+    "id": "19451a4c-cf10-4c8f-a3f2-1699cc1ba043",
+    "slug": "veloura-tailored-vest",
+    "name": "VEL0URA APPAREL City Zip Jacket",
+    "brand": "VEL0URA APPAREL",
+    "category": "Jackets",
+    "product_type": "apparel",
+    "price": 5790,
+    "sale_price": null,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Ivory",
+      "Black"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "features": [
+      "jacket",
+      "zip",
+      "elevated",
+      "minimal"
+    ],
+    "stock": 8,
+    "active": true,
+    "description": "A refined VEL0URA APPAREL essential cut for everyday ease, built around clean lines and quiet detail."
+  },
+  {
+    "id": "47690f9d-7228-4d41-a809-622a4d684fe4",
+    "slug": "veloura-draped-shirt",
+    "name": "VEL0URA APPAREL Draped Shirt",
+    "brand": "VEL0URA APPAREL",
+    "category": "Shirts",
+    "product_type": "apparel",
+    "price": 5390,
+    "sale_price": 4310,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Ivory",
+      "Taupe",
+      "Sage"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "features": [
+      "shirt",
+      "draped",
+      "elevated",
+      "essential"
+    ],
+    "stock": 11,
+    "active": true,
+    "description": "A breathable staple with a considered drape, designed to move between weekday and evening settings."
+  },
+  {
+    "id": "e7492630-77af-4234-a5fd-3c9da40aecd0",
+    "slug": "veloura-city-cap",
+    "name": "VEL0URA APPAREL City Cap",
+    "brand": "VEL0URA APPAREL",
+    "category": "Accessories",
+    "product_type": "apparel",
+    "price": 1890,
+    "sale_price": null,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Sage",
+      "Black",
+      "Ivory"
+    ],
+    "sizes": [
+      "ONE SIZE"
+    ],
+    "features": [
+      "cap",
+      "accessory",
+      "street",
+      "everyday"
+    ],
+    "stock": 25,
+    "active": true,
+    "description": "A restrained VEL0URA APPAREL finishing piece with a premium hand feel and everyday utility."
+  },
+  {
+    "id": "6fd9924d-cced-4f3c-a219-f5f169d37a0f",
+    "slug": "veloura-wide-leg-denim",
+    "name": "VEL0URA APPAREL Wide Leg Denim",
+    "brand": "VEL0URA APPAREL",
+    "category": "Trousers",
+    "product_type": "apparel",
+    "price": 6690,
+    "sale_price": null,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Charcoal",
+      "Black"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "features": [
+      "denim",
+      "trouser",
+      "street",
+      "everyday"
+    ],
+    "stock": 13,
+    "active": true,
+    "description": "Relaxed tailoring with a polished finish, made for modern wardrobes and effortless pairing."
+  },
+  {
+    "id": "087b4450-7fc0-4684-af92-b34d932db498",
+    "slug": "veloura-fine-knit-polo",
+    "name": "VEL0URA APPAREL Fine Knit Polo",
+    "brand": "VEL0URA APPAREL",
+    "category": "Shirts",
+    "product_type": "apparel",
+    "price": 4690,
+    "sale_price": 3280,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Sage",
+      "Ivory",
+      "Black"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "XXL"
+    ],
+    "features": [
+      "knit",
+      "polo",
+      "everyday",
+      "minimal"
+    ],
+    "stock": 15,
+    "active": true,
+    "description": "A breathable staple with a considered drape, designed to move between weekday and evening settings."
+  },
+  {
+    "id": "4caf4e51-5694-4d6d-afe4-72ee8a820cf2",
+    "slug": "veloura-leather-belt",
+    "name": "VEL0URA APPAREL Leather Belt",
+    "brand": "VEL0URA APPAREL",
+    "category": "Accessories",
+    "product_type": "apparel",
+    "price": 3090,
+    "sale_price": null,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Black",
+      "Taupe"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "features": [
+      "belt",
+      "accessory",
+      "minimal",
+      "elevated"
+    ],
+    "stock": 19,
+    "active": true,
+    "description": "A restrained VEL0URA APPAREL finishing piece with a premium hand feel and everyday utility."
+  },
+  {
+    "id": "6e9ac072-0ecb-4c8d-a7c0-da42699f0038",
+    "slug": "veloura-cloud-sneaker",
+    "name": "VEL0URA APPAREL Cloud Sneaker",
+    "brand": "VEL0URA APPAREL",
+    "category": "Sneakers",
+    "product_type": "apparel",
+    "price": 7790,
+    "sale_price": null,
+    "image_url": "",
+    "gallery": [],
+    "colors": [
+      "Ivory",
+      "Sage"
+    ],
+    "sizes": [
+      "36",
+      "37",
+      "38",
+      "39",
+      "40",
+      "41",
+      "42",
+      "43",
+      "44"
+    ],
+    "features": [
+      "sneaker",
+      "shoe",
+      "everyday",
+      "runner"
+    ],
+    "stock": 6,
+    "active": true,
+    "description": "A restrained VEL0URA APPAREL finishing piece with a premium hand feel and everyday utility."
+  }
+]

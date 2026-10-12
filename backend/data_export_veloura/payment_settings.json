@@ -1,0 +1,11 @@
+[
+  {
+    "id": "fecf5420-30ab-43cf-a323-260d0a257456",
+    "currency": "PKR",
+    "currency_symbol": "Rs",
+    "cod_enabled": true,
+    "cod_charge": 0,
+    "delivery_charge": 250,
+    "free_delivery_above": 15000
+  }
+]

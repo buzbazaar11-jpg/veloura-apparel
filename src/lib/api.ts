@@ -205,3 +205,58 @@ export function usePopups() {
     placeholderData: { ok: true, popups: [] as PopupPayload[] },
   });
 }
+
+export type BackendProductPayload = {
+  id: string;
+  slug: string;
+  name: string;
+  brand?: string;
+  category: string | null;
+  price: number;
+  sale_price: number | null;
+  compare_at?: number | null;
+  image_url: string;
+  gallery: string[];
+  colors: string[];
+  sizes: string[];
+  features: string[];
+  stock: number;
+  description: string;
+  featured?: boolean;
+  active?: boolean;
+  badge?: string | null;
+  rating?: number;
+  reviews?: number;
+};
+
+export type CollectionPayload = {
+  id: string;
+  name: string;
+  slug: string;
+  tagline?: string | null;
+  image_url?: string | null;
+  sort_order?: number;
+  active?: boolean;
+};
+
+export function useProducts() {
+  return useQuery({
+    queryKey: ["products"],
+    queryFn: () => request<{ ok: boolean; products: BackendProductPayload[] }>("/products"),
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+    enabled: apiEnabled,
+    placeholderData: { ok: true, products: [] as BackendProductPayload[] },
+  });
+}
+
+export function useCollections() {
+  return useQuery({
+    queryKey: ["collections"],
+    queryFn: () => request<{ ok: boolean; collections: CollectionPayload[] }>("/collections"),
+    staleTime: 60_000,
+    refetchOnWindowFocus: true,
+    enabled: apiEnabled,
+    placeholderData: { ok: true, collections: [] as CollectionPayload[] },
+  });
+}

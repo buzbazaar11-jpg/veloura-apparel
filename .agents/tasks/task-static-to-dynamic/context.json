@@ -1,0 +1,30 @@
+{
+  "project_type": "TanStack Start (React + Vite SSR) storefront + FastAPI backend with SQLite",
+  "language": "TypeScript (frontend) / Python (backend)",
+  "build_system": "Vite via npm scripts; frontend in project root, backend in /backend with uvicorn",
+  "test_framework": "No test suite configured in package.json; verification is done via build: `npm run build`",
+  "build_command": "npm run build",
+  "test_command": "npm run build",
+  "verification_instructions": "Run `npm run build` from the project root (c:\\Users\\JalipEmpire\\Downloads\\New folder (9)\\veloura-apparel-main). Zero TypeScript/Vite errors = pass. Also confirm the dev server starts with `npm run dev` and navigates to http://localhost:8080.",
+  "snapshot_or_generated_files": null,
+  "environment_constraints": "VITE_API_URL must be set to http://localhost:8000 for live backend calls. Without it, apiEnabled=false and all hooks return static fallback data immediately — this must be preserved. Backend must be running on port 8000 separately.",
+  "contribution_requirements": "All API calls go through src/lib/api.ts only. Keep static exports in veloura-data.ts intact as fallbacks. Use @tanstack/react-query for all hooks. staleTime 30_000 for catalog, 60_000 for settings. refetchOnWindowFocus: true. Match existing code style.",
+  "key_patterns": "api.ts exports `apiEnabled` (bool) and `api` object. live-catalog.tsx already polls /api/v1/products and /api/v1/deals every 8s by mutating the products array in-place. Components import static data from veloura-data.ts. The QueryClient is provided in __root.tsx via createRootRouteWithContext. Backend public endpoints live in backend/app/routers/public.py.",
+  "relevant_files": [
+    "src/lib/api.ts",
+    "src/lib/veloura-data.ts",
+    "src/lib/live-catalog.tsx",
+    "src/lib/veloura-store.tsx",
+    "src/components/veloura/commerce.tsx",
+    "src/components/veloura/customer-confidence.tsx",
+    "src/components/veloura/shopping-ui.tsx",
+    "src/routes/journal.tsx",
+    "src/routes/journal.$slug.tsx",
+    "src/routes/checkout.tsx",
+    "src/routes/product.$slug.tsx",
+    "src/routes/__root.tsx",
+    "backend/app/routers/public.py",
+    "backend/app/models.py"
+  ],
+  "directory_structure": "src/lib/ — shared data/logic; src/components/veloura/ — UI components; src/routes/ — TanStack Router file routes; backend/app/ — FastAPI app, models, routers. The QueryClient is instantiated once in the router context and injected into __root.tsx's RootComponent via Route.useRouteContext()."
+}
