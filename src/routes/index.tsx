@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { HomePage } from "@/components/veloura/home-live";
+import { HomePage } from "@/components/veloura/commerce";
 
 export const Route = createFileRoute("/")({
   head: () => ({
