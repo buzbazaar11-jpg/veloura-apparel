@@ -1414,7 +1414,7 @@ export function TrackOrderPage() {
       <form className="mt-10 rounded-sm glass-panel p-5" onSubmit={(e) => { e.preventDefault(); void lookup(); }}>
         <label className="block">
           <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Order Number</span>
-          <input value={orderId} onChange={(event) => setOrderId(event.target.value)} placeholder="TM2610120A1B" className="mt-2 w-full rounded-sm border border-border bg-secondary px-4 py-3 text-sm focus-veloura" />
+          <input value={orderId} onChange={(event) => setOrderId(event.target.value)} placeholder="VA2610138F92" className="mt-2 w-full rounded-sm border border-border bg-secondary px-4 py-3 text-sm focus-veloura" />
         </label>
         {apiEnabled ? <label className="mt-4 block">
           <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Email used at checkout</span>
