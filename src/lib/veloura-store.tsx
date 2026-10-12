@@ -6,6 +6,7 @@ import { getProductBySlug, products, productPrice, coupons, storeConfig, type Pr
 
 export type CartItem = {
   productId: string;
+  slug?: string;
   size: string;
   color: string;
   quantity: number;
@@ -159,7 +160,7 @@ export function VelouraProvider({ children }: { children: ReactNode }) {
             : item,
         );
       }
-      return [...current, { productId: product.id, size: selectedSize, color: selectedColor, quantity }];
+      return [...current, { productId: product.id, slug: product.slug, size: selectedSize, color: selectedColor, quantity }];
     });
     setMiniCart({ name: product.name, images: product.images, size: selectedSize, color: selectedColor });
     toast.success("Added to cart");

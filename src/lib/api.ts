@@ -113,7 +113,7 @@ export const api = {
         payment_method: order.paymentMethod === "Cash on Delivery" ? "cod" : "card",
         coupon_code: order.coupon,
         idempotency_key: idempotencyKey,
-        items: order.items.map((i: CartItem) => ({ slug: products.find(p => p.id === i.productId)?.slug, quantity: i.quantity, color: i.color, size: i.size })),
+        items: order.items.map((i: CartItem) => ({ slug: i.slug ?? products.find(p => p.id === i.productId)?.slug, quantity: i.quantity, color: i.color, size: i.size })),
       }),
     }),
   trackOrder: (orderNumber: string, email: string) =>

@@ -530,7 +530,7 @@ export const heroSlides = [
 ];
 
 export const storeConfig = { currency: "PKR", freeShippingThreshold: 15000, standardShipping: 250, expressShipping: 550, announcement: "NEW SEASON NOW LIVE · FREE DELIVERY OVER Rs. 15,000" };
-export const coupons: Record<string, number> = { WELCOME10: 10, NEW20: 20, VEL0URA15: 15 };
+export const coupons: Record<string, number> = { WELCOME10: 10, NEW20: 20, VELOURA15: 15 };
 const mensImages: Record<string, string> = { Jackets: jacketImage, 'T-Shirts': teeImage, Shirts: shirtImage, Trousers: trouserImage, Hoodies: hoodieImage, Sneakers: sneakerImage, Accessories: campaignFour };
 export const products: Product[] = catalog.map((product, index) => {
   const price = Math.round(product.price * 40 / 100) * 100 - 10;
