@@ -1068,58 +1068,521 @@
       if ($("#add")) $("#add").onclick = () => editor(name, {});
       $$("[data-i]").forEach(b => b.onclick = () => editor(name, rows[b.dataset.i]));
     }
-    function field(c, v, ro) {
-      const id = "f_" + c.name, dis = ro || ["id", "created_at", "updated_at"].includes(c.name) ? "disabled" : "";
-      let inp;
-      if (c.kind === "bool") inp = `<select id="${id}" ${dis}><option value="true" ${v ? "selected" : ""}>Yes</option><option value="false" ${!v ? "selected" : ""}>No</option></select>`;
-      else if (c.kind === "json") inp = `<textarea id="${id}" ${dis}>${esc(v == null ? "" : JSON.stringify(v, null, 1))}</textarea>`;
-      else if (["description", "content", "body", "answer", "message", "notes", "excerpt"].includes(c.name)) inp = `<textarea id="${id}" ${dis}>${esc(v)}</textarea>`;
-      else inp = `<input id="${id}" ${dis} value="${esc(v)}" type="${c.kind === "int" || c.kind === "num" ? "number" : "text"}" step="any">`;
-      const isImg = /(image|logo|_url)$/.test(c.name), up = !dis && (isImg || c.name === "gallery") ? `<input type="file" accept="image/*,video/*" ${c.name === "gallery" ? "multiple" : ""} data-up="${id}" data-multi="${c.name === "gallery" ? 1 : ""}" style="margin-top:6px">` : "";
-      const prev = isImg && v && /\.(jpe?g|png|webp|gif|avif)/i.test(v) ? `<img src="${esc(v)}" style="margin-top:8px;width:72px;height:72px;object-fit:cover;border-radius:12px">` : "";
-      return `<div><label>${c.name.replace(/_/g, " ")}${c.required ? " *" : ""}</label>${inp}${up}${prev}</div>`;
+    /* ══════════════════════════════════════════════════════════════════
+       PROFESSIONAL FORM ENGINE
+       Custom layouts per module, date pickers, image preview, toggles
+    ══════════════════════════════════════════════════════════════════ */
+
+    /* Inject modal + form styles once */
+    (function injectFormStyles() {
+      const s = document.createElement("style");
+      s.textContent = `
+        #modal { z-index:100 }
+        #modal .card { width:min(860px,100%);max-height:90vh;overflow-y:auto;padding:0;border-radius:20px }
+        .mhdr { display:flex;align-items:center;justify-content:space-between;padding:22px 26px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card);z-index:2;border-radius:20px 20px 0 0 }
+        .mhdr h2 { margin:0;font-size:18px;font-weight:800;letter-spacing:-.01em }
+        .mhdr .badge { font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(236,72,153,.08));color:var(--in) }
+        .mhdr .cl { width:34px;height:34px;border-radius:50%;background:var(--soft);color:var(--ink);padding:0;font-size:16px;display:grid;place-items:center }
+        .mhdr .cl:hover { background:var(--line) }
+        .mbody { padding:22px 26px }
+        .mfooter { padding:16px 26px 22px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;background:var(--card);border-radius:0 0 20px 20px }
+        .mfooter button { min-width:110px }
+        .msec { margin-bottom:22px }
+        .msec-title { font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--line) }
+        .mrow { display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px }
+        .mrow.full { grid-template-columns:1fr }
+        .mrow.half { grid-template-columns:1fr 1fr }
+        .mrow.third { grid-template-columns:1fr 1fr 1fr }
+        .mf { display:flex;flex-direction:column;gap:5px }
+        .mf label { font-size:11.5px;font-weight:700;color:var(--mut);letter-spacing:.03em }
+        .mf label span.req { color:var(--cr);margin-left:2px }
+        .mf input,.mf select,.mf textarea { margin:0 }
+        .mf input:disabled,.mf select:disabled,.mf textarea:disabled { background:var(--soft);color:var(--mut);cursor:not-allowed;border-style:dashed }
+        .mf textarea { min-height:90px;resize:vertical }
+        .mf textarea.tall { min-height:160px }
+        .mf .hint { font-size:11px;color:var(--mut);font-weight:600 }
+        /* Toggle switch */
+        .sw-wrap { display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--soft);border-radius:12px;border:1px solid var(--line) }
+        .sw-wrap label { font-size:13px;font-weight:700;flex:1 }
+        .sw { position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0 }
+        .sw input { opacity:0;width:0;height:0 }
+        .sw-sl { position:absolute;inset:0;background:#CBD5E1;border-radius:999px;cursor:pointer;transition:.2s }
+        .sw-sl:before { content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2) }
+        input:checked+.sw-sl { background:var(--em) }
+        input:checked+.sw-sl:before { transform:translateX(20px) }
+        /* Image uploader */
+        .img-up { border:2px dashed var(--line);border-radius:14px;padding:16px;text-align:center;cursor:pointer;transition:.2s;background:var(--soft) }
+        .img-up:hover { border-color:var(--co);background:#EFF6FF }
+        .img-up input { display:none }
+        .img-up .ico { font-size:28px;margin-bottom:6px }
+        .img-up .lbl { font-size:12px;font-weight:700;color:var(--mut) }
+        .img-up .lbl b { color:var(--co) }
+        .img-prev { position:relative;display:inline-block;margin-top:10px }
+        .img-prev img { width:100%;max-height:200px;object-fit:cover;border-radius:12px;display:block }
+        .img-prev .rm { position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(15,23,42,.6);color:#fff;padding:0;font-size:14px;line-height:1;display:grid;place-items:center }
+        .img-prev .rm:hover { background:var(--cr) }
+        .gal-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:8px }
+        .gal-grid .gi { position:relative }
+        .gal-grid .gi img { width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;display:block }
+        .gal-grid .gi .rm { position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:rgba(15,23,42,.7);color:#fff;padding:0;font-size:11px;display:grid;place-items:center }
+        /* Date picker */
+        input[type=date],input[type=datetime-local] { color-scheme:light;cursor:pointer }
+        input[type=date]::-webkit-calendar-picker-indicator,
+        input[type=datetime-local]::-webkit-calendar-picker-indicator { cursor:pointer;opacity:.7;filter:invert(30%) }
+        /* JSON tag input */
+        .tag-wrap { display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;min-height:42px;cursor:text }
+        .tag-wrap:focus-within { border-color:var(--co);box-shadow:0 0 0 4px rgba(59,130,246,.12) }
+        .tag-wrap .tag { display:flex;align-items:center;gap:4px;background:var(--soft);border:1px solid var(--line);padding:3px 8px 3px 10px;border-radius:999px;font-size:12px;font-weight:700 }
+        .tag-wrap .tag button { background:none;color:var(--mut);padding:0;width:16px;height:16px;font-size:12px;border-radius:50%;display:grid;place-items:center;font-weight:700 }
+        .tag-wrap .tag button:hover { background:var(--cr);color:#fff;transform:none;box-shadow:none }
+        .tag-wrap input { border:0;outline:none;background:transparent;font:inherit;min-width:120px;flex:1 }
+        /* Rating stars */
+        .star-pick { display:flex;gap:6px }
+        .star-pick button { background:none;color:#CBD5E1;font-size:24px;padding:0;width:32px;height:32px }
+        .star-pick button.on { color:var(--am) }
+        .star-pick button:hover { transform:scale(1.2);box-shadow:none }
+        /* Loading state */
+        .saving { opacity:.6;pointer-events:none }
+        @media(max-width:600px) {
+          #modal .card { max-height:100vh;border-radius:16px 16px 0 0;position:fixed;bottom:0;left:0;right:0;top:auto;max-width:100% }
+          #modal { align-items:flex-end;padding:0 }
+          .mrow,.mrow.half,.mrow.third { grid-template-columns:1fr }
+        }
+      `;
+      document.head.appendChild(s);
+    })();
+
+    /* ── helpers ── */
+    const DATE_COLS = new Set(["starts_at","ends_at","expires_at","published_at","feature_ends_at","estimated_delivery","last_sync_at"]);
+    const SKIP_COLS = new Set(["id","created_at","updated_at","used_count","purchase_event_id","idempotency_key","utm_source","utm_medium","utm_campaign","utm_content","utm_term","fbclid","fbp","fbc","attribution","status_history"]);
+    const TEXTAREA_COLS = new Set(["description","content","body","answer","message","notes","excerpt","seo_description","address","payment_note","warranty_note"]);
+    const JSON_ARRAY_COLS = new Set(["gallery","videos","images","colors","sizes","features","top_notes","heart_notes","base_notes","bullets","marquee_items","featured_in","nav_links","footer_links"]);
+    const IMG_COLS = new Set(["image_url","logo_url","avatar_url","feature_image_url","hero_video_url","video_wrist_url","video_showcase_url","video_ugc_url"]);
+
+    function fmtDateForInput(v, dt = false) {
+      if (!v) return "";
+      try { const d = new Date(v); return dt ? d.toISOString().slice(0,16) : d.toISOString().slice(0,10); } catch { return ""; }
     }
-    function collect(cols) {
+
+    /* ── Tag-chip input for JSON arrays ── */
+    function buildTagInput(id, arr) {
+      let items = Array.isArray(arr) ? [...arr] : (arr ? String(arr).split(",").map(x=>x.trim()).filter(Boolean) : []);
+      const wrap = document.createElement("div");
+      wrap.className = "tag-wrap"; wrap.id = id;
+      wrap.dataset.kind = "tags";
+      const render = () => {
+        wrap.innerHTML = items.map((t,i)=>`<span class="tag">${esc(t)}<button type="button" data-ri="${i}">×</button></span>`).join("");
+        const inp = document.createElement("input");
+        inp.placeholder = "Add item, press Enter";
+        inp.onkeydown = e => {
+          if ((e.key === "Enter" || e.key === ",") && inp.value.trim()) {
+            e.preventDefault(); items.push(inp.value.trim()); render();
+          } else if (e.key === "Backspace" && !inp.value && items.length) {
+            items.pop(); render();
+          }
+        };
+        wrap.appendChild(inp);
+        wrap.querySelectorAll("[data-ri]").forEach(b => b.onclick = () => { items.splice(Number(b.dataset.ri),1); render(); });
+        inp.focus();
+      };
+      render();
+      wrap._getVal = () => items;
+      return wrap;
+    }
+
+    /* ── Image uploader widget ── */
+    function buildImageUploader(id, val, multi = false) {
+      const wrap = document.createElement("div");
+      let urls = multi ? (Array.isArray(val) ? [...val] : []) : (val ? [val] : []);
+
+      const renderPrev = () => {
+        const prev = wrap.querySelector(".img-prev");
+        if (prev) prev.remove();
+        if (!urls.length) return;
+        if (multi) {
+          const g = document.createElement("div"); g.className = "gal-grid";
+          urls.forEach((u,i) => { g.innerHTML += `<div class="gi"><img src="${esc(u)}"><button class="rm" data-ri="${i}" type="button">×</button></div>`; });
+          wrap.insertBefore(g, wrap.querySelector(".img-up"));
+          g.querySelectorAll("[data-ri]").forEach(b => b.onclick = () => { urls.splice(Number(b.dataset.ri),1); renderPrev(); });
+        } else {
+          const d = document.createElement("div"); d.className = "img-prev";
+          d.innerHTML = `<img src="${esc(urls[0])}"><button class="rm" type="button">×</button>`;
+          d.querySelector(".rm").onclick = () => { urls=[]; renderPrev(); };
+          wrap.insertBefore(d, wrap.querySelector(".img-up"));
+        }
+      };
+
+      const upDiv = document.createElement("div"); upDiv.className = "img-up";
+      upDiv.innerHTML = `<input type="file" accept="image/*,video/*" ${multi?"multiple":""}><div class="ico">🖼</div><div class="lbl"><b>Click to upload</b> or drag & drop<br><span style="font-size:11px">JPG, PNG, WebP, GIF</span></div>`;
+      const fileInp = upDiv.querySelector("input");
+      upDiv.onclick = e => { if(e.target !== fileInp) fileInp.click(); };
+      fileInp.onchange = async () => {
+        upDiv.innerHTML = `<div class="ico">⏳</div><div class="lbl">Uploading…</div>`;
+        try {
+          for (const file of fileInp.files) {
+            const fd = new FormData(); fd.append("file", file);
+            const {url} = await api("/admin/upload",{method:"POST",body:fd});
+            if (multi) urls.push(url); else urls = [url];
+          }
+          toast("Uploaded ✓");
+        } catch(e) { toast("Upload failed: "+e.message); }
+        upDiv.innerHTML = `<input type="file" accept="image/*,video/*" ${multi?"multiple":""}><div class="ico">🖼</div><div class="lbl"><b>Click to upload</b> or drag & drop</div>`;
+        upDiv.querySelector("input").onchange = fileInp.onchange;
+        upDiv.onclick = e => { if(e.target!==upDiv.querySelector("input")) upDiv.querySelector("input").click(); };
+        renderPrev();
+      };
+
+      wrap.appendChild(upDiv);
+      wrap.id = id; wrap.dataset.kind = "imgup";
+      wrap._getVal = () => multi ? urls : (urls[0] || null);
+      renderPrev();
+      return wrap;
+    }
+
+    /* ── Star rating widget ── */
+    function buildStarRating(id, val) {
+      const wrap = document.createElement("div"); wrap.className = "star-pick"; wrap.id = id; wrap.dataset.kind = "stars";
+      let cur = Number(val) || 5;
+      const render = () => {
+        wrap.innerHTML = [1,2,3,4,5].map(n=>`<button type="button" class="${n<=cur?"on":""}" data-v="${n}">★</button>`).join("");
+        wrap.querySelectorAll("button").forEach(b => { b.onmouseenter=()=>{ wrap.querySelectorAll("button").forEach((x,i)=>x.classList.toggle("on",i<Number(b.dataset.v))); }; b.onmouseleave=render; b.onclick=()=>{ cur=Number(b.dataset.v); render(); }; });
+      };
+      render();
+      wrap._getVal = () => cur;
+      return wrap;
+    }
+
+    /* ── MODULE-SPECIFIC FORM LAYOUTS ── */
+    const FORMS = {
+      products: (row) => [
+        { title:"Basic Info", cols:"half", fields:[
+          {n:"name",label:"Product name",req:true}, {n:"brand",label:"Brand"}, {n:"slug",label:"URL slug",hint:"auto-set if blank"},
+          {n:"category",label:"Category"}, {n:"collection",label:"Collection"}, {n:"product_type",label:"Type",kind:"select",opts:["watch","perfume","apparel","accessory"]},
+          {n:"badge",label:"Badge (e.g. New, Hot)"}
+        ]},
+        { title:"Pricing & Stock", cols:"third", fields:[
+          {n:"price",label:"Price (Rs)",req:true,kind:"num"}, {n:"sale_price",label:"Sale price",kind:"num"}, {n:"compare_at",label:"Compare at",kind:"num"},
+          {n:"stock",label:"Stock qty",kind:"int"}, {n:"rating",label:"Rating",kind:"num"}, {n:"sort_order",label:"Sort order",kind:"int"}
+        ]},
+        { title:"Media", cols:"full", fields:[
+          {n:"image_url",label:"Main image",kind:"img"}, {n:"gallery",label:"Gallery images (multiple)",kind:"gallery"}
+        ]},
+        { title:"Description & SEO", cols:"full", fields:[
+          {n:"description",label:"Description",kind:"textarea-tall"},
+          {n:"seo_title",label:"SEO title"},{n:"seo_description",label:"SEO description",kind:"textarea"},{n:"seo_keywords",label:"SEO keywords"}
+        ]},
+        { title:"Variants", cols:"half", fields:[
+          {n:"colors",label:"Colors",kind:"tags"}, {n:"sizes",label:"Sizes",kind:"tags"}, {n:"features",label:"Features",kind:"tags"}
+        ]},
+        { title:"Status", cols:"third", fields:[
+          {n:"active",label:"Active (visible in store)",kind:"bool"}, {n:"featured",label:"Featured",kind:"bool"}, {n:"new_arrival",label:"New Arrival",kind:"bool"}
+        ]}
+      ],
+      collections: (row) => [
+        { title:"Collection Details", cols:"half", fields:[
+          {n:"name",label:"Collection name",req:true},{n:"slug",label:"URL slug"},{n:"tagline",label:"Tagline"},{n:"sort_order",label:"Sort order",kind:"int"}
+        ]},
+        { title:"Cover Image", cols:"full", fields:[{n:"image_url",label:"Cover image",kind:"img"}]},
+        { title:"Status", cols:"full", fields:[{n:"active",label:"Active",kind:"bool"}]}
+      ],
+      categories: (row) => [
+        { title:"Category Details", cols:"half", fields:[
+          {n:"name",label:"Name",req:true},{n:"slug",label:"URL slug"},{n:"description",label:"Description",kind:"textarea"},{n:"sort_order",label:"Sort order",kind:"int"}
+        ]},
+        { title:"Category Image", cols:"full", fields:[{n:"image_url",label:"Image",kind:"img"}]},
+        { title:"Status", cols:"full", fields:[{n:"active",label:"Active",kind:"bool"}]}
+      ],
+      hero_slides: (row) => [
+        { title:"Slide Content", cols:"half", fields:[
+          {n:"title",label:"Headline",req:true},{n:"eyebrow",label:"Eyebrow label"},{n:"title_accent",label:"Accent word"},
+          {n:"description",label:"Body text",kind:"textarea"},{n:"cta_label",label:"CTA button text"},{n:"cta_href",label:"CTA link"}
+        ]},
+        { title:"Slide Image / Video", cols:"full", fields:[
+          {n:"image_url",label:"Background image",kind:"img"},{n:"video_url",label:"Background video URL (optional)"}
+        ]},
+        { title:"Settings", cols:"third", fields:[
+          {n:"sort_order",label:"Order",kind:"int"},{n:"active",label:"Active",kind:"bool"}
+        ]}
+      ],
+      deals: (row) => [
+        { title:"Deal Info", cols:"half", fields:[
+          {n:"title",label:"Title",req:true},{n:"slug",label:"URL slug"},{n:"subtitle",label:"Subtitle"},{n:"badge",label:"Badge"},
+          {n:"description",label:"Description",kind:"textarea"},{n:"code",label:"Coupon code (optional)"}
+        ]},
+        { title:"Discount & CTA", cols:"half", fields:[
+          {n:"discount_percent",label:"Discount %",kind:"int"},{n:"cta_label",label:"Button label"},{n:"cta_href",label:"Button link"}
+        ]},
+        { title:"Schedule", cols:"half", fields:[
+          {n:"starts_at",label:"Starts at",kind:"datetime"},{n:"ends_at",label:"Ends at",kind:"datetime"}
+        ]},
+        { title:"Banner Image", cols:"full", fields:[{n:"image_url",label:"Banner image",kind:"img"}]},
+        { title:"Status", cols:"full", fields:[{n:"active",label:"Active",kind:"bool"},{n:"sort_order",label:"Sort order",kind:"int"}]}
+      ],
+      coupons: (row) => [
+        { title:"Coupon Details", cols:"half", fields:[
+          {n:"code",label:"Coupon code",req:true,hint:"e.g. SAVE20"},{n:"description",label:"Description",kind:"textarea"},
+          {n:"discount_type",label:"Discount type",kind:"select",opts:["percent","fixed"]},
+          {n:"discount_value",label:"Discount value",req:true,kind:"num",hint:"% or Rs amount"},
+          {n:"min_order",label:"Min order amount",kind:"num"},{n:"usage_limit",label:"Usage limit",kind:"int",hint:"blank = unlimited"},
+          {n:"expires_at",label:"Expires at",kind:"datetime"}
+        ]},
+        { title:"Status", cols:"full", fields:[{n:"active",label:"Active",kind:"bool"}]}
+      ],
+      faqs: (row) => [
+        { title:"FAQ", cols:"full", fields:[
+          {n:"question",label:"Question",req:true,kind:"textarea"},{n:"answer",label:"Answer",req:true,kind:"textarea-tall"},
+          {n:"category",label:"Category (e.g. Shipping, Returns)"},{n:"sort_order",label:"Sort order",kind:"int"},{n:"active",label:"Active",kind:"bool"}
+        ]}
+      ],
+      trust_sections: (row) => [
+        { title:"Trust Item", cols:"half", fields:[
+          {n:"group_name",label:"Group",req:true},{n:"heading",label:"Heading",req:true},{n:"body",label:"Body text",kind:"textarea"},
+          {n:"icon",label:"Icon (emoji or URL)"},{n:"sort_order",label:"Sort order",kind:"int"},{n:"active",label:"Active",kind:"bool"}
+        ]},
+        { title:"Bullet Points", cols:"full", fields:[{n:"bullets",label:"Bullet points",kind:"tags"}]}
+      ],
+      popups: (row) => [
+        { title:"Popup Content", cols:"half", fields:[
+          {n:"title",label:"Title",req:true},{n:"message",label:"Message",kind:"textarea"},{n:"badge",label:"Badge"},
+          {n:"coupon_code",label:"Coupon code"},{n:"cta_label",label:"Button label"},{n:"cta_href",label:"Button link"}
+        ]},
+        { title:"Image", cols:"full", fields:[{n:"image_url",label:"Popup image",kind:"img"}]},
+        { title:"Behaviour", cols:"half", fields:[
+          {n:"trigger_type",label:"Trigger",kind:"select",opts:["delay","exit","scroll"]},
+          {n:"frequency",label:"Frequency",kind:"select",opts:["session","once","always"]},
+          {n:"delay_seconds",label:"Delay (seconds)",kind:"int"},
+          {n:"starts_at",label:"Starts at",kind:"datetime"},{n:"ends_at",label:"Ends at",kind:"datetime"},
+          {n:"sort_order",label:"Sort order",kind:"int"},{n:"active",label:"Active",kind:"bool"}
+        ]}
+      ],
+      reviews: (row) => [
+        { title:"Review", cols:"half", fields:[
+          {n:"customer_name",label:"Customer name",req:true},{n:"customer_role",label:"Role / title"},
+          {n:"title",label:"Review title"},{n:"body",label:"Review text",kind:"textarea-tall"}
+        ]},
+        { title:"Rating", cols:"full", fields:[{n:"rating",label:"Rating (1–5)",kind:"stars"}]},
+        { title:"Status", cols:"half", fields:[
+          {n:"approved",label:"Approved (show on store)",kind:"bool"},{n:"featured",label:"Featured",kind:"bool"}
+        ]}
+      ],
+      blog_posts: (row) => [
+        { title:"Post Details", cols:"half", fields:[
+          {n:"title",label:"Title",req:true},{n:"slug",label:"URL slug"},{n:"author",label:"Author"},{n:"category",label:"Category"},
+          {n:"excerpt",label:"Excerpt",kind:"textarea"},{n:"published_at",label:"Publish date",kind:"date"}
+        ]},
+        { title:"Cover Image", cols:"full", fields:[{n:"image_url",label:"Cover image",kind:"img"}]},
+        { title:"Content (Markdown)", cols:"full", fields:[{n:"content",label:"Content",kind:"textarea-tall"}]},
+        { title:"Status", cols:"full", fields:[{n:"published",label:"Published",kind:"bool"}]}
+      ],
+    };
+
+    /* ── Render one section ── */
+    function renderSection(sec, row, ro) {
+      const fields = sec.fields.map(f => renderField(f, row[f.n], ro)).join("");
+      return `<div class="msec"><div class="msec-title">${esc(sec.title)}</div><div class="mrow ${sec.cols || ""}">${fields}</div></div>`;
+    }
+
+    /* ── Render one field (returns HTML string for simple fields, or mounts widget) ── */
+    const WIDGET_FIELDS = new Set(); // stores field names that need widget (not innerHTML)
+
+    function renderField(f, v, ro) {
+      const id = "f_" + f.n;
+      const dis = ro || SKIP_COLS.has(f.n) ? "disabled" : "";
+      const label = `<label>${f.label || f.n.replace(/_/g," ")}${f.req?`<span class="req">*</span>`:""}</label>`;
+      const hint = f.hint ? `<span class="hint">${esc(f.hint)}</span>` : "";
+      const kind = f.kind || (DATE_COLS.has(f.n) ? "datetime" : TEXTAREA_COLS.has(f.n) ? "textarea" : JSON_ARRAY_COLS.has(f.n) ? "tags" : IMG_COLS.has(f.n) ? "img" : "text");
+
+      // Widgets that need JS — mark them, render placeholder div
+      if (kind === "img" || kind === "gallery" || kind === "tags" || kind === "stars") {
+        WIDGET_FIELDS.add(f.n);
+        return `<div class="mf"><label>${f.label || f.n.replace(/_/g," ")}${f.req?`<span class="req">*</span>`:""}</label><div id="${id}_wrap" data-widget="${kind}" data-val='${esc(JSON.stringify(v??null))}' data-multi="${kind==="gallery"?1:""}" data-ro="${ro?1:""}"></div>${hint}</div>`;
+      }
+
+      let inp = "";
+      if (kind === "bool") {
+        const checked = v === true || v === "true" ? "checked" : "";
+        inp = `<div class="sw-wrap"><label>${esc(f.label || f.n.replace(/_/g," "))}</label><label class="sw"><input type="checkbox" id="${id}" ${checked} ${dis}><span class="sw-sl"></span></label></div>`;
+        return `<div class="mf" data-bool="1">${inp}${hint}</div>`;
+      }
+      if (kind === "select") {
+        inp = `<select id="${id}" ${dis}>${(f.opts||[]).map(o=>`<option value="${esc(o)}" ${o===(v||"")?"selected":""}>${esc(o)}</option>`).join("")}</select>`;
+      } else if (kind === "textarea" || kind === "textarea-tall") {
+        inp = `<textarea id="${id}" ${dis} class="${kind==="textarea-tall"?"tall":""}">${esc(v??'')}</textarea>`;
+      } else if (kind === "date") {
+        inp = `<input type="date" id="${id}" value="${fmtDateForInput(v,false)}" ${dis}>`;
+      } else if (kind === "datetime") {
+        inp = `<input type="datetime-local" id="${id}" value="${fmtDateForInput(v,true)}" ${dis}>`;
+      } else if (kind === "num") {
+        inp = `<input type="number" id="${id}" step="any" value="${esc(v??'')}" ${dis}>`;
+      } else if (kind === "int") {
+        inp = `<input type="number" id="${id}" step="1" value="${esc(v??'')}" ${dis}>`;
+      } else if (kind === "json") {
+        inp = `<textarea id="${id}" ${dis}>${esc(v==null?'':JSON.stringify(v,null,1))}</textarea>`;
+      } else {
+        inp = `<input type="text" id="${id}" value="${esc(v??'')}" ${dis}>`;
+      }
+      return `<div class="mf">${label}${inp}${hint}</div>`;
+    }
+
+    /* ── Mount widgets after HTML is injected ── */
+    function mountWidgets() {
+      document.querySelectorAll("[data-widget]").forEach(wrap => {
+        const kind = wrap.dataset.widget;
+        const id = wrap.id.replace(/_wrap$/,"");
+        let val; try { val = JSON.parse(wrap.dataset.val); } catch { val = null; }
+        const ro = wrap.dataset.ro === "1";
+        if (ro) { wrap.innerHTML = `<span class="mut" style="font-size:12px">${esc(String(val??''))}</span>`; return; }
+        let widget;
+        if (kind === "img") widget = buildImageUploader(id, val, false);
+        else if (kind === "gallery") widget = buildImageUploader(id, val, true);
+        else if (kind === "tags") widget = buildTagInput(id, Array.isArray(val)?val:val?[val]:[]);
+        else if (kind === "stars") widget = buildStarRating(id, val);
+        if (widget) wrap.replaceWith(widget);
+      });
+    }
+
+    /* ── Collect all values from the open form ── */
+    function collectForm(name, row) {
+      const spec = FORMS[name];
+      const meta = SCHEMA[name];
       const out = {};
-      for (const c of cols) {
-        const el = $("#f_" + c.name); if (!el || el.disabled) continue; let v = el.value;
-        if (c.kind === "bool") v = v === "true"; else if (c.kind === "json") { try { v = v.trim() ? JSON.parse(v) : null; } catch { throw new Error(c.name + ": invalid JSON"); } }
-        else if (c.kind === "int" || c.kind === "num") v = v === "" ? null : Number(v); else if (v === "") v = null;
-        out[c.name] = v;
+
+      if (spec) {
+        const allFields = spec(row).flatMap(s => s.fields);
+        for (const f of allFields) {
+          const id = "f_" + f.n;
+          // Widget
+          const widget = document.getElementById(id);
+          if (widget && widget._getVal !== undefined) { out[f.n] = widget._getVal(); continue; }
+          const el = document.getElementById(id); if (!el || el.disabled) continue;
+          const kind = f.kind || "text";
+          if (kind === "bool") out[f.n] = el.type === "checkbox" ? el.checked : el.value === "true";
+          else if (kind === "num") out[f.n] = el.value === "" ? null : parseFloat(el.value);
+          else if (kind === "int") out[f.n] = el.value === "" ? null : parseInt(el.value, 10);
+          else if (kind === "date" || kind === "datetime") out[f.n] = el.value ? new Date(el.value).toISOString() : null;
+          else out[f.n] = el.value === "" ? null : el.value;
+        }
+      } else {
+        // Generic fallback for modules without a custom form
+        for (const c of meta.columns) {
+          if (SKIP_COLS.has(c.name)) continue;
+          const el = document.getElementById("f_" + c.name); if (!el || el.disabled) continue;
+          let v = el.value;
+          if (c.kind === "bool") v = el.type === "checkbox" ? el.checked : v === "true";
+          else if (c.kind === "json") { try { v = v.trim() ? JSON.parse(v) : null; } catch { throw new Error(c.name + ": invalid JSON"); } }
+          else if (c.kind === "int" || c.kind === "num") v = v === "" ? null : Number(v);
+          else if (v === "") v = null;
+          out[c.name] = v;
+        }
       }
       return out;
     }
-    function bindUploads() {
-      $$("[data-up]").forEach(f => f.onchange = async () => {
-        f.disabled = true; const target = $("#" + f.dataset.up);
-        try {
-          const urls = []; for (const file of f.files) { const fd = new FormData(); fd.append("file", file); urls.push((await api("/admin/upload", { method: "POST", body: fd })).url); }
-          if (f.dataset.multi) { let cur = []; try { cur = JSON.parse(target.value || "[]") } catch { }; target.value = JSON.stringify([...cur, ...urls], null, 1); } else target.value = urls[0];
-          toast("Uploaded");
-        } catch (e) { toast(e.message); }
-        f.disabled = false;
-      });
-    }
+
+    /* ── Open the editor modal ── */
     function editor(name, row) {
       const meta = SCHEMA[name], ro = meta.readonly;
-      $("#mbody").innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px"><h2 style="margin:0;font-size:19px;font-weight:800">${row.id ? (ro ? "View" : "Edit") : "New"} · ${esc(LABEL[name] || name)}</h2><button class="ghost sm" id="cl">✕</button></div>
-   <div class="form">${meta.columns.map(c => field(c, row[c.name], ro)).join("")}</div>
-   <div class="bar" style="margin:20px 0 0">${ro ? "" : `<button id="sv">Save changes</button>`}${row.id && !ro ? `<button class="danger" id="del">Delete</button>` : ""}</div>`;
-      $("#modal").style.display = "flex"; bindUploads();
-      $("#cl").onclick = () => $("#modal").style.display = "none";
-      if ($("#sv")) $("#sv").onclick = async () => {
-        try {
-          await api("/admin/r/" + name + (row.id ? "/" + row.id : ""), { method: row.id ? "PUT" : "POST", body: JSON.stringify(collect(meta.columns)) });
-          $("#modal").style.display = "none"; toast("Saved — live on store"); render();
-        } catch (e) { toast(e.message); }
-      };
-      if ($("#del")) $("#del").onclick = async () => { if (!confirm("Delete?")) return; await api(`/admin/r/${name}/${row.id}`, { method: "DELETE" }); $("#modal").style.display = "none"; toast("Deleted"); render(); };
+      const spec = FORMS[name];
+      const isNew = !row.id;
+      const accent = isNew ? "var(--em)" : "var(--co)";
+      const badgeText = isNew ? "New record" : "Editing";
+
+      let bodyHtml = "";
+      WIDGET_FIELDS.clear();
+
+      if (spec) {
+        bodyHtml = spec(row).map(sec => renderSection(sec, row, ro)).join("");
+      } else {
+        // Generic form for modules without custom spec
+        const cols = meta.columns.filter(c => !SKIP_COLS.has(c.name));
+        const fields = cols.map(c => {
+          const kind = DATE_COLS.has(c.name) ? (c.name.includes("_at") ? "datetime" : "date") : TEXTAREA_COLS.has(c.name) ? "textarea" : c.kind;
+          return renderField({n:c.name, label:c.name.replace(/_/g," "), kind, req:c.required}, row[c.name], ro);
+        }).join("");
+        bodyHtml = `<div class="msec"><div class="mrow">${fields}</div></div>`;
+      }
+
+      $("#mbody").innerHTML = `
+        <div class="mhdr">
+          <div style="display:flex;align-items:center;gap:10px">
+            <h2>${isNew?"Add new":"Edit"} ${esc(LABEL[name]||name.replace(/_/g," "))}</h2>
+            <span class="badge" style="background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(236,72,153,.08));color:var(--in)">${badgeText}</span>
+          </div>
+          <button class="cl" id="cl" title="Close">✕</button>
+        </div>
+        <div class="mbody">${bodyHtml}</div>
+        <div class="mfooter">
+          ${ro ? `<span class="mut" style="font-size:13px;font-weight:600">Read-only record</span>` : `<button id="sv" style="background:linear-gradient(135deg,var(--in),var(--pk))">Save changes</button>`}
+          ${row.id && !ro ? `<button class="ghost" id="del" style="color:var(--cr);border-color:var(--cr);background:transparent">Delete</button>` : ""}
+          <button class="ghost" id="cl2" style="margin-left:auto">Cancel</button>
+        </div>`;
+
+      $("#modal").style.display = "flex";
+      mountWidgets();
+
+      const close = () => { $("#modal").style.display = "none"; };
+      $("#cl").onclick = close;
+      if ($("#cl2")) $("#cl2").onclick = close;
+      $("#modal").onclick = e => { if (e.target === $("#modal")) close(); };
+
+      if ($("#sv")) {
+        $("#sv").onclick = async () => {
+          const btn = $("#sv"); btn.classList.add("saving"); btn.textContent = "Saving…";
+          try {
+            const data = collectForm(name, row);
+            await api("/admin/r/" + name + (row.id ? "/" + row.id : ""), {
+              method: row.id ? "PUT" : "POST", body: JSON.stringify(data)
+            });
+            close(); toast("✓ Saved — live on store"); render();
+          } catch(e) { toast("⚠ " + e.message); btn.classList.remove("saving"); btn.textContent = "Save changes"; }
+        };
+      }
+
+      if ($("#del")) {
+        $("#del").onclick = async () => {
+          if (!confirm(`Delete this ${LABEL[name]||name}? This cannot be undone.`)) return;
+          try {
+            await api(`/admin/r/${name}/${row.id}`, { method: "DELETE" });
+            close(); toast("Deleted"); render();
+          } catch(e) { toast(e.message); }
+        };
+      }
     }
+
     async function singleton(name) {
-      const { row } = await api("/admin/settings/" + name); const cols = SCHEMA[name].columns;
-      $("#main").innerHTML = `<div class="card"><div class="form">${cols.map(c => field(c, row[c.name])).join("")}</div><p style="margin:20px 0 0"><button id="sv">Save settings</button></p></div>`;
-      bindUploads();
-      $("#sv").onclick = async () => { try { await api("/admin/settings/" + name, { method: "PUT", body: JSON.stringify(collect(cols)) }); toast("Settings saved — live on store"); } catch (e) { toast(e.message); } };
+      const { row } = await api("/admin/settings/" + name);
+      const meta = SCHEMA[name];
+      const cols = meta.columns.filter(c => !SKIP_COLS.has(c.name));
+      WIDGET_FIELDS.clear();
+
+      const fields = cols.map(c => {
+        const kind = DATE_COLS.has(c.name) ? "datetime" : TEXTAREA_COLS.has(c.name) ? "textarea" : IMG_COLS.has(c.name) ? "img" : JSON_ARRAY_COLS.has(c.name) ? "tags" : c.kind;
+        return renderField({n:c.name, label:c.name.replace(/_/g," "), kind}, row[c.name], false);
+      }).join("");
+
+      $("#main").innerHTML = `<div class="card"><div class="msec"><div class="mrow">${fields}</div></div><p style="margin:20px 0 0"><button id="sv" style="background:linear-gradient(135deg,var(--in),var(--pk))">Save settings</button></p></div>`;
+      mountWidgets();
+
+      $("#sv").onclick = async () => {
+        const btn = $("#sv"); btn.textContent = "Saving…";
+        try {
+          const out = {};
+          for (const c of cols) {
+            const id = "f_" + c.name;
+            const widget = document.getElementById(id);
+            if (widget && widget._getVal !== undefined) { out[c.name] = widget._getVal(); continue; }
+            const el = document.getElementById(id); if (!el || el.disabled) continue;
+            const kind = IMG_COLS.has(c.name) ? "img" : JSON_ARRAY_COLS.has(c.name) ? "tags" : DATE_COLS.has(c.name) ? "datetime" : c.kind;
+            if (c.kind === "bool") out[c.name] = el.type === "checkbox" ? el.checked : el.value === "true";
+            else if (c.kind === "json") { try { out[c.name] = el.value.trim() ? JSON.parse(el.value) : null; } catch { throw new Error(c.name + ": invalid JSON"); } }
+            else if (c.kind === "int" || c.kind === "num") out[c.name] = el.value === "" ? null : Number(el.value);
+            else if (kind === "datetime" || kind === "date") out[c.name] = el.value ? new Date(el.value).toISOString() : null;
+            else out[c.name] = el.value === "" ? null : el.value;
+          }
+          await api("/admin/settings/" + name, { method: "PUT", body: JSON.stringify(out) });
+          toast("✓ Settings saved — live on store");
+        } catch(e) { toast("⚠ " + e.message); }
+        btn.textContent = "Save settings";
+      };
     }
     async function users() {
       const { users } = await api("/admin/users");
