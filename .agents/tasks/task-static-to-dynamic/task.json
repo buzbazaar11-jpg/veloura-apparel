@@ -1,0 +1,7 @@
+{
+  "task_id": "task-static-to-dynamic",
+  "task_description": "Wire every hardcoded/static frontend data source to live FastAPI backend endpoints. Admin panel changes appear on the storefront instantly; customer reviews and orders appear in the admin panel instantly and persist to DB. Offline-first fallback to static data when VITE_API_URL is not set.",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}
