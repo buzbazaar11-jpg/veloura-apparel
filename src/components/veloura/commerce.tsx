@@ -1,4 +1,4 @@
-﻿import { Logo } from "./logo";
+import { Logo } from "./logo";
 import { MobileShoppingNav } from "./mobile-shopping-nav";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CustomerExtras, ShoppingConfidence } from "./customer-confidence";
@@ -38,11 +38,6 @@ import {
   formatPrice,
   productPrice,
   storeConfig,
-  heroSlides,
-  moods,
-  products,
-  productsForMood,
-  recommendProducts,
   sizes,
   type Product,
 } from "@/lib/veloura-data";
@@ -193,7 +188,7 @@ function Navbar() {
 
 export function HomePage() {
   const { data: productsData } = useProducts();
-  const liveProducts = productsData?.products?.length ? productsData.products.map(fromBackend) : products;
+  const liveProducts = productsData?.products?.map(fromBackend) ?? [];
   const newArrivalItems = liveProducts.filter(p => p.newArrival).slice(0, 4);
   const signatureItems = liveProducts.filter(p => p.bestSeller || p.featured).slice(0, 4);
   return <main><HeroCarousel /><TrustStrip /><CategorySection liveProducts={liveProducts} />
@@ -203,7 +198,7 @@ export function HomePage() {
     <EditorialBanner /><ShoppingConfidence /><BuildYourLook liveProducts={liveProducts} /><NewsletterBand />
   </main>;
 }
-function TrustStrip(){const { data } = useSettings();const freeAbove = data?.payment?.free_delivery_above ?? storeConfig.freeShippingThreshold;return <section aria-label="Shopping benefits" className="border-b border-border bg-secondary"><div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-5 px-5 py-5 md:grid-cols-4">{[[Truck,`Free delivery from ${formatPrice(freeAbove)}`],[RotateCcw,"Find your fit \u00b7 size guides"],[ShieldCheck,"Cash on Delivery \u00b7 demo"],[Sparkles,"WELCOME10 \u00b7 save 10%"]].map(([Icon,label])=>{const Symbol=Icon as typeof Truck; return <div key={String(label)} className="flex items-center justify-center gap-2 text-xs"><Symbol className="size-5 shrink-0 text-sage" /><span>{String(label)}</span></div>;})}</div></section>;}
+function TrustStrip(){const { data } = useSettings();const freeAbove = data?.payment?.free_delivery_above ?? storeConfig.freeShippingThreshold;return <section aria-label="Shopping benefits" className="border-b border-border bg-secondary"><div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-5 px-5 py-5 md:grid-cols-4">{[[Truck,`Free delivery from ${formatPrice(freeAbove)}`],[RotateCcw,"Find your fit \u00b7 size guides"],[ShieldCheck,"Cash on Delivery available"],[Sparkles,"Exclusive member deals"]].map(([Icon,label])=>{const Symbol=Icon as typeof Truck; return <div key={String(label)} className="flex items-center justify-center gap-2 text-xs"><Symbol className="size-5 shrink-0 text-sage" /><span>{String(label)}</span></div>;})}</div></section>;}
 function SaleBanner(){
   const { data: dealsData } = useDeals();
   const deal = dealsData?.deals?.[0];
@@ -220,14 +215,15 @@ function HomeDeals(){
   const { applyCoupon } = useVelouraStore();
   const { data: couponsData } = useCoupons();
   const liveCoupons = couponsData?.coupons ?? [];
-  const firstCoupon = apiEnabled ? liveCoupons[0] : { code: 'WELCOME10', discount_value: 10, discount_type: 'percent', description: 'Save 10% on your next order.', id: 'offline' };
+  const firstCoupon = liveCoupons[0] ?? null;
   const [selected, setSelected] = useState(false);
-  if (apiEnabled && !firstCoupon) return null;
-  const code = firstCoupon?.code ?? 'WELCOME10';
-  const desc = firstCoupon?.description ?? `Use ${code} on your next bag. One code per order.`;
-  const discVal = firstCoupon?.discount_value ?? 10;
-  const headline = firstCoupon?.discount_type === 'percent' ? `Make it yours. Save ${discVal}%.` : `Make it yours. Save ${discVal} off.`;
-  return <section className="home-deals border-b border-border bg-secondary"><div className="store-section grid gap-8 md:grid-cols-[1fr_1fr]"><div><p className="editorial-label">YOUR FIRST LOOK</p><h2 className="mt-3 font-display text-4xl">{headline}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{desc}</p><Button variant="outline" className="mt-5" onClick={()=>{ void applyCoupon(code).then(ok=>{ if(ok) setSelected(true); }); }}>{selected ? <Check /> : <Plus />}{selected ? `${code} applied` : `Apply ${code}`}</Button><p className="sr-only" role="status">{selected ? `${discVal}${firstCoupon?.discount_type === 'percent' ? '%' : ''} discount applied to your bag.` : ''}</p></div><div className="border-t border-border pt-7 md:border-l md:border-t-0 md:pl-9 md:pt-0"><p className="editorial-label">EASY ON THE BUDGET</p><h2 className="mt-3 font-display text-4xl">Essentials under Rs. 5,000.</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">Everyday tees and finishing touches, without the extra spend.</p><Button asChild className="mt-5"><Link to="/shop" search={{category:'T-Shirts'}}>Shop everyday tees <ArrowRight /></Link></Button></div></div></section>;
+  // Only render when there is a real coupon from the database
+  if (!firstCoupon) return null;
+  const code = firstCoupon.code;
+  const desc = firstCoupon.description ?? `Use ${code} on your next bag. One code per order.`;
+  const discVal = firstCoupon.discount_value;
+  const headline = firstCoupon.discount_type === 'percent' ? `Make it yours. Save ${discVal}%.` : `Make it yours. Save ${formatPrice(discVal)} off.`;
+  return <section className="home-deals border-b border-border bg-secondary"><div className="store-section grid gap-8 md:grid-cols-[1fr_1fr]"><div><p className="editorial-label">YOUR FIRST LOOK</p><h2 className="mt-3 font-display text-4xl">{headline}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{desc}</p><Button variant="outline" className="mt-5" onClick={()=>{ void applyCoupon(code).then(ok=>{ if(ok) setSelected(true); }); }}>{selected ? <Check /> : <Plus />}{selected ? `${code} applied` : `Apply ${code}`}</Button><p className="sr-only" role="status">{selected ? `${discVal}${firstCoupon.discount_type === 'percent' ? '%' : ''} discount applied to your bag.` : ''}</p></div><div className="border-t border-border pt-7 md:border-l md:border-t-0 md:pl-9 md:pt-0"><p className="editorial-label">EASY ON THE BUDGET</p><h2 className="mt-3 font-display text-4xl">Essentials under Rs. 5,000.</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">Everyday tees and finishing touches, without the extra spend.</p><Button asChild className="mt-5"><Link to="/shop" search={{category:'T-Shirts'}}>Shop everyday tees <ArrowRight /></Link></Button></div></div></section>;
 }
 export function Reveal({ children, className = "", as = "div" }: { children: React.ReactNode; className?: string; as?: "div" | "section" }) {
   const ref = useRef<HTMLElement | null>(null);
@@ -401,19 +397,18 @@ function SplitBanners() {
 function HeroCarousel() {
  const [index,setIndex]=useState(0);const [paused,setPaused]=useState(false);const touchStart=useRef<number|null>(null);
  const { data: heroData } = useHeroSlides();
- const slides = apiEnabled
-   ? (heroData?.slides?.length
-       ? heroData.slides.map(s => ({
-           label: s.eyebrow ?? '',
-           headline: s.title ?? '',
-           text: s.description ?? '',
-           cta: s.cta_label ?? 'Shop now',
-           ctaPath: (s.cta_href ?? '/shop') as '/shop' | '/collections' | '/new-arrivals',
-           image: s.image_url ? assetUrl(s.image_url) : '',
-           product: s.title ?? '',
-         }))
-       : [])
-   : heroSlides;
+ const slides = heroData?.slides?.length
+   ? heroData.slides.map(s => ({
+       label: s.eyebrow ?? '',
+       headline: s.title ?? '',
+       text: s.description ?? '',
+       cta: s.cta_label ?? 'Shop now',
+       ctaPath: (s.cta_href ?? '/shop') as '/shop' | '/collections' | '/new-arrivals',
+       image: s.image_url ? assetUrl(s.image_url) : '',
+       product: s.title ?? '',
+       badge: null as string | null,
+     }))
+   : [];
  const slide = slides[index] ?? slides[0];
  useEffect(()=>{if(paused || prefersReducedMotion())return;const timer=window.setInterval(()=>setIndex(i=>(i+1)%slides.length),6500);return()=>window.clearInterval(timer);},[paused, slides.length]);
  const go=(direction:number)=>setIndex(i=>(i+direction+slides.length)%slides.length);
@@ -423,7 +418,7 @@ function HeroCarousel() {
  {slides.map((hero,i)=><img key={hero.headline || i} src={hero.image} alt={i===index ? `${hero.product ?? ''} seasonal campaign` : ""} aria-hidden={i!==index} width={1600} height={1200} loading={i===0?'eager':'lazy'} fetchPriority={i===0?'high':'auto'} className={`hero-image absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${i===index?'opacity-100':'opacity-0'}`} />)}
  <div className="hero-shade absolute inset-0" />
  <div className="hero-inner relative z-10 mx-auto flex h-full max-w-[1500px] flex-col justify-end text-primary-foreground">
- <div key={index} className="hero-stagger hero-copy"><p className="text-xs font-semibold uppercase">{slide.label}</p><h1 className="hero-title mt-5 font-display">VEL0URA<br />APPAREL</h1><p className="mt-5 text-xs font-semibold">{slide.headline}</p><p className="mt-3 max-w-md text-sm leading-6 text-primary-foreground/85">{slide.text}</p><div className="mt-7 flex flex-wrap gap-3"><Button asChild variant="secondary" size="lg"><Link to={slide.ctaPath}>{slide.cta}<ArrowRight /></Link></Button><Button asChild variant="outline" size="lg" className="hero-secondary border-primary-foreground/50 text-primary-foreground hover:text-foreground"><Link to="/collections">The collection</Link></Button></div><p className="mt-5 text-xs text-primary-foreground/85">Men's everyday essentials · 10% off with WELCOME10</p></div>
+ <div key={index} className="hero-stagger hero-copy"><p className="text-xs font-semibold uppercase">{slide.label}</p><h1 className="hero-title mt-5 font-display">VEL0URA<br />APPAREL</h1><p className="mt-5 text-xs font-semibold">{slide.headline}</p><p className="mt-3 max-w-md text-sm leading-6 text-primary-foreground/85">{slide.text}</p><div className="mt-7 flex flex-wrap gap-3"><Button asChild variant="secondary" size="lg"><Link to={slide.ctaPath}>{slide.cta}<ArrowRight /></Link></Button><Button asChild variant="outline" size="lg" className="hero-secondary border-primary-foreground/50 text-primary-foreground hover:text-foreground"><Link to="/collections">The collection</Link></Button></div>{slide.badge ? <p className="mt-5 text-xs text-primary-foreground/85">{slide.badge}</p> : null}</div>
  <div className="mt-8 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-primary-foreground/30 pt-4"><div className="flex items-center gap-3"><span className="text-xs">0{index+1} / 0{slides.length}</span>{slides.map((h,i)=><Button key={h.headline || i} variant="ghost" size="icon" className="size-7 hover:bg-primary/20" aria-label={`Go to slide ${i+1}`} aria-current={i===index} onClick={()=>setIndex(i)}><span className={`block h-0.5 w-5 ${i===index?'bg-primary-foreground':'bg-primary-foreground/40'}`} /></Button>)}</div><div className="flex"><Button variant="ghost" size="icon" className="text-primary-foreground" aria-label={paused?'Play hero slides':'Pause hero slides'} onClick={()=>setPaused(v=>!v)}>{paused?<Play />:<Pause />}</Button><Button variant="ghost" size="icon" className="text-primary-foreground" onClick={()=>go(-1)} aria-label="Previous hero slide"><ArrowLeft /></Button><Button variant="ghost" size="icon" className="text-primary-foreground" onClick={()=>go(1)} aria-label="Next hero slide"><ArrowRight /></Button></div></div>
  </div></section>;
 }
@@ -526,7 +521,7 @@ function CategorySection({ liveProducts }: { liveProducts: Product[] }) {
       <BentoTile className="bento-square" to="/shop" search={{category:"Shirts"}} img={shirt?.images[0] ?? jacket?.images[0]} alt="Men's shirts" tag="04 / Shirts" title="Easy Shirts" />
       <div className="bento-tile bento-wide bento-uniform">
         <div className="bento-uniform-imgs">{uniform.map(p=><img key={p.id} src={p.images[0]} alt={p.name} width={400} height={500} loading="lazy" />)}</div>
-        <div className="bento-uniform-copy"><span className="bento-tag static">05 / The Uniform</span><h3>Complete the uniform.</h3><p>{uniform.map(p=>p.name).join(" + ")} Â· {formatPrice(uniform.reduce((s,p)=>s+p.price,0))}</p>
+        <div className="bento-uniform-copy"><span className="bento-tag static">05 / The Uniform</span><h3>Complete the uniform.</h3><p>{uniform.map(p=>p.name).join(" + ")} · {formatPrice(uniform.reduce((s,p)=>s+p.price,0))}</p>
           <Button variant="editorial" className="magnetic-btn mt-4" onClick={()=>{addManyToCart(uniform.map(product=>({product})));setAdded(true);}}>{added ? <Check /> : <Plus />}{added ? "Added to bag" : "Add both to bag"}</Button></div>
       </div>
     </div></section>;
@@ -541,7 +536,9 @@ function EditorialBanner() {
   return <section className="mens-editorial relative overflow-hidden bg-primary"><img src={img} alt={deal?.title ?? "Men's signature jacket with everyday trousers"} width={1536} height={1024} loading="lazy" className="absolute inset-0 h-full w-full object-cover" /><div className="hero-shade absolute inset-0" /><div className="relative mx-auto max-w-[1500px] px-6 py-20 text-primary-foreground sm:px-12"><p className="text-xs uppercase">{deal?.subtitle ?? "ONE WARDROBE. MORE POSSIBILITIES."}</p><h2 className="mt-4 max-w-lg font-display text-5xl sm:text-7xl">{deal?.title ?? "From workday to weekend."}</h2><p className="mt-5 max-w-sm text-sm leading-6">{deal?.description ?? "Start with the essentials. Build a look that feels like you."}</p><Button asChild variant="secondary" className="mt-7"><Link to={ctaHref}>{deal?.cta_label ?? "Find your look"} <ArrowRight /></Link></Button></div></section>;
 }
 function FeaturedProducts() {
-  const featured = products.filter((product) => product.featured).slice(0, 4);
+  const { data: productsData } = useProducts();
+  const liveProducts = productsData?.products?.map(fromBackend) ?? [];
+  const featured = liveProducts.filter((product) => product.featured).slice(0, 4);
   const large = featured[0];
   const rest = featured.slice(1);
   if (!large) return null;
@@ -574,12 +571,15 @@ function FeaturedProducts() {
 
 export function BuildYourLook({ liveProducts: propProducts }: { liveProducts?: Product[] } = {}) {
     const { data: productsData } = useProducts();
-  const liveProducts = propProducts ?? (productsData?.products?.length ? productsData.products.map(fromBackend) : products);
+  const liveProducts = propProducts ?? (productsData?.products?.map(fromBackend) ?? []);
   const [selectedId, setSelectedId] = useState(liveProducts[0]?.id ?? "");
   const { addManyToCart } = useVelouraStore();
   const selected = liveProducts.find((product) => product.id === selectedId) ?? liveProducts[0];
   if (!selected) return null;
-  const recommendations = recommendProducts(selected, 4);
+  // Recommend from live products — same-category or same-mood, different id
+  const recommendations = liveProducts
+    .filter(p => p.id !== selected.id && (p.category === selected.category || p.mood === selected.mood))
+    .slice(0, 4);
   return (
     <section className="mx-auto max-w-[1500px] px-5 py-20 sm:px-8 lg:px-12">
       <div className="grid gap-8 rounded-sm glass-panel-strong p-5 sm:p-8 lg:grid-cols-[0.75fr_1.25fr]">
@@ -696,7 +696,7 @@ export function ArticleCard({ article }: { article: (typeof articles)[number] })
 
 export function ShopPage({ mode = "all", initialCategory = "All" }: { mode?: "all" | "new" | "best" | "sale"; initialCategory?: string }) {
   const { data: productsData } = useProducts();
-  const liveProducts = productsData?.products?.length ? productsData.products.map(fromBackend) : products;
+  const liveProducts = productsData?.products?.map(fromBackend) ?? [];
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState(initialCategory);
   useEffect(()=>setCategory(initialCategory),[initialCategory]);
@@ -715,7 +715,7 @@ export function ShopPage({ mode = "all", initialCategory = "All" }: { mode?: "al
       const matchesMode = mode === "all" || mode === "new" && product.newArrival || mode === "best" && product.bestSeller || mode === "sale" && Boolean(product.salePrice);
       const matchesSize = size === "All" || product.sizes.includes(size);
       const matchesColor = color === "All" || product.colors.includes(color);
-      const matchesPrice = price === "All" || (price === "Under Rs. 4,000" ? productPrice(product) < 4000 : price === "Rs. 4,000â€“8,000" ? productPrice(product) >= 4000 && productPrice(product) <= 8000 : productPrice(product) > 8000);
+      const matchesPrice = price === "All" || (price === "Under Rs. 4,000" ? productPrice(product) < 4000 : price === "Rs. 4,000–8,000" ? productPrice(product) >= 4000 && productPrice(product) <= 8000 : productPrice(product) > 8000);
       const matchesAvailability = availability === "All" || (availability === "In Stock" ? product.stock > 0 : product.stock > 0 && product.stock < 8);
       return matchesMode && matchesQuery && matchesCategory && matchesSize && matchesColor && matchesPrice && matchesAvailability;
     });
@@ -806,7 +806,7 @@ function FilterPanel(props: {
       <FilterSelect label="Category" value={props.category} onChange={props.setCategory} options={["All", "Men", "Sale", "New Arrivals", ...categories]} />
       <FilterSelect label="Size" value={props.size} onChange={props.setSize} options={["All", ...sizes, "36", "37", "38", "39", "40", "41", "42", "43", "44", "ONE SIZE"]} />
       <FilterSelect label="Color" value={props.color} onChange={props.setColor} options={["All", ...colors]} />
-      <FilterSelect label="Price" value={props.price} onChange={props.setPrice} options={["All", "Under Rs. 4,000", "Rs. 4,000â€“8,000", "Over Rs. 8,000"]} />
+      <FilterSelect label="Price" value={props.price} onChange={props.setPrice} options={["All", "Under Rs. 4,000", "Rs. 4,000–8,000", "Over Rs. 8,000"]} />
       <FilterSelect label="Availability" value={props.availability} onChange={props.setAvailability} options={["All", "In Stock", "Low Stock"]} />
       <FilterSelect label="Sort" value={props.sort} onChange={props.setSort} options={["Featured", "Newest", "Price: Low to High", "Price: High to Low", "Best Rated", "Best Selling"]} />
     </div>
@@ -842,7 +842,7 @@ function FilterSelect({ label, value, onChange, options }: { label: string; valu
 
 export function ProductDetailPage({ product }: { product: Product }) {
   const { data: productsData } = useProducts();
-  const liveProducts = productsData?.products?.length ? productsData.products.map(fromBackend) : products;
+  const liveProducts = productsData?.products?.map(fromBackend) ?? [];
   const [selectedSize, setSelectedSize] = useState(product.sizes[0] ?? "ONE SIZE");
   const [selectedColor, setSelectedColor] = useState(product.colors[0] ?? "Ivory");
   const [quantity, setQuantity] = useState(1);
@@ -850,7 +850,10 @@ export function ProductDetailPage({ product }: { product: Product }) {
   const { recentlyViewed, viewProduct, addToCart, addManyToCart, toggleWishlist, isWishlisted } = useVelouraStore();
   useEffect(()=>viewProduct(product.id),[product.id,viewProduct]);
   const navigate = useNavigate();
-  const recommendations = recommendProducts(product, 3);
+  // Recommend from live products — same-category or same-mood, exclude current
+  const recommendations = liveProducts
+    .filter(p => p.id !== product.id && (p.category === product.category || p.mood === product.mood))
+    .slice(0, 3);
   const wished = isWishlisted(product.id);
 
   return (
@@ -887,7 +890,7 @@ export function ProductDetailPage({ product }: { product: Product }) {
               ))}
             </div>
           </div>
-          <p className="mt-6 text-sm text-muted-foreground">{product.stock < 8 ? `LOW STOCK â€” ${product.stock} LEFT` : "IN STOCK"}</p>
+          <p className="mt-6 text-sm text-muted-foreground">{product.stock < 8 ? `LOW STOCK — ${product.stock} LEFT` : "IN STOCK"}</p>
           <div className="mt-6 flex items-center gap-3">
             <Quantity value={quantity} onChange={setQuantity} />
             <Button variant="editorial" className="flex-1" onClick={() => addToCart(product, selectedSize, selectedColor, quantity)}>
@@ -970,7 +973,7 @@ function ProductAccordions({ product }: { product: Product }) {
     ["The Fit", product.fit],
     ["Material", product.material],
     ["Care", product.care],
-    ["Delivery", "Complimentary standard delivery on orders over Rs. 15,000. Standard delivery arrives in 3â€“5 business days."],
+    ["Delivery", "Complimentary standard delivery on orders over Rs. 15,000. Standard delivery arrives in 3–5 business days."],
     ["Returns", "Returns are accepted within 14 days on unworn VEL0URA APPAREL pieces with original tags attached."],
   ];
   return (
@@ -1071,7 +1074,7 @@ export function SizeGuide({ onClose }: { onClose: () => void }) {
 
 function SearchOverlay() {
   const { data: productsData } = useProducts();
-  const liveProducts = productsData?.products?.length ? productsData.products.map(fromBackend) : products;
+  const liveProducts = productsData?.products?.map(fromBackend) ?? [];
   const { isSearchOpen, closeSearch } = useVelouraStore();
   const [query, setQuery] = useState("");
   const results = useMemo(() => {
@@ -1121,7 +1124,7 @@ function SearchOverlay() {
 
 function CartDrawer() {
   const { data: productsData } = useProducts();
-  const liveProducts = productsData?.products?.length ? productsData.products.map(fromBackend) : products;
+  const liveProducts = productsData?.products?.map(fromBackend) ?? [];
   const { isCartOpen, closeCart, cart, updateQuantity, removeFromCart, cartSubtotal, shipping, cartTotal, discount } = useVelouraStore();
   if (!isCartOpen) return null;
   return (
@@ -1159,7 +1162,7 @@ function CartDrawer() {
         <div className="border-t border-border p-5">
           <CouponInput />
           <SummaryRow label="Subtotal" value={formatPrice(cartSubtotal)} />
-          {discount ? <SummaryRow label="Discount" value={`âˆ’${formatPrice(discount)}`} /> : null}
+          {discount ? <SummaryRow label="Discount" value={`−${formatPrice(discount)}`} /> : null}
           <SummaryRow label="Shipping" value={shipping ? formatPrice(shipping) : "Complimentary"} />
           <SummaryRow label="Total" value={formatPrice(cartTotal)} strong />
           <Button asChild variant="editorial" className="mt-5 w-full" disabled={!cart.length} onClick={closeCart}>
@@ -1203,7 +1206,7 @@ function MiniCart() {
       <div className="mt-3 grid grid-cols-[72px_1fr] gap-3">
         <img src={miniCart.images[0]} alt={miniCart.name} width={144} height={180} loading="lazy" className="aspect-[4/5] rounded-sm object-cover" />
         <div>
-          <p className="text-sm font-semibold">{miniCart.name}</p><p className="mt-1 text-xs text-muted-foreground">Size: {miniCart.size} Â· Color: {miniCart.color}</p>
+          <p className="text-sm font-semibold">{miniCart.name}</p><p className="mt-1 text-xs text-muted-foreground">Size: {miniCart.size} · Color: {miniCart.color}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="editorial" size="sm" onClick={openCart}>View Bag</Button>
             <Button asChild variant="outline" size="sm" onClick={dismissMiniCart}><Link to="/checkout">Checkout</Link></Button>
@@ -1220,7 +1223,7 @@ export function SummaryRow({ label, value, strong }: { label: string; value: str
 
 export function WishlistPage() {
   const { data: productsData } = useProducts();
-  const liveProducts = productsData?.products?.length ? productsData.products.map(fromBackend) : products;
+  const liveProducts = productsData?.products?.map(fromBackend) ?? [];
   const { wishlist, moveWishlistToCart, removeWishlist } = useVelouraStore();
   const wished = liveProducts.filter((product: Product) => wishlist.includes(product.id));
   return (
@@ -1260,10 +1263,10 @@ export function CheckoutPage() {
 
   const paymentMethods: string[] = [];
   if (settingsData?.payment?.cod_enabled !== false) paymentMethods.push('Cash on Delivery');
-  if (settingsData?.payment?.easypaisa_enabled) paymentMethods.push(`EasyPaisa · ${settingsData.payment.easypaisa_number ?? ''}`);
-  if (settingsData?.payment?.jazzcash_enabled) paymentMethods.push(`JazzCash · ${settingsData.payment.jazzcash_number ?? ''}`);
-  if (settingsData?.payment?.bank_enabled) paymentMethods.push(`Bank Transfer · ${settingsData.payment.bank_name ?? ''}`);
-  if (!paymentMethods.length) paymentMethods.push('Cash on Delivery', 'Card — Demo', 'Online Payment — Demo');
+  if (settingsData?.payment?.easypaisa_enabled) paymentMethods.push(`EasyPaisa � ${settingsData.payment.easypaisa_number ?? ''}`);
+  if (settingsData?.payment?.jazzcash_enabled) paymentMethods.push(`JazzCash � ${settingsData.payment.jazzcash_number ?? ''}`);
+  if (settingsData?.payment?.bank_enabled) paymentMethods.push(`Bank Transfer � ${settingsData.payment.bank_name ?? ''}`);
+  if (!paymentMethods.length) paymentMethods.push('Cash on Delivery', 'Card � Demo', 'Online Payment � Demo');
 
   const [paymentMethod, setPaymentMethod] = useState(paymentMethods[0] ?? "Cash on Delivery");
 
@@ -1325,7 +1328,7 @@ export function CheckoutPage() {
               <CheckoutInput name="country" label="Country" required />
             </div>
           </CheckoutGroup>
-          <CheckoutGroup title="Delivery method"><div className="flex flex-wrap gap-3">{["Standard","Express"].map(method=><Button type="button" key={method} variant={deliveryMethod===method?"editorial":"outline"} onClick={()=>setDeliveryMethod(method)}>{method} Â· {method==="Express"?"1â€“2 days":"3â€“5 days"}</Button>)}</div></CheckoutGroup>
+          <CheckoutGroup title="Delivery method"><div className="flex flex-wrap gap-3">{["Standard","Express"].map(method=><Button type="button" key={method} variant={deliveryMethod===method?"editorial":"outline"} onClick={()=>setDeliveryMethod(method)}>{method} · {method==="Express"?"1–2 days":"3–5 days"}</Button>)}</div></CheckoutGroup>
           <CheckoutGroup title="Payment">
             <div className="grid gap-3 sm:grid-cols-2">
               {paymentMethods.map((method) => (
@@ -1356,7 +1359,7 @@ function CheckoutInput({ name, label, type = "text", required }: { name: string;
 
 export function OrderSummary({ cart, subtotal, shipping, total, actionLabel, orderDiscount }: { cart: CartItem[]; subtotal: number; shipping: number; total: number; actionLabel?: string; orderDiscount?: number }) {
   const { data: productsData } = useProducts();
-  const liveProducts = productsData?.products?.length ? productsData.products.map(fromBackend) : products;
+  const liveProducts = productsData?.products?.map(fromBackend) ?? [];
   const {discount} = useVelouraStore();
   return (
     <aside className="h-fit rounded-sm glass-panel-strong p-5 lg:sticky lg:top-28">
@@ -1371,7 +1374,7 @@ export function OrderSummary({ cart, subtotal, shipping, total, actionLabel, ord
       <div className="mt-6 border-t border-border pt-4">
         {actionLabel ? <CouponInput /> : null}
         <SummaryRow label="Subtotal" value={formatPrice(subtotal)} />
-        {(orderDiscount ?? (actionLabel ? discount : 0)) > 0 ? <SummaryRow label="Discount" value={`âˆ’${formatPrice(orderDiscount ?? discount)}`} /> : null}
+        {(orderDiscount ?? (actionLabel ? discount : 0)) > 0 ? <SummaryRow label="Discount" value={`−${formatPrice(orderDiscount ?? discount)}`} /> : null}
         <SummaryRow label="Shipping" value={shipping ? formatPrice(shipping) : "Complimentary"} />
         <SummaryRow label="Total" value={formatPrice(total)} strong />
       </div>
@@ -1466,7 +1469,7 @@ export function TrackOrderPage() {
       {searched ? (
         found && !(apiEnabled && error && !local) ? (
           <div className="mt-10 rounded-sm bg-secondary p-6">
-            <p className="editorial-label">{remote?.order_number ?? local?.backendOrderNumber ?? local?.id}{cancelled ? " · CANCELLED" : ""}</p>
+            <p className="editorial-label">{remote?.order_number ?? local?.backendOrderNumber ?? local?.id}{cancelled ? " � CANCELLED" : ""}</p>
             <div className="mt-8 space-y-5">
               {steps.map((step, index) => {
                 const done = !cancelled && index <= current;
@@ -1524,12 +1527,16 @@ export function AboutPage() {
 }
 
 export function CollectionsPage() {
+  const { data: productsData } = useProducts();
+  const liveProducts = productsData?.products?.map(fromBackend) ?? [];
   return (
     <main>
       <EditorialBanner />
       <section className="mx-auto max-w-[1500px] px-5 py-20 sm:px-8 lg:px-12">
         <SectionHeader label="VEL0URA APPAREL Collection" title="Signature essentials" />
-        <ProductGrid products={products.filter((product) => product.tags.includes("signature") || product.featured)} />
+        {liveProducts.length > 0
+          ? <ProductGrid products={liveProducts.filter((product) => product.tags.includes("signature") || product.featured)} />
+          : null}
       </section>
       <BuildYourLook />
     </main>
