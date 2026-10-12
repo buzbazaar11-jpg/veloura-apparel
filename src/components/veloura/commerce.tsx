@@ -48,7 +48,8 @@ import {
 } from "@/lib/veloura-data";
 import { useVelouraStore, type CartItem, type Order } from "@/lib/veloura-store";
 import { useSettings, useHeroSlides, useBlogPosts } from "@/lib/api";
-import { assetUrl } from "@/lib/live-catalog";
+import { assetUrl, LiveDeals, useCatalogVersion } from "@/lib/live-catalog";
+import { api, apiEnabled } from "@/lib/api";
 
 export function SiteChrome() {
   return (
@@ -1025,7 +1026,7 @@ export function SizeGuide({ onClose }: { onClose: () => void }) {
 }
 
 function SearchOverlay() {
-  useCatalogVersion();
+  const catalogV = useCatalogVersion();
   const { isSearchOpen, closeSearch } = useVelouraStore();
   const [query, setQuery] = useState("");
   const results = useMemo(() => {
@@ -1033,7 +1034,7 @@ function SearchOverlay() {
     return products
       .filter((product) => [product.name, product.category, product.tags.join(" ")].join(" ").toLowerCase().includes(query.toLowerCase()))
       .slice(0, 8);
-  }, [query]);
+  }, [query, catalogV]);
   useEffect(() => {
     if (isSearchOpen) setQuery("");
   }, [isSearchOpen]);
@@ -1371,39 +1372,69 @@ export function OrderConfirmationPage({ order }: { order: Order | undefined }) {
 
 export function TrackOrderPage() {
   const { findOrder, orders } = useVelouraStore();
-  const [orderId, setOrderId] = useState(orders[0]?.id ?? "");
+  const [orderId, setOrderId] = useState("");
+  const [email, setEmail] = useState("");
   const [searched, setSearched] = useState(false);
-  const order = searched ? findOrder(orderId) : undefined;
+  const [remote, setRemote] = useState<{ order_number: string; status: string; status_history?: { status: string; at: string }[] } | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => { const o = orders[0]; if (o && !orderId) { setOrderId(o.backendOrderNumber ?? o.id); setEmail(o.customer.email); } }, [orders]); // eslint-disable-line react-hooks/exhaustive-deps
+  const local = searched ? orders.find(o => o.id.toUpperCase() === orderId.trim().toUpperCase() || o.backendOrderNumber?.toUpperCase() === orderId.trim().toUpperCase()) ?? findOrder(orderId) : undefined;
+  const lookup = async () => {
+    setError(""); setRemote(null);
+    if (apiEnabled) {
+      const number = local?.backendOrderNumber ?? orders.find(o => o.id.toUpperCase() === orderId.trim().toUpperCase())?.backendOrderNumber ?? orderId.trim();
+      try { const r = await api.trackOrder(number, email.trim()); setRemote(r.order); } catch (e) { setError((e as Error).message); }
+    }
+    setSearched(true);
+  };
+  // Live refresh of status every second while viewing
+  useEffect(() => {
+    if (!apiEnabled || !remote) return;
+    const t = window.setInterval(() => { api.trackOrder(remote.order_number, email.trim()).then(r => setRemote(r.order)).catch(() => {}); }, 1000);
+    return () => window.clearInterval(t);
+  }, [remote?.order_number, email]); // eslint-disable-line react-hooks/exhaustive-deps
   const steps = ["CONFIRMED", "PROCESSING", "SHIPPED", "OUT FOR DELIVERY", "DELIVERED"];
+  const map: Record<string, number> = { pending: 0, confirmed: 0, processing: 1, shipped: 2, out_for_delivery: 3, "out for delivery": 3, delivered: 4 };
+  const status = remote?.status?.toLowerCase() ?? "";
+  const cancelled = status === "cancelled" || status === "canceled";
+  const current = remote ? (map[status] ?? 0) : 0;
+  const found = remote || local;
   return (
     <main className="mx-auto max-w-4xl px-5 pb-20 pt-32 sm:px-8 lg:px-12">
       <p className="editorial-label">Order Tracking</p>
       <h1 className="mt-3 font-display text-6xl leading-none sm:text-8xl">TRACK YOUR VEL0URA APPAREL ORDER</h1>
-      <div className="mt-10 rounded-sm glass-panel p-5">
+      <form className="mt-10 rounded-sm glass-panel p-5" onSubmit={(e) => { e.preventDefault(); void lookup(); }}>
         <label className="block">
           <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Order Number</span>
-          <input value={orderId} onChange={(event) => setOrderId(event.target.value)} placeholder="VL-2026-10482" className="mt-2 w-full rounded-sm border border-border bg-secondary px-4 py-3 text-sm focus-veloura" />
+          <input value={orderId} onChange={(event) => setOrderId(event.target.value)} placeholder="TM2610120A1B" className="mt-2 w-full rounded-sm border border-border bg-secondary px-4 py-3 text-sm focus-veloura" />
         </label>
-        <Button className="mt-4" variant="editorial" onClick={() => setSearched(true)}>Track Order</Button>
-      </div>
+        {apiEnabled ? <label className="mt-4 block">
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Email used at checkout</span>
+          <input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className="mt-2 w-full rounded-sm border border-border bg-secondary px-4 py-3 text-sm focus-veloura" />
+        </label> : null}
+        <Button type="submit" className="mt-4" variant="editorial">Track Order</Button>
+      </form>
       {searched ? (
-        order ? (
+        found && !(apiEnabled && error && !local) ? (
           <div className="mt-10 rounded-sm bg-secondary p-6">
-            <p className="editorial-label">{order.id}</p>
+            <p className="editorial-label">{remote?.order_number ?? local?.backendOrderNumber ?? local?.id}{cancelled ? " · CANCELLED" : ""}</p>
             <div className="mt-8 space-y-5">
-              {steps.map((step, index) => (
+              {steps.map((step, index) => {
+                const done = !cancelled && index <= current;
+                const at = remote?.status_history?.find(h => (map[h.status.toLowerCase()] ?? -1) === index)?.at;
+                return (
                 <div key={step} className="flex gap-4">
-                  <span className={`grid size-8 shrink-0 place-items-center rounded-full ${index === 0 ? "bg-sage text-sage-foreground" : "bg-background text-muted-foreground"}`}>{index === 0 ? <Check className="size-4" /> : index + 1}</span>
+                  <span className={`grid size-8 shrink-0 place-items-center rounded-full ${done ? "bg-sage text-sage-foreground" : "bg-background text-muted-foreground"}`}>{done ? <Check className="size-4" /> : index + 1}</span>
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.16em]">{step}</p>
-                    <p className="text-sm text-muted-foreground">{index === 0 ? "Your VEL0URA APPAREL order is confirmed." : "Pending"}</p>
+                    <p className="text-sm text-muted-foreground">{done ? (at ? new Date(at).toLocaleString() : "Completed") : "Pending"}</p>
                   </div>
-                </div>
-              ))}
+                </div>);
+              })}
             </div>
           </div>
         ) : (
-          <p className="mt-8 text-muted-foreground">No local VEL0URA APPAREL order found with that number.</p>
+          <p className="mt-8 text-muted-foreground">{error || "No VEL0URA APPAREL order found with that number."}</p>
         )
       ) : null}
     </main>

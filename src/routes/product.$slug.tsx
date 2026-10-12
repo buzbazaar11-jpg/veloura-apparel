@@ -4,10 +4,11 @@ import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { ProductDetailPage } from "@/components/veloura/commerce";
 import { getProductBySlug } from "@/lib/veloura-data";
+import { fetchBackendProduct } from "@/lib/live-catalog";
 
 export const Route = createFileRoute("/product/$slug")({
-  loader: ({ params }) => {
-    const product = getProductBySlug(params.slug);
+  loader: async ({ params }) => {
+    const product = (await fetchBackendProduct(params.slug)) ?? getProductBySlug(params.slug);
     if (!product) throw notFound();
     return { product };
   },

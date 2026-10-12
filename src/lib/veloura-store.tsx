@@ -1,6 +1,7 @@
 import { toast } from "sonner";
 import { api, apiEnabled, useSettings } from "./api";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCatalogVersion } from "@/lib/live-catalog";
 import { getProductBySlug, products, productPrice, coupons, storeConfig, type Product } from "@/lib/veloura-data";
 
 export type CartItem = {
@@ -229,9 +230,10 @@ export function VelouraProvider({ children }: { children: ReactNode }) {
 
   const findOrder = useCallback((id: string) => orders.find((order) => order.id.toUpperCase() === id.toUpperCase()), [orders]);
 
+  const catalogV = useCatalogVersion();
   const cartSubtotal = useMemo(
     () => cart.reduce((sum, item) => sum + (productPrice(products.find((product) => product.id === item.productId) ?? products[0] as Product)) * item.quantity, 0),
-    [cart],
+    [cart, catalogV],
   );
   const cartSubtotalRef = useRef(cartSubtotal);
   cartSubtotalRef.current = cartSubtotal;
