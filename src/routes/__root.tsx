@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { VelouraProvider } from "@/lib/veloura-store";
 import { Footer, SiteChrome } from "@/components/veloura/commerce";
 import { ErrorComponent } from "@/lib/error-component";
+import { LiveCatalogProvider, LiveProductSync } from "@/lib/live-catalog";
 
 function NotFoundComponent() {
   return (
@@ -90,6 +91,8 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <LiveCatalogProvider>
+      <LiveProductSync />
       <VelouraProvider>
         <SiteChrome />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
@@ -97,6 +100,7 @@ function RootComponent() {
         <Footer />
         <Toaster closeButton position="bottom-left" />
       </VelouraProvider>
+      </LiveCatalogProvider>
     </QueryClientProvider>
   );
 }

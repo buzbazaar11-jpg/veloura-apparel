@@ -181,9 +181,10 @@ function Navbar() {
 }
 
 export function HomePage() {
+  useCatalogVersion();
   return <main><HeroCarousel /><TrustStrip /><CategorySection />
     <section className="store-section"><SectionHeader label="THE EVERYDAY LINEUP" title="Menâ€™s essentials. Sorted." action={<LinkText to="/shop">Shop all menswear</LinkText>} /><p className="mb-7 max-w-lg text-sm leading-6 text-muted-foreground">Start with a clean tee, add an easy shirt, finish with your favorite trousers.</p><ProductGrid products={products.filter(p=>p.newArrival).slice(0,4)} /></section>
-    <SaleBanner /><HomeDeals />
+    <SaleBanner /><LiveDeals /><HomeDeals />
     <section className="store-section"><SectionHeader label="THE SIGNATURE EDIT" title="Your next go-to pieces." action={<LinkText to="/best-sellers">Explore the edit</LinkText>} /><ProductGrid products={products.filter(p=>p.bestSeller).slice(0,4)} /></section>
     <EditorialBanner /><ShoppingConfidence /><BuildYourLook /><NewsletterBand />
   </main>;
@@ -473,6 +474,7 @@ function BentoTile({ to, search, img, alt, tag, title, note, className = "" }: {
 }
 
 function CategorySection() {
+  useCatalogVersion();
   const { addManyToCart } = useVelouraStore();
   const [added, setAdded] = useState(false);
   const find = (c: string) => products.find(p => p.category === c);
@@ -497,6 +499,7 @@ function EditorialBanner() {
 }
 
 function FeaturedProducts() {
+  useCatalogVersion();
   const featured = products.filter((product) => product.featured).slice(0, 4);
   const large = featured[0];
   const rest = featured.slice(1);
@@ -529,6 +532,7 @@ function FeaturedProducts() {
 }
 
 export function BuildYourLook() {
+  useCatalogVersion();
   const [selectedId, setSelectedId] = useState(products[0]?.id ?? "");
   const { addManyToCart } = useVelouraStore();
   const selected = products.find((product) => product.id === selectedId) ?? products[0];
@@ -649,6 +653,7 @@ export function ArticleCard({ article }: { article: (typeof articles)[number] })
 }
 
 export function ShopPage({ mode = "all", initialCategory = "All" }: { mode?: "all" | "new" | "best" | "sale"; initialCategory?: string }) {
+  const catalogV = useCatalogVersion();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState(initialCategory);
   useEffect(()=>setCategory(initialCategory),[initialCategory]);
@@ -678,7 +683,7 @@ export function ShopPage({ mode = "all", initialCategory = "All" }: { mode?: "al
     if (sort === "Best Rated") list = [...list].sort((a,b)=>b.rating-a.rating);
     if (sort === "Best Selling") list = [...list].sort((a,b)=>b.reviewCount-a.reviewCount);
     return list;
-  }, [query, category, size, color, price, availability, sort, mode]);
+  }, [query, category, size, color, price, availability, sort, mode, catalogV]);
 
   const filters = (
     <FilterPanel
@@ -1020,6 +1025,7 @@ export function SizeGuide({ onClose }: { onClose: () => void }) {
 }
 
 function SearchOverlay() {
+  useCatalogVersion();
   const { isSearchOpen, closeSearch } = useVelouraStore();
   const [query, setQuery] = useState("");
   const results = useMemo(() => {
@@ -1166,6 +1172,7 @@ export function SummaryRow({ label, value, strong }: { label: string; value: str
 }
 
 export function WishlistPage() {
+  useCatalogVersion();
   const { wishlist, moveWishlistToCart, removeWishlist } = useVelouraStore();
   const wished = products.filter((product) => wishlist.includes(product.id));
   return (
@@ -1437,6 +1444,7 @@ export function AboutPage() {
 }
 
 export function CollectionsPage() {
+  useCatalogVersion();
   return (
     <main>
       <EditorialBanner />
