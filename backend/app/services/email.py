@@ -43,7 +43,7 @@ def send_order_email(db: Session, order, template: str) -> OrderEmail:
     if template not in TEMPLATES:
         template = "placed"
     s = db.query(SiteSettings).first()
-    brand = s.brand_name if s else "Timera"
+    brand = s.brand_name if s else "Veloura Apparel"
     subject_t, intro = TEMPLATES[template]
     subject = subject_t.format(n=order.order_number)
     log = OrderEmail(order_id=order.id, order_number=order.order_number, recipient=order.customer_email,

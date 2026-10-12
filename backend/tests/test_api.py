@@ -15,7 +15,7 @@ def admin_h():
 def test_full_flow():
     h = admin_h()
     assert c.get("/api/v1/admin/stats").status_code == 401
-    p = c.post("/api/v1/admin/r/products", headers=h, json={"name": "Test Watch", "brand": "Timera", "collection": "x",
+    p = c.post("/api/v1/admin/r/products", headers=h, json={"name": "Test Watch", "brand": "Veloura Apparel", "collection": "x",
         "price": 10000, "image_url": "https://x/y.jpg", "description": "d", "stock": 5, "active": True}).json()["row"]
     assert c.get(f"/api/v1/products/{p['slug']}").status_code == 200
     c.put("/api/v1/admin/settings/payment_settings", headers=h, json={"delivery_charge": 250, "free_delivery_above": 5000, "cod_charge": 0})

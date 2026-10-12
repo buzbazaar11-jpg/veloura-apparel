@@ -1,19 +1,21 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ProductDetailPage } from "@/components/veloura/commerce";
-import { getProductBySlug } from "@/lib/veloura-data";
+import { getProductBySlug, type Product } from "@/lib/veloura-data";
 import { fetchBackendProduct } from "@/lib/live-catalog";
+import { apiEnabled } from "@/lib/api";
 
 export const Route = createFileRoute("/product/$slug")({
-  loader: async ({ params }) => {
-    const product = (await fetchBackendProduct(params.slug)) ?? getProductBySlug(params.slug);
-    if (!product) throw notFound();
-    return { product };
+  loader: ({ params }) => {
+    const product = getProductBySlug(params.slug);
+    // Always return something — live fetch happens in component
+    return { product: product ?? null, slug: params.slug };
   },
   head: ({ loaderData }) => {
-    if (!loaderData) {
+    if (!loaderData?.product) {
       return { meta: [{ title: "Product — VEL0URA APPAREL" }, { name: "robots", content: "noindex" }] };
     }
     return {
@@ -32,7 +34,19 @@ export const Route = createFileRoute("/product/$slug")({
 });
 
 function ProductRoute() {
-  const { product } = Route.useLoaderData();
+  const { product: staticProduct, slug } = Route.useLoaderData();
+  const [liveProduct, setLiveProduct] = useState<Product | null>(null);
+
+  useEffect(() => {
+    if (!apiEnabled) return;
+    fetchBackendProduct(slug).then((p) => {
+      if (p) setLiveProduct(p);
+    });
+  }, [slug]);
+
+  const product = liveProduct ?? staticProduct;
+
+  if (!product) return <ProductNotFound />;
   return <ProductDetailPage product={product} />;
 }
 
@@ -48,4 +62,3 @@ function ProductNotFound() {
     </main>
   );
 }
-

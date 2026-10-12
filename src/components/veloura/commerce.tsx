@@ -47,8 +47,8 @@ import {
   type Product,
 } from "@/lib/veloura-data";
 import { useVelouraStore, type CartItem, type Order } from "@/lib/veloura-store";
-import { useSettings, useHeroSlides, useBlogPosts } from "@/lib/api";
-import { assetUrl, LiveDeals, useCatalogVersion } from "@/lib/live-catalog";
+import { useSettings, useHeroSlides, useBlogPosts, useProducts, useCollections } from "@/lib/api";
+import { assetUrl, fromBackend, LiveDeals } from "@/lib/live-catalog";
 import { api, apiEnabled } from "@/lib/api";
 
 export function SiteChrome() {
@@ -182,12 +182,13 @@ function Navbar() {
 }
 
 export function HomePage() {
-  useCatalogVersion();
-  return <main><HeroCarousel /><TrustStrip /><CategorySection />
-    <section className="store-section"><SectionHeader label="THE EVERYDAY LINEUP" title="Menâ€™s essentials. Sorted." action={<LinkText to="/shop">Shop all menswear</LinkText>} /><p className="mb-7 max-w-lg text-sm leading-6 text-muted-foreground">Start with a clean tee, add an easy shirt, finish with your favorite trousers.</p><ProductGrid products={products.filter(p=>p.newArrival).slice(0,4)} /></section>
+  const { data: productsData } = useProducts();
+  const liveProducts = productsData?.products?.length ? productsData.products.map(fromBackend) : products;
+  return <main><HeroCarousel /><TrustStrip /><CategorySection liveProducts={liveProducts} />
+    <section className="store-section"><SectionHeader label="THE EVERYDAY LINEUP" title="Men's essentials. Sorted." action={<LinkText to="/shop">Shop all menswear</LinkText>} /><p className="mb-7 max-w-lg text-sm leading-6 text-muted-foreground">Start with a clean tee, add an easy shirt, finish with your favorite trousers.</p><ProductGrid products={liveProducts.filter(p=>p.newArrival).slice(0,4)} /></section>
     <SaleBanner /><LiveDeals /><HomeDeals />
-    <section className="store-section"><SectionHeader label="THE SIGNATURE EDIT" title="Your next go-to pieces." action={<LinkText to="/best-sellers">Explore the edit</LinkText>} /><ProductGrid products={products.filter(p=>p.bestSeller).slice(0,4)} /></section>
-    <EditorialBanner /><ShoppingConfidence /><BuildYourLook /><NewsletterBand />
+    <section className="store-section"><SectionHeader label="THE SIGNATURE EDIT" title="Your next go-to pieces." action={<LinkText to="/best-sellers">Explore the edit</LinkText>} /><ProductGrid products={liveProducts.filter(p=>p.bestSeller).slice(0,4)} /></section>
+    <EditorialBanner /><ShoppingConfidence /><BuildYourLook liveProducts={liveProducts} /><NewsletterBand />
   </main>;
 }
 function TrustStrip(){const { data } = useSettings();const freeAbove = data?.payment?.free_delivery_above ?? storeConfig.freeShippingThreshold;return <section aria-label="Shopping benefits" className="border-b border-border bg-secondary"><div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-5 px-5 py-5 md:grid-cols-4">{[[Truck,`Free delivery from ${formatPrice(freeAbove)}`],[RotateCcw,"Find your fit \u00b7 size guides"],[ShieldCheck,"Cash on Delivery \u00b7 demo"],[Sparkles,"WELCOME10 \u00b7 save 10%"]].map(([Icon,label])=>{const Symbol=Icon as typeof Truck; return <div key={String(label)} className="flex items-center justify-center gap-2 text-xs"><Symbol className="size-5 shrink-0 text-sage" /><span>{String(label)}</span></div>;})}</div></section>;}
@@ -474,13 +475,12 @@ function BentoTile({ to, search, img, alt, tag, title, note, className = "" }: {
   </Link>;
 }
 
-function CategorySection() {
-  useCatalogVersion();
+function CategorySection({ liveProducts }: { liveProducts: Product[] }) {
   const { addManyToCart } = useVelouraStore();
   const [added, setAdded] = useState(false);
-  const find = (c: string) => products.find(p => p.category === c);
+  const find = (c: string) => liveProducts.find(p => p.category === c);
   const tee = find("T-Shirts"), trouser = find("Trousers"), jacket = find("Jackets"), acc = find("Accessories"), shirt = find("Shirts");
-  const uniform = [tee, trouser].filter(Boolean) as typeof products;
+  const uniform = [tee, trouser].filter(Boolean) as typeof liveProducts;
   return <section className="category-section store-section"><SectionHeader label="BUILT FOR YOUR EVERYDAY" title="Find your kind of fit." />
     <div className="bento-grid">
       <BentoTile className="bento-hero" to="/shop" search={{category:"Jackets"}} img={campaignImages.one} alt="Men's jacket campaign" tag="01 / Outerwear" title="The Jacket Edit" note="Layers made for every season." />
@@ -500,7 +500,6 @@ function EditorialBanner() {
 }
 
 function FeaturedProducts() {
-  useCatalogVersion();
   const featured = products.filter((product) => product.featured).slice(0, 4);
   const large = featured[0];
   const rest = featured.slice(1);
@@ -532,11 +531,12 @@ function FeaturedProducts() {
   );
 }
 
-export function BuildYourLook() {
-  useCatalogVersion();
-  const [selectedId, setSelectedId] = useState(products[0]?.id ?? "");
+export function BuildYourLook({ liveProducts: propProducts }: { liveProducts?: Product[] } = {}) {
+    const { data: productsData } = useProducts();
+  const liveProducts = propProducts ?? (productsData?.products?.length ? productsData.products.map(fromBackend) : products);
+  const [selectedId, setSelectedId] = useState(liveProducts[0]?.id ?? "");
   const { addManyToCart } = useVelouraStore();
-  const selected = products.find((product) => product.id === selectedId) ?? products[0];
+  const selected = liveProducts.find((product) => product.id === selectedId) ?? liveProducts[0];
   if (!selected) return null;
   const recommendations = recommendProducts(selected, 4);
   return (
@@ -549,7 +549,7 @@ export function BuildYourLook() {
             Piece
           </label>
           <select id="look-piece" value={selectedId} onChange={(event) => setSelectedId(event.target.value)} className="mt-3 w-full rounded-full border border-border bg-secondary px-4 py-3 text-sm focus-veloura">
-            {products.slice(0, 12).map((product) => (
+            {liveProducts.slice(0, 12).map((product) => (
               <option key={product.id} value={product.id}>
                 {product.name}
               </option>
@@ -654,7 +654,8 @@ export function ArticleCard({ article }: { article: (typeof articles)[number] })
 }
 
 export function ShopPage({ mode = "all", initialCategory = "All" }: { mode?: "all" | "new" | "best" | "sale"; initialCategory?: string }) {
-  const catalogV = useCatalogVersion();
+  const { data: productsData } = useProducts();
+  const liveProducts = productsData?.products?.length ? productsData.products.map(fromBackend) : products;
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState(initialCategory);
   useEffect(()=>setCategory(initialCategory),[initialCategory]);
@@ -667,7 +668,7 @@ export function ShopPage({ mode = "all", initialCategory = "All" }: { mode?: "al
   const [mobileFilters, setMobileFilters] = useState(false);
 
   const filtered = useMemo(() => {
-    let list = products.filter((product) => {
+    let list = liveProducts.filter((product) => {
       const matchesQuery = [product.name, product.category, product.description, product.tags.join(" ")].join(" ").toLowerCase().includes(query.toLowerCase());
       const matchesCategory = category === "All" || product.category === category || product.audience === category || category === "New Arrivals" && product.newArrival || category === "Sale" && Boolean(product.salePrice);
       const matchesMode = mode === "all" || mode === "new" && product.newArrival || mode === "best" && product.bestSeller || mode === "sale" && Boolean(product.salePrice);
@@ -684,7 +685,7 @@ export function ShopPage({ mode = "all", initialCategory = "All" }: { mode?: "al
     if (sort === "Best Rated") list = [...list].sort((a,b)=>b.rating-a.rating);
     if (sort === "Best Selling") list = [...list].sort((a,b)=>b.reviewCount-a.reviewCount);
     return list;
-  }, [query, category, size, color, price, availability, sort, mode, catalogV]);
+  }, [query, category, size, color, price, availability, sort, mode]);
 
   const filters = (
     <FilterPanel
@@ -799,6 +800,8 @@ function FilterSelect({ label, value, onChange, options }: { label: string; valu
 }
 
 export function ProductDetailPage({ product }: { product: Product }) {
+  const { data: productsData } = useProducts();
+  const liveProducts = productsData?.products?.length ? productsData.products.map(fromBackend) : products;
   const [selectedSize, setSelectedSize] = useState(product.sizes[0] ?? "ONE SIZE");
   const [selectedColor, setSelectedColor] = useState(product.colors[0] ?? "Ivory");
   const [quantity, setQuantity] = useState(1);
@@ -885,7 +888,7 @@ export function ProductDetailPage({ product }: { product: Product }) {
         </div>
       </section>
       <section className="mt-16"><SectionHeader label="Reviews" title="Worn. Loved. Repeated." /><Rating product={product} /><LiveReviews productId={product.id} fallbackCount={product.reviewCount} /><div className="mt-10 border-t border-border pt-8"><h3 className="font-display text-3xl">Leave a Review</h3><ReviewForm productId={product.id} /></div></section>
-      {recentlyViewed.filter(id=>id!==product.id).length ? <section className="mt-16"><SectionHeader label="Recently viewed" title="Another look." /><ProductGrid products={products.filter(p=>recentlyViewed.includes(p.id)&&p.id!==product.id).slice(0,4)} /></section>:null}
+      {recentlyViewed.filter(id=>id!==product.id).length ? <section className="mt-16"><SectionHeader label="Recently viewed" title="Another look." /><ProductGrid products={liveProducts.filter(p=>recentlyViewed.includes(p.id)&&p.id!==product.id).slice(0,4)} /></section>:null}
       {sizeGuideOpen ? <SizeGuide onClose={() => setSizeGuideOpen(false)} /> : null}
     </main>
   );
@@ -1026,15 +1029,15 @@ export function SizeGuide({ onClose }: { onClose: () => void }) {
 }
 
 function SearchOverlay() {
-  const catalogV = useCatalogVersion();
+  const { data: productsData } = useProducts();
+  const liveProducts = productsData?.products?.length ? productsData.products.map(fromBackend) : products;
   const { isSearchOpen, closeSearch } = useVelouraStore();
   const [query, setQuery] = useState("");
   const results = useMemo(() => {
-    if (!query.trim()) return products.slice(0, 6);
-    return products
-      .filter((product) => [product.name, product.category, product.tags.join(" ")].join(" ").toLowerCase().includes(query.toLowerCase()))
+    if (!query.trim()) return liveProducts.slice(0, 6);
+    return liveProducts.filter((product) => [product.name, product.category, product.tags.join(" ")].join(" ").toLowerCase().includes(query.toLowerCase()))
       .slice(0, 8);
-  }, [query, catalogV]);
+  }, [query]);
   useEffect(() => {
     if (isSearchOpen) setQuery("");
   }, [isSearchOpen]);
@@ -1076,6 +1079,8 @@ function SearchOverlay() {
 }
 
 function CartDrawer() {
+  const { data: productsData } = useProducts();
+  const liveProducts = productsData?.products?.length ? productsData.products.map(fromBackend) : products;
   const { isCartOpen, closeCart, cart, updateQuantity, removeFromCart, cartSubtotal, shipping, cartTotal, discount } = useVelouraStore();
   if (!isCartOpen) return null;
   return (
@@ -1094,7 +1099,7 @@ function CartDrawer() {
           {cart.length ? (
             <div className="space-y-5">
               {cart.map((item) => {
-                const product = products.find((candidate) => candidate.id === item.productId);
+                const product = liveProducts.find((candidate: Product) => candidate.id === item.productId);
                 if (!product) return null;
                 return <CartLine key={`${item.productId}-${item.size}-${item.color}`} item={item} product={product} updateQuantity={updateQuantity} removeFromCart={removeFromCart} />;
               })}
@@ -1173,9 +1178,10 @@ export function SummaryRow({ label, value, strong }: { label: string; value: str
 }
 
 export function WishlistPage() {
-  useCatalogVersion();
+  const { data: productsData } = useProducts();
+  const liveProducts = productsData?.products?.length ? productsData.products.map(fromBackend) : products;
   const { wishlist, moveWishlistToCart, removeWishlist } = useVelouraStore();
-  const wished = products.filter((product) => wishlist.includes(product.id));
+  const wished = liveProducts.filter((product: Product) => wishlist.includes(product.id));
   return (
     <main className="mx-auto max-w-[1500px] px-5 pb-20 pt-32 sm:px-8 lg:px-12">
       <p className="editorial-label">Wishlist</p>
@@ -1308,13 +1314,15 @@ function CheckoutInput({ name, label, type = "text", required }: { name: string;
 }
 
 export function OrderSummary({ cart, subtotal, shipping, total, actionLabel, orderDiscount }: { cart: CartItem[]; subtotal: number; shipping: number; total: number; actionLabel?: string; orderDiscount?: number }) {
- const {discount} = useVelouraStore();
+  const { data: productsData } = useProducts();
+  const liveProducts = productsData?.products?.length ? productsData.products.map(fromBackend) : products;
+  const {discount} = useVelouraStore();
   return (
     <aside className="h-fit rounded-sm glass-panel-strong p-5 lg:sticky lg:top-28">
       <h2 className="font-display text-3xl">Order Summary</h2>
       <div className="mt-5 space-y-4">
         {cart.map((item) => {
-          const product = products.find((candidate) => candidate.id === item.productId);
+          const product = liveProducts.find((candidate: Product) => candidate.id === item.productId);
           if (!product) return null;
           return <div key={`${item.productId}-${item.size}-${item.color}`} className="grid grid-cols-[64px_1fr_auto] gap-3 text-sm"><img src={product.images[0]} alt={product.name} width={128} height={160} loading="lazy" className="aspect-[4/5] rounded-sm object-cover" /><span><span className="block font-semibold">{product.name}</span><span className="text-muted-foreground">Qty {item.quantity}</span></span><span>{formatPrice(productPrice(product) * item.quantity)}</span></div>;
         })}
@@ -1475,7 +1483,6 @@ export function AboutPage() {
 }
 
 export function CollectionsPage() {
-  useCatalogVersion();
   return (
     <main>
       <EditorialBanner />

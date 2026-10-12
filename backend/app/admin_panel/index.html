@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Timera Admin</title>
+<title>Veloura Apparel Admin</title>
 <style>
 :root{--bg:#0e0e10;--card:#17171a;--line:#2a2a2f;--fg:#eee;--mut:#999;--acc:#c9a24a}
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,Arial;background:var(--bg);color:var(--fg)}
@@ -43,7 +43,7 @@ const MENU = [["dashboard","Dashboard"],["orders","Orders"],["products","Product
  ["payment_settings","Payment settings"],["meta_settings","Meta settings"]];
 
 function loginView(){
-  $("#app").innerHTML = `<div style="max-width:360px;margin:12vh auto" class="card"><h1>Timera Admin</h1>
+  $("#app").innerHTML = `<div style="max-width:360px;margin:12vh auto" class="card"><h1>Veloura Apparel Admin</h1>
   <p><input id="em" placeholder="Email"></p><p><input id="pw" type="password" placeholder="Password"></p>
   <button id="go">Sign in</button><p id="err" style="color:#e66"></p></div>`;
   $("#go").onclick = async () => {
@@ -57,7 +57,7 @@ async function render(){
   if (!TOKEN) return loginView();
   if (!SCHEMA) { try { SCHEMA = (await api("/admin/schema")).schema; } catch(e){ return; } }
   const page = location.hash.slice(1) || "dashboard";
-  $("#app").innerHTML = `<div class="wrap"><nav><h3 style="color:var(--acc)">TIMERA</h3>${MENU.map(([k,l])=>`<a href="#${k}" class="${k===page?"on":""}">${l}</a>`).join("")}
+  $("#app").innerHTML = `<div class="wrap"><nav><h3 style="color:var(--acc)">Veloura Apparel</h3>${MENU.map(([k,l])=>`<a href="#${k}" class="${k===page?"on":""}">${l}</a>`).join("")}
   <p><button class="ghost" onclick="logout()">Sign out</button></p></nav><main id="main">Loading…</main></div>`;
   try {
     if (page==="dashboard") await dashboard();

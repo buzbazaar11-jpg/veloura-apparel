@@ -4,11 +4,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    APP_NAME: str = "Timera API"
-    DATABASE_URL: str = "postgresql+psycopg2://timera:timera@localhost:5432/timera"
+    APP_NAME: str = "Veloura Apparel API"
+    DATABASE_URL: str = "postgresql+psycopg2://Veloura Apparel:Veloura Apparel@localhost:5432/Veloura Apparel"
     JWT_SECRET: str = "change-me-to-a-long-random-string"
     JWT_EXPIRE_MINUTES: int = 60 * 24 * 7
-    CORS_ORIGINS: str = "*"  # comma separated, e.g. https://timera.pk,https://www.timera.pk
+    CORS_ORIGINS: str = "*"  # comma separated, e.g. https://Veloura Apparel.pk,https://www.Veloura Apparel.pk
     PUBLIC_BASE_URL: str = "http://localhost:8000"  # used to build upload URLs
     UPLOAD_DIR: str = "uploads"
     MAX_UPLOAD_MB: int = 200
@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
-    SMTP_FROM: str = "Timera <orders@timera.pk>"
+    SMTP_FROM: str = "Veloura Apparel <orders@Veloura Apparel.pk>"
     SMTP_SSL: bool = False
     ADMIN_NOTIFY_EMAIL: str = ""
 

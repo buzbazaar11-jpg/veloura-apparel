@@ -2,13 +2,13 @@ services:
   db:
     image: postgres:16
     restart: unless-stopped
-    environment: { POSTGRES_USER: timera, POSTGRES_PASSWORD: timera, POSTGRES_DB: timera }
+    environment: { POSTGRES_USER: Veloura Apparel, POSTGRES_PASSWORD: Veloura Apparel, POSTGRES_DB: Veloura Apparel }
     volumes: [pgdata:/var/lib/postgresql/data]
   api:
     build: .
     restart: unless-stopped
     env_file: .env
-    environment: { DATABASE_URL: "postgresql+psycopg://timera:timera@db:5432/timera" }
+    environment: { DATABASE_URL: "postgresql+psycopg://Veloura Apparel:Veloura Apparel@db:5432/Veloura Apparel" }
     ports: ["8000:8000"]
     volumes: [./uploads:/app/uploads]
     depends_on: [db]

@@ -1,4 +1,4 @@
-# Backend Investigation Report — Veloura / Timera FastAPI
+# Backend Investigation Report — Veloura / Veloura Apparel FastAPI
 
 ## Summary
 
@@ -8,7 +8,7 @@ The backend code is **structurally complete and has no syntax errors**. All five
 
 1. **`psycopg` (psycopg3) is NOT installed** — the system only has `psycopg2-binary`. The `DATABASE_URL` in `config.py` uses the `postgresql+psycopg://` driver prefix, which requires the `psycopg` v3 package. Importing `app.core.database` immediately fails with `ModuleNotFoundError: No module named 'psycopg'`, which means the entire app crashes on startup.
 2. **No `.env` file exists** in `backend/` — neither `backend/.env` nor the project root has one. Without it, the app falls back to the defaults in `config.py`, which includes a `DATABASE_URL` pointing to a local PostgreSQL instance that likely does not exist on this machine.
-3. **No PostgreSQL database is running locally** — the `DATABASE_URL` default points to `localhost:5432/timera` which does not exist on this Windows machine, so even after fixing the psycopg issue the DB connection would fail at startup (`Base.metadata.create_all(engine)` on line 11 of `main.py`).
+3. **No PostgreSQL database is running locally** — the `DATABASE_URL` default points to `localhost:5432/Veloura Apparel` which does not exist on this Windows machine, so even after fixing the psycopg issue the DB connection would fail at startup (`Base.metadata.create_all(engine)` on line 11 of `main.py`).
 
 Everything else (code logic, imports, models, router registrations, CORS, file uploads, admin panel) is correct.
 
@@ -50,7 +50,7 @@ ModuleNotFoundError: No module named 'psycopg'
 **File:** `backend/app/core/config.py` — `SettingsConfigDict(env_file=".env")` on line 4.
 
 Without `.env`, the app uses these defaults from `config.py`:
-- `DATABASE_URL = "postgresql+psycopg://timera:timera@localhost:5432/timera"` — requires local Postgres
+- `DATABASE_URL = "postgresql+psycopg://Veloura Apparel:Veloura Apparel@localhost:5432/Veloura Apparel"` — requires local Postgres
 - `JWT_SECRET = "change-me-to-a-long-random-string"` — insecure default, works for dev
 - `CORS_ORIGINS = "*"` — permissive, fine for dev
 - `SMTP_HOST = ""` — email sending will be skipped (graceful, logged as "skipped")
@@ -60,11 +60,11 @@ Without `.env`, the app uses these defaults from `config.py`:
 
 ### 3. No PostgreSQL instance on this machine
 
-The default and `.env.example` both point to `localhost:5432/timera`. This machine has no PostgreSQL running (no Postgres process, Docker not confirmed running). Even if psycopg is installed, `Base.metadata.create_all(engine)` on `main.py` line 11 will fail with a connection error at startup.
+The default and `.env.example` both point to `localhost:5432/Veloura Apparel`. This machine has no PostgreSQL running (no Postgres process, Docker not confirmed running). Even if psycopg is installed, `Base.metadata.create_all(engine)` on `main.py` line 11 will fail with a connection error at startup.
 
 **Fix options (choose one):**
 - Option A (Docker, recommended): Run `docker compose up -d` inside `backend/` — this starts both Postgres and the API container together.
-- Option B (Local dev without Docker): Install PostgreSQL locally, create a `timera` user/database, then run `uvicorn app.main:app --reload` from `backend/`.
+- Option B (Local dev without Docker): Install PostgreSQL locally, create a `Veloura Apparel` user/database, then run `uvicorn app.main:app --reload` from `backend/`.
 - Option C (SQLite for local testing only): Change `DATABASE_URL` in `.env` to `sqlite:///./veloura.db`. The `database.py` already handles SQLite at line 6–7.
 
 ### 4. Python version
@@ -251,7 +251,7 @@ All variables in `.env.example` are recognized by `config.py`. No mismatch. The 
    OR change the driver to psycopg2 in `config.py` line 8 and `database.py` (simpler since psycopg2-binary is already installed):
    ```python
    # config.py line 8
-   DATABASE_URL: str = "postgresql+psycopg2://timera:timera@localhost:5432/timera"
+   DATABASE_URL: str = "postgresql+psycopg2://Veloura Apparel:Veloura Apparel@localhost:5432/Veloura Apparel"
    ```
 
 2. **Create `backend/.env`** by copying `.env.example` and setting a real `DATABASE_URL`.

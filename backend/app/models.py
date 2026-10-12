@@ -61,7 +61,7 @@ class Product(Base):
     id = pk()
     slug = Column(Text, unique=True, nullable=False, index=True)
     name = Column(Text, nullable=False)
-    brand = Column(Text, nullable=False, default="Timera")
+    brand = Column(Text, nullable=False, default="Veloura Apparel")
     collection = Column(Text, nullable=False, default="")
     category = Column(Text)
     product_type = Column(Text, nullable=False, default="watch")  # watch | perfume
@@ -167,7 +167,7 @@ class Review(Base):
 class BlogPost(Base):
     __tablename__ = "blog_posts"
     id = pk(); slug = Column(Text, unique=True, nullable=False); title = Column(Text, nullable=False)
-    excerpt = Column(Text); content = Column(Text); author = Column(Text, nullable=False, default="Timera")
+    excerpt = Column(Text); content = Column(Text); author = Column(Text, nullable=False, default="Veloura Apparel")
     category = Column(Text, nullable=False, default="Journal"); image_url = Column(Text)
     published = Column(Boolean, nullable=False, default=True)
     published_at = Column(DateTime(timezone=True), nullable=False, default=now)
@@ -276,7 +276,7 @@ class MetaInsightDaily(Base):
 class SiteSettings(Base):
     __tablename__ = "site_settings"
     id = pk()
-    brand_name = Column(Text, nullable=False, default="Timera"); brand_suffix = Column(Text)
+    brand_name = Column(Text, nullable=False, default="Veloura Apparel"); brand_suffix = Column(Text)
     brand_tagline = Column(Text); logo_url = Column(Text)
     marquee_enabled = Column(Boolean, nullable=False, default=True); marquee_items = Column(J, nullable=False, default=list)
     featured_in = Column(J, nullable=False, default=list); warranty_years = Column(Integer, nullable=False, default=1)
