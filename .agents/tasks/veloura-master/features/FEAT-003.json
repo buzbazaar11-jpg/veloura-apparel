@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Dynamic customer-confidence.tsx: replace hardcoded FAQ questions array and hardcoded coupon offers with live API data from useFaqs() and useCoupons(). Depends on FEAT-001 (useCoupons hook in api.ts). Independent of FEAT-002.",
+  "status": "pending",
+  "steps": [
+    "1. In src/components/veloura/customer-confidence.tsx — ShoppingConfidence() function: replace the hardcoded `questions` array with `useFaqs()`. Import `useFaqs` from '@/lib/api'. Derive the FAQ items: `const { data: faqData } = useFaqs(); const questions = faqData?.faqs?.length ? faqData.faqs.map(f => [f.question, f.answer] as const) : (apiEnabled ? [] : hardcodedQuestions);` Store the existing hardcoded array as `hardcodedQuestions` const at top of file for offline-first fallback. When apiEnabled=true and faqs is empty, render no FAQ section (or show 'No FAQs yet' only in development). When !apiEnabled, show hardcoded questions.",
+
+    "2. In src/components/veloura/customer-confidence.tsx — ShoppingConfidence() function: replace the hardcoded `offers` array `[['WELCOME10', '10%'], ...]` with `useCoupons()`. Import `useCoupons` and `CouponPublicPayload` from '@/lib/api'. Derive the coupons: `const { data: couponsData } = useCoupons(); const liveCoupons = couponsData?.coupons ?? []; const offers = apiEnabled ? liveCoupons.map(c => [c.code, c.discount_type === 'percent' ? c.discount_value + '%' : 'Rs ' + c.discount_value] as const) : hardcodedOffers;` Store existing offers as `hardcodedOffers` for offline-first. When apiEnabled and no active coupons, omit the 'A LITTLE EXTRA, ON US' section entirely.",
+
+    "3. In src/components/veloura/customer-confidence.tsx — CustomerExtras() function: the popup coupon code already uses `activePopup?.coupon_code ?? 'WELCOME10'`. Change this fallback to use the first live coupon: `const firstCoupon = couponsData?.coupons?.[0]?.code ?? (apiEnabled ? null : 'WELCOME10'); const couponCode = activePopup?.coupon_code ?? firstCoupon;`. If `couponCode` is null (apiEnabled but no coupons), hide the coupon display and the 'Use my X% off' button entirely, showing only a 'Explore new arrivals' CTA. Add import `useCoupons` from '@/lib/api'.",
+
+    "4. In src/components/veloura/customer-confidence.tsx — ensure the 4 trust info cards in ShoppingConfidence (Delivery / Find your fit / Know your total / Keep track) remain static — these are UX copy, not DB-driven content. The spec says trust cards come from GET /api/v1/trust via TrustSection model, but the existing 4-item grid is a design element used even when the API returns structured sections. Keep the 4-card TrustStrip as-is (it's driven by settings payment values already). The separate 'useTrust' hook is available but implementing it would change the storefront's visual design significantly — leave this for a future iteration unless the FEAT reviewer flags it.",
+
+    "5. Verify imports: ensure `apiEnabled` is imported from '@/lib/api' in customer-confidence.tsx (it may not be currently imported — check and add if needed). The pattern `import { useSettings, usePopups, useFaqs, useCoupons, apiEnabled } from '@/lib/api'` covers all needed imports."
+  ],
+  "acceptance_criteria": [
+    "npm run build completes with 0 TypeScript errors",
+    "ShoppingConfidence FAQ section uses useFaqs() data; shows hardcoded questions when !apiEnabled",
+    "ShoppingConfidence coupon offers use useCoupons() data; omits section when apiEnabled and no active coupons",
+    "CustomerExtras popup uses first live coupon when apiEnabled; hides coupon UI when no coupons available",
+    "Offline-first behavior preserved: hardcoded fallbacks used when VITE_API_URL is not set"
+  ],
+  "verification": [
+    "Run `npm run build` from workspace root — must complete with 0 TypeScript errors"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

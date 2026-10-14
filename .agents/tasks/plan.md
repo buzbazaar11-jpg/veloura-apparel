@@ -1,115 +1,136 @@
-# Implementation Plan — Veloura Static → Dynamic Wiring
+# Implementation Plan — Veloura Apparel Master Rebuild
 
-> This task is decomposed into 3 FEAT artifacts under `.agents/tasks/task-static-to-dynamic/features/`.
-> Read `context.json` first. Each FEAT is independently verifiable with `npm run build`.
-
----
-
-## Decisions made during exploration
-
-**QueryClient**: already set up in `src/routes/__root.tsx` via `createRootRouteWithContext<{ queryClient: QueryClient }>()` and passed as context. `@tanstack/react-query` v5 is installed.
-
-**Backend endpoints confirmed available** (from `backend/app/routers/public.py`):
-- `GET /api/v1/settings` → `{ settings: SiteSettings, payment: PaymentSettings }`
-- `GET /api/v1/hero-slides` → `{ slides: HeroSlide[] }`
-- `GET /api/v1/categories` → `{ categories: Category[] }`
-- `GET /api/v1/blog` → `{ posts: BlogPost[] }`
-- `GET /api/v1/blog/{slug}` → `{ post: BlogPost }`
-- `GET /api/v1/reviews` → `{ reviews: Review[] }` (all approved, no product_id filter on server)
-- `POST /api/v1/reviews` → `{ ok, message }` (approved=false by default)
-- `GET /api/v1/popups` → `{ popups: Popup[] }`
-
-**Live-catalog.tsx already handles**: products array mutation + deals polling every 8s. Do NOT duplicate this.
-
-**Coupon validation**: `api.validateCoupon` already exists in api.ts; applyCoupon in veloura-store.tsx still uses the local static `coupons` record. Must be updated.
-
-**No hooks/ directory to speak of**: only `src/hooks/use-mobile.tsx` exists. All new hooks go into `src/lib/api.ts` per AGENTS.md rule.
+**Last updated by planning agent. Work decomposes into 3 FEATs (see `.agents/tasks/veloura-master/`).**
 
 ---
 
-## FEAT-001 — Settings, hero, categories, blog, popups wired to DB
+## Baseline: What is Already Done (do NOT redo)
 
-**Files**: `src/lib/api.ts`, `src/components/veloura/commerce.tsx`, `src/components/veloura/customer-confidence.tsx`
-
-- [ ] 1. Add typed React Query hooks to `src/lib/api.ts`:
-        `useSettings()`, `useHeroSlides()`, `useCategories()`, `useBlogPosts()`, `useBlogPost(slug)`, `useReviews(productId?)`, `usePopups()`.
-        Also add `api.submitReview(body)` to the existing `api` object.
-        All hooks: `enabled: apiEnabled`, correct staleTime, `refetchOnWindowFocus: true`, typed placeholderData as fallback.
-        Files: `src/lib/api.ts`
-        Verify: `npm run build`
-
-- [ ] 2. Wire `Navbar` announcement bar to `data?.settings?.brand_tagline ?? storeConfig.announcement`.
-        Wire `MarqueeStrip` items to `data?.settings?.marquee_items` (fallback to hardcoded array).
-        Wire `Footer` social hrefs to `data?.settings?.instagram_url / tiktok_url` (fallback to current hrefs).
-        Wire `TrustStrip` free-delivery text to `data?.payment?.free_delivery_above ?? storeConfig.freeShippingThreshold`.
-        Wire `HeroCarousel` to use live slides when `heroData?.slides?.length > 0`, mapped to existing slide shape.
-        Files: `src/components/veloura/commerce.tsx`
-        Verify: `npm run build`
-
-- [ ] 3. Wire `JournalPage` and `JournalPreview` to `useBlogPosts()`, mapping posts to Article shape with `assetUrl` image resolution.
-        Wire `ArticleRoute` in `src/routes/journal.$slug.tsx` to `useBlogPost(slug)` — hydrate title/description/image from DB post if available.
-        Files: `src/components/veloura/commerce.tsx`, `src/routes/journal.$slug.tsx`
-        Verify: `npm run build`
-
-- [ ] 4. Wire `ShoppingConfidence` to live `delivery_charge` and `free_delivery_above` from `useSettings()`.
-        Wire `CustomerExtras` popup to first active DB popup from `usePopups()` (title, message, coupon_code, delay_seconds).
-        Wire WhatsApp float button href to `data?.settings?.whatsapp_number`.
-        Files: `src/components/veloura/customer-confidence.tsx`
-        Verify: `npm run build`
+- VA prefix on order numbers — `orders.py` line ~80: `order_number="VA" + now.strftime("%y%m%d") + secrets.token_hex(2).upper()`
+- All database models in `backend/app/models.py`: Product, Category, Deal, Coupon, HeroSlide, Review, Faq, TrustSection, Collection, BlogPost, Order, SiteSettings, PaymentSettings etc.
+- All public read endpoints in `backend/app/routers/public.py`: `/health`, `/products`, `/categories`, `/hero-slides`, `/faqs`, `/trust`, `/deals`, `/settings`, `/reviews`, `/blog`, `/collections`
+- Generic admin CRUD: `PUT/POST/DELETE /api/v1/admin/r/{name}/{id}` — covers products, hero_slides, reviews, coupons, etc.
+- Admin singletons: `GET/PUT /api/v1/admin/settings/{name}` — covers site_settings, payment_settings
+- Order status update: `PATCH /api/v1/admin/orders/{id}` with status, courier, tracking_number
+- Admin dashboard: KPI cards, SVG area/donut/stacked-bar charts, orders table with status dropdowns
+- Admin panel light-luxury theme: CSS variables, responsive layout, mobile bottom nav
+- Admin panel sidebar collapse (`colbtn`), mobile hamburger drawer, sticky top bar
+- HeroCarousel already uses `useHeroSlides()` — falls back to static `heroSlides` if empty
+- All products fetch via `useProducts()` React Query hook
+- Footer already renders `data?.settings?.brand_tagline` from API
+- Track page already uses `VA2610138F92` as placeholder
+- `tm_admin_token` read was already added as backwards-compat fallback (need to remove it now)
 
 ---
 
-## FEAT-002 — Coupon validation + checkout payment methods from DB
+## FEAT-001: Backend additions + Admin Panel enhancement
 
-**Files**: `src/lib/veloura-store.tsx`, `src/components/veloura/commerce.tsx`, `src/components/veloura/shopping-ui.tsx`, `src/components/veloura/customer-confidence.tsx`
+**Files:** `backend/app/models.py`, `backend/app/routers/public.py`, `backend/app/admin_panel/index.html`, `src/lib/api.ts`
 
-- [ ] 5. Rewrite `applyCoupon` in `veloura-store.tsx` to be async: try `api.validateCoupon` when `apiEnabled`, fall back to local `coupons` record on error/offline.
-        Store discount percent from backend response so cart discount recalculates correctly.
-        Expose live `standardShipping` and `freeShippingThreshold` from `useSettings()` in context.
-        Files: `src/lib/veloura-store.tsx`
-        Verify: `npm run build`
+- [ ] 1. Add `new_arrival` boolean column to `Product` model in `backend/app/models.py`.
+      After the `featured` line add: `new_arrival = Column(Boolean, nullable=False, default=False)`
+      Files: `backend/app/models.py`
+      Verify: `python -m py_compile backend/app/models.py` — no output (success).
 
-- [ ] 6. Update all `applyCoupon(code)` call sites to handle `Promise<boolean>` return:
-        `ShoppingConfidence`, `CustomerExtras` (customer-confidence.tsx), `HomeDeals` (commerce.tsx), `CouponInput` (shopping-ui.tsx).
-        Files: `src/components/veloura/customer-confidence.tsx`, `src/components/veloura/commerce.tsx`, `src/components/veloura/shopping-ui.tsx`
-        Verify: `npm run build`
+- [ ] 2. Expose `new_arrival` filter and add public `GET /api/v1/coupons` endpoint in `backend/app/routers/public.py`.
+      In `products()`: add `new_arrival: bool | None = None` param and `.filter(Product.new_arrival.is_(new_arrival))` when set.
+      Add new route `@router.get("/coupons")` returning active coupons with id, code, discount_type, discount_value, description only.
+      Files: `backend/app/routers/public.py`
+      Verify: `python -m py_compile backend/app/routers/public.py` — no output.
 
-- [ ] 7. Wire `CheckoutPage` payment methods to live `PaymentSettings` from `useSettings()`.
-        Build `paymentMethods[]` from `cod_enabled`, `easypaisa_enabled`, `jazzcash_enabled`, `bank_enabled`.
-        Show `payment_note` if set. Fall back to `['Cash on Delivery', 'Card — Demo', 'Online Payment — Demo']`.
-        Files: `src/components/veloura/commerce.tsx`
-        Verify: `npm run build`
+- [ ] 3. Add `CouponPublicPayload` type and `useCoupons()` hook to `src/lib/api.ts`.
+      Add `new_arrival?: boolean` to `BackendProductPayload`.
+      Use the existing `liveQuery` helper for `useCoupons` pointing to `/coupons` with empty `{ ok: true, coupons: [] }` placeholder.
+      Files: `src/lib/api.ts`
+      Verify: `npm run build` — 0 TypeScript errors.
 
----
-
-## FEAT-003 — Live reviews display + review submission form on product detail page
-
-**Files**: `src/components/veloura/shopping-ui.tsx`, `src/components/veloura/commerce.tsx`
-
-- [ ] 8. Add `ReviewForm` component to `shopping-ui.tsx`: star selector, name/title/body inputs, calls `api.submitReview` via `useMutation`.
-        Add `LiveReviews` component: calls `useReviews(productId)`, filters by productId client-side, renders blockquotes or static demo fallback.
-        Add `useProductRating(productId, fallback)` helper that computes average from live reviews.
-        Files: `src/components/veloura/shopping-ui.tsx`
-        Verify: `npm run build`
-
-- [ ] 9. Update `ProductDetailPage` reviews section in `commerce.tsx`:
-        Replace static hardcoded review blockquotes with `<LiveReviews productId={product.id} fallbackCount={product.reviewCount} />`.
-        Add `<ReviewForm productId={product.id} />` below the reviews list.
-        Update `Rating` component to call `useReviews` and show live average + count when available.
-        Files: `src/components/veloura/commerce.tsx`
-        Verify: `npm run build`
+- [ ] 4. Admin panel — remove `tm_admin_token` fallback, add 7d/30d/90d selector, add hero slides drag-to-reorder.
+      (a) Remove `|| localStorage.getItem("tm_admin_token")` from TOKEN init and `localStorage.removeItem("tm_admin_token")` from `logout()`.
+      (b) Add `let DAYS = 30;` global; change `dashboard()` to accept `days=DAYS` param and pass `?days=${days}` to `/admin/stats`. Render 3 buttons [7d | 30d | 90d] at top of dashboard that set DAYS and call `dashboard(n)`.
+      (c) When `page === 'hero_slides'`, override the generic `crud()` output with a draggable-card layout instead of the generic table. Each card is `draggable=true` and uses `dragstart`/`dragover`/`drop` events to track order. On drop, call `PUT /api/v1/admin/r/hero_slides/{id}` for each card in the new order, saving its index as `sort_order`.
+      Files: `backend/app/admin_panel/index.html`
+      Verify: Load admin panel in browser, confirm no console errors (manual check); confirm `tm_admin_token` is gone via grep.
 
 ---
 
-## Build verification (final)
+## FEAT-002: 100% Dynamic Homepage (depends on FEAT-001 completing first)
 
-Run `npm run build` from `c:\Users\JalipEmpire\Downloads\New folder (9)\veloura-apparel-main`.
-Zero TypeScript errors and zero Vite transform errors = pass.
+**Files:** `src/lib/live-catalog.tsx`, `src/components/veloura/commerce.tsx`
 
-End-to-end test:
-1. Set `VITE_API_URL=http://localhost:8000` in `.env` (or `.env.local`).
-2. Start backend: `cd backend && uvicorn app.main:app --reload --port 8000`.
-3. Start frontend: `npm run dev`.
-4. In admin (`http://localhost:8000/admin`): change `brand_tagline` → storefront navbar updates within 60s.
-5. Submit a review on any product → appears in admin under Reviews → approve it → product page shows it within 30s.
-6. Unset `VITE_API_URL`, restart dev server → storefront renders with all static fallback data, no errors.
+- [ ] 5. Fix `fromBackend()` in `src/lib/live-catalog.tsx` to read `new_arrival` from backend payload.
+      Change: `newArrival: base?.newArrival ?? !base` → `newArrival: b.new_arrival ?? base?.newArrival ?? false`
+      Files: `src/lib/live-catalog.tsx`
+      Verify: `npm run build` — 0 errors.
+
+- [ ] 6. Make `MarqueeStrip()` return null when `marquee_items` is empty (API enabled case).
+      Remove hardcoded fallback array. When `apiEnabled` and items empty: `return null`. When `!apiEnabled`: render nothing too (marquee only renders from DB). Actually for offline-first, keep static fallback only when `!apiEnabled`.
+      Files: `src/components/veloura/commerce.tsx`
+      Verify: `npm run build` — 0 errors.
+
+- [ ] 7. Make `HeroCarousel()` show a skeleton when apiEnabled + no slides.
+      Remove `heroSlides` as fallback when `apiEnabled`. When apiEnabled and slides empty, return a minimal placeholder `<section id="hero" className="veloura-hero relative overflow-hidden bg-primary animate-pulse" aria-label="Loading..." />`. Offline (!apiEnabled): keep existing static `heroSlides` fallback.
+      Files: `src/components/veloura/commerce.tsx`
+      Verify: `npm run build` — 0 errors.
+
+- [ ] 8. Make New Arrivals and Signature Edit product shelves conditional.
+      In `HomePage()`, wrap each ProductGrid shelf in a conditional: only render section when the filtered array has length > 0. When apiEnabled and DB is empty, sections are simply absent.
+      Files: `src/components/veloura/commerce.tsx`
+      Verify: `npm run build` — 0 errors.
+
+- [ ] 9. Make `SaleBanner()`, `DropBanner()`, `EditorialBanner()` dynamic from `useDeals()`.
+      Import `useDeals` (already in api.ts). Each banner consumes deals[0], deals[1], deals[2] respectively by index. When apiEnabled and deal doesn't exist: `return null`. When `!apiEnabled`: render existing static content (offline-first preservation). Use `assetUrl(deal.image_url)` for banner images.
+      Files: `src/components/veloura/commerce.tsx`
+      Verify: `npm run build` — 0 errors.
+
+- [ ] 10. Make `HomeDeals()` use the first active coupon from `useCoupons()`.
+      Replace hardcoded `'WELCOME10'` with the first coupon from `couponsData?.coupons`. When apiEnabled and no coupons: hide the left panel entirely (show only the right panel static CTA). Offline: use existing hardcoded WELCOME10 reference.
+      Files: `src/components/veloura/commerce.tsx`
+      Verify: `npm run build` — 0 errors.
+
+- [ ] 11. Make `CategorySection()` use a live Jackets product image for the hero bento tile instead of hardcoded `campaignImages.one`.
+      Change: `img={campaignImages.one}` → `img={find('Jackets')?.images[0]}` in the hero BentoTile. The bento CSS handles undefined img gracefully.
+      Files: `src/components/veloura/commerce.tsx`
+      Verify: `npm run build` — 0 errors.
+
+---
+
+## FEAT-003: Dynamic customer-confidence.tsx (depends on FEAT-001; independent of FEAT-002)
+
+**Files:** `src/components/veloura/customer-confidence.tsx`
+
+- [ ] 12. Replace hardcoded FAQ `questions` array with `useFaqs()`.
+      Store existing array as `HARDCODED_QUESTIONS` const. Import `useFaqs, apiEnabled` from `@/lib/api`. Derive: `const liveQs = faqData?.faqs?.map(f => [f.question, f.answer]) ?? []; const questions = apiEnabled ? liveQs : HARDCODED_QUESTIONS;`. When apiEnabled + empty: FAQ section is omitted (return null for that section, not an error state).
+      Files: `src/components/veloura/customer-confidence.tsx`
+      Verify: `npm run build` — 0 errors.
+
+- [ ] 13. Replace hardcoded `offers` array with `useCoupons()`.
+      Store existing `[['WELCOME10','10%'],...]` as `HARDCODED_OFFERS` const. Derive: `const liveCoupons = couponsData?.coupons ?? []; const offers = apiEnabled && liveCoupons.length ? liveCoupons.map(c => [c.code, c.discount_type==='percent' ? c.discount_value+'%' : 'Rs '+c.discount_value]) : (apiEnabled ? [] : HARDCODED_OFFERS);`. When apiEnabled and offers empty: omit the entire 'A LITTLE EXTRA, ON US' section.
+      Files: `src/components/veloura/customer-confidence.tsx`
+      Verify: `npm run build` — 0 errors.
+
+- [ ] 14. Update `CustomerExtras()` popup to use first live coupon, hiding coupon UI when none available.
+      Import `useCoupons` from `@/lib/api`. Derive `const firstCoupon = couponsData?.coupons?.[0]?.code ?? (apiEnabled ? null : 'WELCOME10')`. Use `firstCoupon` as `couponCode`. When `couponCode` is null: omit the coupon code display block and the 'Use my X% off' button; show only the 'Explore new arrivals' CTA button.
+      Files: `src/components/veloura/customer-confidence.tsx`
+      Verify: `npm run build` — 0 errors.
+
+---
+
+## Verification & Acceptance Criteria
+
+1. `npm run build` — zero TypeScript errors, zero build warnings treated as errors.
+2. `python -m py_compile backend/app/models.py backend/app/routers/public.py` — no output (success).
+3. Admin Panel: Confirm `tm_admin_token` string no longer appears in `admin_panel/index.html`. Confirm 7d/30d/90d buttons present in dashboard HTML. Confirm drag-to-reorder present in hero slides view.
+4. Order System: `VA` prefix already confirmed in `orders.py`. No regression from model migration (new_arrival column adds with default=False, no data loss).
+5. Storefront: When `apiEnabled=true` and DB sections are empty — homepage omits sections cleanly rather than showing static dummy content.
+6. When `apiEnabled=false` (no VITE_API_URL) — all offline-first fallbacks preserved (static heroSlides, hardcoded FAQs, static product data).
+
+---
+
+## FEAT Artifacts Location
+
+Full FEAT specifications with detailed steps:
+- `.agents/tasks/veloura-master/context.json` — project context
+- `.agents/tasks/veloura-master/task.json` — task metadata
+- `.agents/tasks/veloura-master/features/FEAT-001.json` — backend + admin panel
+- `.agents/tasks/veloura-master/features/FEAT-002.json` — dynamic homepage
+- `.agents/tasks/veloura-master/features/FEAT-003.json` — dynamic customer-confidence

@@ -1,0 +1,29 @@
+{
+  "project_type": "Vite + React + TanStack Router SPA (frontend) + FastAPI + SQLAlchemy (backend in /backend)",
+  "language": "TypeScript (frontend), Python 3.11+ (backend)",
+  "build_system": "Vite 5 (npm run build); backend runs via uvicorn. No monorepo tooling — frontend and backend are independent.",
+  "test_framework": "No automated test framework found. Verification is by build (npm run build) and manual inspection.",
+  "build_command": "npm run build",
+  "test_command": "npm run build (zero TypeScript errors = passing)",
+  "verification_instructions": "1. cd to workspace root. 2. Run `npm run build` — must complete with 0 errors. 3. For backend changes, verify Python syntax with `python -m py_compile backend/app/routers/admin.py` etc.",
+  "snapshot_or_generated_files": null,
+  "environment_constraints": "Windows PowerShell environment. Backend uses SQLite in dev (SQLAlchemy). VITE_API_URL must be set for API features; without it the store works offline-first. Do NOT restart any running dev server.",
+  "contribution_requirements": "AGENTS.md: All API calls via src/lib/api.ts when VITE_API_URL set. Storefront must work offline-first (no VITE_API_URL = graceful empty states, not errors). Zero hardcoded fallback content for homepage sections. No force-push/rebase on published commits.",
+  "key_patterns": "Frontend: React Query hooks in src/lib/api.ts (liveQuery helper pattern). All hooks guard with `enabled: apiEnabled`. Backend: generic CRUD via PUT /api/v1/admin/r/{name}/{id}; singletons via /admin/settings/{name}; custom routes for orders/stats. Admin panel: single-file vanilla JS SPA in backend/app/admin_panel/index.html. Models all exist in backend/app/models.py — do not recreate.",
+  "relevant_files": [
+    "backend/app/admin_panel/index.html",
+    "backend/app/routers/admin.py",
+    "backend/app/routers/public.py",
+    "backend/app/routers/orders.py",
+    "backend/app/models.py",
+    "src/lib/api.ts",
+    "src/lib/live-catalog.tsx",
+    "src/lib/veloura-store.tsx",
+    "src/lib/veloura-data.ts",
+    "src/components/veloura/commerce.tsx",
+    "src/components/veloura/customer-confidence.tsx",
+    "src/routes/index.tsx",
+    "src/routes/track.tsx"
+  ],
+  "directory_structure": "/ — workspace root (Vite SPA)\n/src/routes/ — TanStack file-based routes (index.tsx=homepage, track.tsx=order tracking)\n/src/components/veloura/ — all storefront UI (commerce.tsx=1496 lines, customer-confidence.tsx, shopping-ui.tsx, etc.)\n/src/lib/ — api.ts (React Query hooks), veloura-data.ts (static fallback data), veloura-store.tsx (cart/order context), live-catalog.tsx (product sync)\n/backend/app/ — FastAPI app: main.py, models.py, routers/{admin,public,orders,auth,tracking}.py, admin_panel/index.html"
+}

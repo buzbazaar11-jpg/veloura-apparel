@@ -527,35 +527,157 @@ export const heroSlides = [
   { label: "THE MEN'S EDIT / AW26", headline: "GOOD STYLE. EVERY DAY.", product: "VEL0URA APPAREL men's jacket", text: "Clean tees. Easy layers. Better everyday fits. Find your next look, from weekday to weekend.", cta: "SHOP MEN'S EDIT", ctaPath: "/shop" as const, image: campaignOne },
   { label: "MEN'S NEW ARRIVALS", headline: "YOUR NEXT EVERYDAY FIT.", product: "VEL0URA APPAREL men's shirts", text: "Relaxed shirts and considered layers. Pieces that work together, without overthinking it.", cta: "SHOP NEW ARRIVALS", ctaPath: "/new-arrivals" as const, image: campaignTwo },
   { label: "THE MEN'S SALE EDIT", headline: "BETTER FITS. LESS SPEND.", product: "VEL0URA APPAREL menswear", text: "Save up to 30% on selected men's styles. Discover the pieces and see your savings before checkout.", cta: "SHOP THE DEALS", ctaPath: "/sale" as const, image: campaignOne },
-];
+];export const storeConfig = {
+  currency: "PKR",
+  freeShippingThreshold: 15000,
+  standardShipping: 250,
+  expressShipping: 550,
+  announcement: "NEW SEASON NOW LIVE · FREE DELIVERY OVER Rs. 15,000",
+};
 
-export const storeConfig = { currency: "PKR", freeShippingThreshold: 15000, standardShipping: 250, expressShipping: 550, announcement: "NEW SEASON NOW LIVE · FREE DELIVERY OVER Rs. 15,000" };
-export const coupons: Record<string, number> = { WELCOME10: 10, NEW20: 20, VELOURA15: 15 };
-const mensImages: Record<string, string> = { Jackets: jacketImage, 'T-Shirts': teeImage, Shirts: shirtImage, Trousers: trouserImage, Hoodies: hoodieImage, Sneakers: sneakerImage, Accessories: campaignFour };
+export const coupons: Record<string, number> = {
+  WELCOME10: 10,
+  NEW20: 20,
+  VELOURA15: 15,
+};
+
+const mensImages: Record<string, string> = {
+  Jackets: jacketImage,
+  "T-Shirts": teeImage,
+  Shirts: shirtImage,
+  Trousers: trouserImage,
+  Hoodies: hoodieImage,
+  Sneakers: sneakerImage,
+  Accessories: campaignFour,
+};
+
+// Generate products safely from the catalog.
 export const products: Product[] = catalog.map((product, index) => {
-  const price = Math.round(product.price * 40 / 100) * 100 - 10;
-  const image = product.tags.includes('cargo') ? cargoImage : product.tags.includes('overshirt') ? campaignThree : mensImages[product.category] ?? jacketImage;
-  return { ...product, images: [image], mood: product.mood as Product["mood"], price, salePrice: index % 3 === 0 ? Math.round(price * (index % 2 === 0 ? .7 : .8) / 10) * 10 : undefined, rating: [4.8, 4.9, 4.7, 4.6][index % 4] ?? 4.8, reviewCount: 38 + index * 7, audience: "Men" };
-});
-export function productPrice(product: Product) { return product.salePrice ?? product.price; }
-export function formatPrice(price: number) { return `Rs. ${Math.round(price).toLocaleString("en-PK")}`; }
+  const basePrice = Number(product.price);
 
-export function getProductBySlug(slug: string) {
+  const safeBasePrice =
+    Number.isFinite(basePrice) && basePrice > 0
+      ? basePrice
+      : 1000;
+
+  const price = Math.max(
+    0,
+    Math.round(safeBasePrice * 0.4 / 100) * 100 - 10
+  );
+
+  const tags = Array.isArray(product.tags) ? product.tags : [];
+
+  const image = tags.includes("cargo")
+    ? cargoImage
+    : tags.includes("overshirt")
+      ? campaignThree
+      : mensImages[product.category] ?? jacketImage;
+
+  const salePrice =
+    index % 3 === 0
+      ? Math.round(
+          (price * (index % 2 === 0 ? 0.7 : 0.8)) / 10
+        ) * 10
+      : undefined;
+
+  return {
+    ...product,
+    images: [image],
+    mood: product.mood as Product["mood"],
+    price,
+    salePrice,
+    rating: [4.8, 4.9, 4.7, 4.6][index % 4] ?? 4.8,
+    reviewCount: 38 + index * 7,
+    audience: "Men",
+  };
+});
+
+// Return the correct selling price, even if the input is missing.
+export function productPrice(
+  product: Product | null | undefined
+): number {
+  if (!product) {
+    return 0;
+  }
+
+  const salePrice = Number(product.salePrice);
+  const regularPrice = Number(product.price);
+
+  if (Number.isFinite(salePrice) && salePrice > 0) {
+    return salePrice;
+  }
+
+  if (Number.isFinite(regularPrice) && regularPrice >= 0) {
+    return regularPrice;
+  }
+
+  return 0;
+}
+
+// Format prices using Pakistani Rupees.
+export function formatPrice(price: number): string {
+  const safePrice = Number.isFinite(price) ? price : 0;
+
+  return `Rs. ${Math.round(safePrice).toLocaleString("en-PK")}`;
+}
+
+// Find a product by its slug.
+export function getProductBySlug(
+  slug: string
+): Product | undefined {
   return products.find((product) => product.slug === slug);
 }
 
-export function recommendProducts(product: Product, limit = 4) {
-  const ranked = products
-    .filter((candidate) => candidate.id !== product.id)
-    .map((candidate) => ({
-      candidate,
-      score: candidate.tags.filter((tag) => product.tags.includes(tag)).length + (candidate.mood === product.mood ? 2 : 0),
-    }))
-    .sort((a, b) => b.score - a.score || a.candidate.price - b.candidate.price)
+// Recommend products with matching tags or moods.
+export function recommendProducts(
+  product: Product | null | undefined,
+  limit = 4
+): Product[] {
+  if (!product || !Number.isFinite(limit) || limit <= 0) {
+    return [];
+  }
+
+  const productTags = Array.isArray(product.tags)
+    ? product.tags
+    : [];
+
+  return products
+    .filter(
+      (candidate) =>
+        candidate &&
+        candidate.id !== product.id
+    )
+    .map((candidate) => {
+      const candidateTags = Array.isArray(candidate.tags)
+        ? candidate.tags
+        : [];
+
+      const matchingTags = candidateTags.filter((tag) =>
+        productTags.includes(tag)
+      ).length;
+
+      const matchingMood =
+        candidate.mood === product.mood ? 2 : 0;
+
+      return {
+        candidate,
+        score: matchingTags + matchingMood,
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        productPrice(a.candidate) - productPrice(b.candidate)
+    )
+    .slice(0, Math.floor(limit))
     .map(({ candidate }) => candidate);
-  return ranked.slice(0, limit);
 }
 
-export function productsForMood(mood: Product["mood"]) {
-  return products.filter((product) => product.mood === mood).slice(0, 6);
+// Get products matching a particular mood.
+export function productsForMood(
+  mood: Product["mood"]
+): Product[] {
+  return products
+    .filter((product) => product && product.mood === mood)
+    .slice(0, 6);
 }

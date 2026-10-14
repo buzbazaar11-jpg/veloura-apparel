@@ -1,0 +1,43 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "100% dynamic homepage — remove ALL hardcoded fallback content from every homepage section. Depends on FEAT-001 (new_arrival column and /coupons endpoint must exist first). Independent of FEAT-003.",
+  "status": "pending",
+  "steps": [
+    "1. In src/lib/live-catalog.tsx — fix fromBackend() to read new_arrival from the backend payload: change `newArrival: base?.newArrival ?? !base` to `newArrival: b.new_arrival ?? base?.newArrival ?? false`. This ensures the backend value is the authoritative source.",
+
+    "2. In src/components/veloura/commerce.tsx — MarqueeStrip() function: remove the hardcoded fallback array. Change the items derivation to: `const items = data?.settings?.marquee_items ?? []; if (!items.length) return null;`. The marquee section is hidden entirely when no items in DB.",
+
+    "3. In src/components/veloura/commerce.tsx — HeroCarousel() function: remove the fallback `heroSlides` import usage. Change the slides derivation: when `heroData?.slides` is undefined/empty AND `apiEnabled`, render a skeleton placeholder (`<div className='veloura-hero relative overflow-hidden bg-primary animate-pulse' aria-hidden='true' />`). When `!apiEnabled`, render the existing `heroSlides` static data as before (offline-first: static data is acceptable when no API configured). Pattern: `const slides = apiEnabled ? (heroData?.slides?.length ? heroData.slides.map(...) : []) : heroSlides; if (apiEnabled && !slides.length) return <HeroSkeleton />;`",
+
+    "4. In src/components/veloura/commerce.tsx — HomePage() function: change `liveProducts.filter(p=>p.newArrival).slice(0,4)` to render the section only when there are results. Wrap the New Arrivals section with: `{(() => { const items = liveProducts.filter(p=>p.newArrival).slice(0,4); return items.length ? <section ...><ProductGrid products={items} /></section> : null; })()}`. Do the same for the Signature Edit section (bestSeller filter). When apiEnabled and no products match, omit the section; when !apiEnabled, retain the filter (static data still works).",
+
+    "5. In src/components/veloura/commerce.tsx — SaleBanner() function: change from a fully hardcoded component to a dynamic one. Import and use `useDeals()`. Find the first active deal with `discount_percent > 0`. If a matching deal exists, render the banner using its `title`, `subtitle`, `description`, `cta_label`, `cta_href`, and `image_url` (via assetUrl). If no deal exists AND `apiEnabled`, return null (omit). If `!apiEnabled`, render the existing static banner (offline-first). Pattern: `function SaleBanner() { const { deals } = useDeals ? useDeals() : { deals: [] }; ... }`",
+
+    "6. In src/components/veloura/commerce.tsx — DropBanner() function: apply same pattern as SaleBanner — use second deal from useDeals() if available; omit if API-enabled-but-empty; show static if offline.",
+
+    "7. In src/components/veloura/commerce.tsx — EditorialBanner() function: apply same pattern — use third deal from useDeals() or a collection from useCollections(); omit if API-enabled-but-empty; show static if offline.",
+
+    "8. In src/components/veloura/commerce.tsx — HomeDeals() function: replace the hardcoded 'WELCOME10' coupon reference with `useCoupons()`. Show the first active coupon's code and discount. If no active coupons and apiEnabled, omit the left panel. The right panel ('Essentials under Rs 5,000') can remain as a static CTA (it's a navigation shortcut, not content).",
+
+    "9. In src/components/veloura/commerce.tsx — CategorySection() function: the BentoTile components already use `liveProducts.find(p => p.category === c)` for images — this is already dynamic. However remove the hardcoded campaignImages fallback in BentoTile for the hero tile: if `img` is undefined, render a plain colored background div instead of the hardcoded import. Change: `<BentoTile className='bento-hero' img={campaignImages.one} ...>` to `<BentoTile className='bento-hero' img={find('Jackets')?.images[0]} ...>` (use a live product image). The bento-tile CSS already handles missing images with a background color.",
+
+    "10. In src/components/veloura/commerce.tsx — Footer() function: it already uses `data?.settings?.brand_tagline ?? 'Modern essentials...'` — change the fallback to empty string and conditionally render: `{data?.settings?.brand_tagline ? <p>...</p> : null}`. Also wire instagram/tiktok links: if `!apiEnabled`, keep existing fallback URLs; if `apiEnabled` and no URLs, omit the social links section.",
+
+    "11. In src/components/veloura/commerce.tsx — Remove unused static imports that are no longer needed as primary content: remove `import bannerDrop from '@/assets/mens-campaign-everyday.jpg'` only if no longer used in any component (check all usages after above changes). Do NOT remove `campaignImages` or other imports still used by ShopPage or ProductDetailPage. Note: bannerDrop is still used as a fallback in SaleBanner for offline mode, so keep it."
+  ],
+  "acceptance_criteria": [
+    "npm run build completes with 0 TypeScript errors",
+    "MarqueeStrip renders null when marquee_items is empty (not hardcoded text)",
+    "HeroCarousel shows a skeleton placeholder when apiEnabled=true but no slides in DB",
+    "New Arrivals and Signature Edit sections are omitted from homepage when no matching products",
+    "SaleBanner/DropBanner/EditorialBanner use deals from DB or are omitted when apiEnabled and DB is empty",
+    "HomeDeals left panel uses first active coupon from /coupons API instead of hardcoded WELCOME10",
+    "CategorySection hero tile uses live product image from 'Jackets' category instead of hardcoded campaignImages.one"
+  ],
+  "verification": [
+    "Run `npm run build` from workspace root — must complete with 0 TypeScript errors"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

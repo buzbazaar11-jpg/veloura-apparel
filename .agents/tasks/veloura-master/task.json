@@ -1,0 +1,7 @@
+{
+  "task_id": "task-veloura-master",
+  "task_description": "Three-phase master rebuild: (1) Complete admin panel to full Light Luxury 2026 spec with all missing UI — time-range selector for trend chart, drag-to-reorder hero slides, 7d/30d/90d stats toggle. (2) Branding purge: remove tm_admin_token fallback from admin panel. (3) 100% dynamic homepage: remove all hardcoded fallbacks from homepage sections, add new_arrival field to backend Product model, expose public /coupons endpoint, and wire customer-confidence.tsx FAQs/trust/coupons to live API.",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}
