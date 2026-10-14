@@ -797,7 +797,113 @@
         padding: 16px
       }
     }
+
+    .pos {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 16px;
+      align-items: start
+    }
+
+    .pos-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 12px
+    }
+
+    .qrc {
+      padding: 14px;
+      text-align: center;
+      cursor: pointer
+    }
+
+    .qrc .qr {
+      display: flex;
+      justify-content: center;
+      margin: 6px 0
+    }
+
+    .qrc .qr img,
+    .qrc .qr svg {
+      width: 104px;
+      height: 104px
+    }
+
+    .qrc svg.bc {
+      width: 100%;
+      height: 48px
+    }
+
+    .code {
+      font-family: ui-monospace, monospace;
+      font-weight: 800;
+      letter-spacing: .06em
+    }
+
+    .bill-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px dashed var(--line)
+    }
+
+    .qty {
+      display: flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    #printArea {
+      display: none
+    }
+
+    @media(max-width:1000px) {
+      .pos {
+        grid-template-columns: 1fr
+      }
+    }
+
+    @media print {
+      body>*:not(#printArea) {
+        display: none !important
+      }
+
+      #printArea {
+        display: block !important;
+        font-family: ui-monospace, monospace;
+        color: #000;
+        width: 76mm;
+        margin: 0 auto;
+        font-size: 12px
+      }
+
+      #printArea .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px
+      }
+
+      #printArea hr {
+        border: 0;
+        border-top: 1px dashed #000;
+        margin: 8px 0
+      }
+
+      #printArea .lbl {
+        display: inline-block;
+        width: 48mm;
+        text-align: center;
+        padding: 4mm;
+        border: 1px solid #000;
+        margin: 2mm;
+        page-break-inside: avoid
+      }
+    }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 </head>
 
 <body>
@@ -806,6 +912,7 @@
     <div class="card" id="mbody"></div>
   </div>
   <div id="toast"></div>
+  <div id="printArea"></div>
   <script>
     const API = location.origin + "/api/v1";
     let TOKEN = localStorage.getItem("va_admin_token"), SCHEMA = null, COL = localStorage.getItem("va_col") === "1";
@@ -822,7 +929,7 @@
     }
     function logout() { TOKEN = null; localStorage.removeItem("va_admin_token"); render(); }
 
-    const MENU = [["Overview", [["dashboard", "Dashboard", "◎"], ["orders", "Orders", "▤"], ["cart_leads", "Leads", "◌"]]],
+    const MENU = [["Overview", [["dashboard", "Dashboard", "◎"], ["pos", "POS terminal", "⌸"], ["orders", "Orders", "▤"], ["cart_leads", "Leads", "◌"]]],
     ["Catalog", [["products", "Products", "▦"], ["collections", "Collections", "◫"], ["categories", "Categories", "⌗"]]],
     ["Marketing", [["hero_slides", "Hero slides", "▭"], ["deals", "Deals", "✦"], ["coupons", "Coupons", "%"], ["popups", "Popups", "◳"]]],
     ["Content", [["reviews", "Reviews", "★"], ["blog_posts", "Journal", "✎"], ["faqs", "FAQs", "?"], ["trust_sections", "Trust", "◇"]]],
@@ -864,6 +971,7 @@
         if (page === "dashboard") { await dashboard(DAYS); LIVE = setInterval(() => document.hidden || dashboard(DAYS).catch(() => { }), 5000); }
         else if (page === "orders") await orders();
         else if (page === "users") await users();
+        else if (page === "pos") await pos();
         else if (page === "products") await products();
         else if (page === "coupons") await coupons();
         else if (page === "reviews") await reviews();
@@ -872,6 +980,67 @@
       } catch (e) { $("#main").innerHTML = `<div class="card" style="color:var(--cr);font-weight:600">${esc(e.message)}</div>`; }
     }
     window.onhashchange = render;
+
+    // ---------- POS terminal ----------
+    const vaCode = p => "VA-" + String(p.id).replace(/-/g, "").slice(0, 8).toUpperCase();
+    const qrSvg = (txt, cell = 3) => { if (!window.qrcode) return `<small class="mut">${esc(txt)}</small>`; const q = qrcode(0, "M"); q.addData(txt); q.make(); return q.createSvgTag({ cellSize: cell, margin: 1, scalable: true }); };
+    const barSvg = txt => { if (!window.JsBarcode) return ""; const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); try { JsBarcode(s, txt, { format: "CODE128", height: 40, displayValue: false, margin: 0 }); s.setAttribute("class", "bc"); return s.outerHTML; } catch { return ""; } };
+    let BILL = [];
+    async function pos() {
+      const { rows } = await api("/admin/r/products");
+      const items = rows.map(r => ({ ...r, code: vaCode(r), unit: Number(r.sale_price || r.price) || 0 }));
+      $("#main").innerHTML = `<div class="pos"><div>
+   <div class="bar"><input id="scan" placeholder="Scan barcode / type VA- code or product name…" style="max-width:none;flex:1" autofocus><button id="printLabels" class="ghost">Print all labels</button></div>
+   <div class="pos-items" id="pitems"></div></div>
+   <div class="card" style="position:sticky;top:80px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">Current bill</b><button class="ghost sm" id="clr">Clear</button></div>
+   <div id="bill"></div>
+   <div class="form" style="grid-template-columns:1fr 1fr;margin-top:14px"><div><label>Customer (optional)</label><input id="cust" placeholder="Walk-in"></div><div><label>Payment</label><select id="pay"><option>Cash</option><option>Card</option><option>Online</option></select></div>
+   <div><label>Discount (Rs)</label><input id="disc" type="number" value="0" min="0"></div><div><label>Cash received</label><input id="recv" type="number" placeholder="0"></div></div>
+   <div id="tot" style="margin-top:14px"></div><button id="prt" style="width:100%;margin-top:14px;padding:13px">🖨 Print receipt</button></div></div>`;
+      const drawItems = () => {
+        const q = $("#scan").value.trim().toLowerCase();
+        const list = items.filter(p => !q || p.code.toLowerCase().includes(q) || (p.name || "").toLowerCase().includes(q));
+        $("#pitems").innerHTML = list.length ? list.map(p => `<div class="card qrc" data-add="${p.code}" title="Click to add"><div class="qr">${qrSvg(p.code)}</div>${barSvg(p.code)}
+      <div class="code">${p.code}</div><b style="display:block;margin-top:4px;font-size:13px">${esc(p.name)}</b><div class="mut" style="font-size:12px">${rs(p.unit)} · ${p.stock ?? 0} in stock</div>
+      <button class="ghost sm" style="margin-top:8px" data-lbl="${p.code}">Print label</button></div>`).join("") : `<div class="card empty">No product found</div>`;
+        $$("[data-add]").forEach(c => c.onclick = e => { if (e.target.dataset.lbl) return; add(c.dataset.add); });
+        $$("[data-lbl]").forEach(b => b.onclick = () => printLabels(items.filter(p => p.code === b.dataset.lbl)));
+      };
+      const add = code => { const p = items.find(x => x.code === code); if (!p) return toast("Product not found"); const l = BILL.find(x => x.code === code); l ? l.qty++ : BILL.push({ code, name: p.name, unit: p.unit, qty: 1 }); toast(p.name + " added"); drawBill(); };
+      const totals = () => { const sub = BILL.reduce((s, l) => s + l.unit * l.qty, 0), d = Math.min(sub, Math.max(0, Number($("#disc").value) || 0)); return { sub, d, total: sub - d }; };
+      const drawBill = () => {
+        $("#bill").innerHTML = BILL.length ? BILL.map((l, i) => `<div class="bill-row"><div><b style="font-size:13px">${esc(l.name)}</b><div class="mut code" style="font-size:11px">${l.code} · ${rs(l.unit)}</div></div>
+      <div class="qty"><button class="ghost sm" data-m="${i}">−</button><b>${l.qty}</b><button class="ghost sm" data-p="${i}">+</button></div><b>${rs(l.unit * l.qty)}</b></div>`).join("") : `<div class="empty" style="padding:24px">Scan or click a product to add it</div>`;
+        $$("[data-m]").forEach(b => b.onclick = () => { const l = BILL[b.dataset.m]; if (--l.qty <= 0) BILL.splice(b.dataset.m, 1); drawBill(); });
+        $$("[data-p]").forEach(b => b.onclick = () => { BILL[b.dataset.p].qty++; drawBill(); });
+        const t = totals(), recv = Number($("#recv").value) || 0;
+        $("#tot").innerHTML = `<div class="row" style="display:flex;justify-content:space-between"><span class="mut">Subtotal</span><b>${rs(t.sub)}</b></div>
+      <div style="display:flex;justify-content:space-between"><span class="mut">Discount</span><b>− ${rs(t.d)}</b></div>
+      <div style="display:flex;justify-content:space-between;font-size:20px;margin-top:6px"><b>Total</b><b>${rs(t.total)}</b></div>
+      ${recv ? `<div style="display:flex;justify-content:space-between"><span class="mut">Change</span><b>${rs(Math.max(0, recv - t.total))}</b></div>` : ""}`;
+      };
+      $("#scan").oninput = drawItems;
+      $("#scan").onkeydown = e => { if (e.key !== "Enter") return; const v = e.target.value.trim().toUpperCase(); const exact = items.find(p => p.code === v) || items.find(p => (p.name || "").toUpperCase() === v); const list = items.filter(p => p.code.includes(v) || (p.name || "").toUpperCase().includes(v)); const hit = exact || (list.length === 1 ? list[0] : null); if (hit) { add(hit.code); e.target.value = ""; drawItems(); } else toast(list.length ? "Multiple matches — click one" : "Product not found"); };
+      $("#disc").oninput = drawBill; $("#recv").oninput = drawBill;
+      $("#clr").onclick = () => { BILL = []; drawBill(); };
+      $("#printLabels").onclick = () => printLabels(items);
+      $("#prt").onclick = () => {
+        if (!BILL.length) return toast("Bill is empty");
+        const t = totals(), no = "VA-POS-" + Date.now().toString().slice(-6), now = new Date(), recv = Number($("#recv").value) || 0;
+        $("#printArea").innerHTML = `<div style="text-align:center"><b style="font-size:16px">VELOURA APPAREL</b><div>Sales receipt</div><div>${now.toLocaleString()}</div><div>Receipt: ${no}</div>${$("#cust").value ? `<div>Customer: ${esc($("#cust").value)}</div>` : ""}</div><hr>
+      ${BILL.map(l => `<div>${esc(l.name)}</div><div class="row"><span>${l.code} ${l.qty} x ${rs(l.unit)}</span><span>${rs(l.unit * l.qty)}</span></div>`).join("")}<hr>
+      <div class="row"><span>Subtotal</span><span>${rs(t.sub)}</span></div>${t.d ? `<div class="row"><span>Discount</span><span>-${rs(t.d)}</span></div>` : ""}
+      <div class="row" style="font-size:15px"><b>TOTAL</b><b>${rs(t.total)}</b></div><div class="row"><span>Payment</span><span>${esc($("#pay").value)}</span></div>
+      ${recv ? `<div class="row"><span>Received</span><span>${rs(recv)}</span></div><div class="row"><span>Change</span><span>${rs(Math.max(0, recv - t.total))}</span></div>` : ""}<hr>
+      <div style="text-align:center"><div style="width:30mm;margin:0 auto">${qrSvg(no, 2)}</div><div>Thank you for shopping with Veloura</div></div>`;
+        window.print();
+      };
+      drawItems(); drawBill(); setTimeout(() => $("#scan")?.focus(), 50);
+    }
+    function printLabels(list) {
+      $("#printArea").innerHTML = list.map(p => `<div class="lbl"><b>VELOURA</b><div style="width:28mm;margin:2mm auto">${qrSvg(p.code, 2)}</div>${barSvg(p.code)}<div><b>${p.code}</b></div><div>${esc(p.name)}</div><div>${rs(p.unit)}</div></div>`).join("");
+      window.print();
+    }
 
     /* ---------- charts (pure SVG) ---------- */
     function areaChart(trend) {
