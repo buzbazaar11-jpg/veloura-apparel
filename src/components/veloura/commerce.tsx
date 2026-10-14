@@ -42,7 +42,7 @@ import {
   type Product,
 } from "@/lib/veloura-data";
 import { useVelouraStore, type CartItem, type Order } from "@/lib/veloura-store";
-import { useSettings, useHeroSlides, useBlogPosts, useProducts, useCollections, useDeals, useCoupons, apiEnabled } from "@/lib/api";
+import { useSettings, useHeroSlides, useBlogPosts, useProducts, useCollections, useDeals, useCoupons, apiEnabled, useCategories } from "@/lib/api";
 import { assetUrl, fromBackend, LiveDeals } from "@/lib/live-catalog";
 import { api } from "@/lib/api";
 
@@ -189,46 +189,164 @@ function Navbar() {
 export function HomePage() {
   const { data: productsData } = useProducts();
   const liveProducts = productsData?.products?.map(fromBackend) ?? [];
-  const newArrivalItems  = liveProducts.filter(p => p.newArrival).slice(0, 4);
-  const bestSellerItems  = liveProducts.filter(p => p.bestSeller).slice(0, 4);
-  const signatureItems   = liveProducts.filter(p => p.bestSeller || p.featured).slice(0, 4);
-
-  return <main>
-    <HeroCarousel />
-    <TrustStrip />
-    <CategorySection liveProducts={liveProducts} />
-    {newArrivalItems.length > 0 && (
-      <section className="store-section">
-        <SectionHeader label="THE EVERYDAY LINEUP" title="Men's essentials. Sorted." action={<LinkText to="/new-arrivals">Shop new arrivals</LinkText>} />
-        <p className="mb-7 max-w-lg text-sm leading-6 text-muted-foreground">Start with a clean tee, add an easy shirt, finish with your favorite trousers.</p>
-        <ProductGrid products={newArrivalItems} />
-      </section>
-    )}
-    <SaleBanner />
-    <LiveDeals />
-    {bestSellerItems.length > 0 && (
-      <section className="store-section bg-secondary -mx-0">
-        <SectionHeader label="BEST SELLERS" title="What everyone's wearing." action={<LinkText to="/best-sellers">See all best sellers</LinkText>} />
-        <ProductGrid products={bestSellerItems} />
-      </section>
-    )}
-    <HomeDeals />
-    {signatureItems.length > 0 && (
-      <section className="store-section">
-        <SectionHeader label="THE SIGNATURE EDIT" title="Your next go-to pieces." action={<LinkText to="/best-sellers">Explore the edit</LinkText>} />
-        <ProductGrid products={signatureItems} />
-      </section>
-    )}
-    <DealsShowcase />
-    <CollectionsStrip />
-    <EditorialBanner />
-    <JournalPreview />
-    <ShoppingConfidence />
-    <BuildYourLook liveProducts={liveProducts} />
-    <NewsletterBand />
-  </main>;
+  const newArrivalItems = liveProducts.filter(p => p.newArrival).slice(0, 8);
+  const bestSellerItems = liveProducts.filter(p => p.bestSeller || p.featured).slice(0, 8);
+  const budgetItems     = liveProducts.filter(p => p.price < 5000).slice(0, 4);
+  return (
+    <main>
+      <HeroCarousel />
+      <TrustStrip />
+      <CategorySection liveProducts={liveProducts} />
+      {newArrivalItems.length > 0 && <NewArrivalsShelf products={newArrivalItems} />}
+      <SaleBanner />
+      {bestSellerItems.length > 0 && <BestSellersShelf products={bestSellerItems} newItems={newArrivalItems} />}
+      <FeaturedCampaignJackets />
+      <DealsShowcase />
+      <CollectionsStrip />
+      {budgetItems.length > 0 && <BudgetSection products={budgetItems} />}
+      <WatchesAccessoriesSection />
+      <BrandStorySection />
+      <JournalPreview />
+      <HomeDeals />
+      <ShoppingConfidence />
+      <BuildYourLook liveProducts={liveProducts} />
+      <NewsletterBand />
+    </main>
+  );
 }
-function TrustStrip(){const { data } = useSettings();const freeAbove = data?.payment?.free_delivery_above ?? storeConfig.freeShippingThreshold;return <section aria-label="Shopping benefits" className="border-b border-border bg-secondary"><div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-5 px-5 py-5 md:grid-cols-4">{[[Truck,`Free delivery from ${formatPrice(freeAbove)}`],[RotateCcw,"Find your fit \u00b7 size guides"],[ShieldCheck,"Cash on Delivery available"],[Sparkles,"Exclusive member deals"]].map(([Icon,label])=>{const Symbol=Icon as typeof Truck; return <div key={String(label)} className="flex items-center justify-center gap-2 text-xs"><Symbol className="size-5 shrink-0 text-sage" /><span>{String(label)}</span></div>;})}</div></section>;}
+function TrustStrip() {
+  const { data } = useSettings();
+  const freeAbove = data?.payment?.free_delivery_above ?? storeConfig.freeShippingThreshold;
+  const items: [React.ElementType, string, string][] = [
+    [Truck,       "Free delivery",     `From ${formatPrice(freeAbove)} on all orders`],
+    [RotateCcw,   "Size guides",       "Measurements on every product"],
+    [ShieldCheck, "Cash on Delivery",  "Available nationwide"],
+    [Sparkles,    "Exclusive offers",  "Members get first access"],
+  ];
+  return (
+    <section aria-label="Shopping benefits" className="border-y border-border bg-secondary">
+      <div className="mx-auto flex max-w-[1400px] overflow-x-auto divide-x divide-border">
+        {items.map(([Icon, label, sub]) => (
+          <div key={label} className="flex shrink-0 flex-1 items-center gap-3 px-6 py-4 min-w-[180px]">
+            <Icon className="size-5 shrink-0 text-sage" />
+            <div>
+              <p className="text-xs font-semibold">{label}</p>
+              <p className="text-[11px] text-muted-foreground">{sub}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+const SkeletonCard = () => (
+  <div className="animate-pulse">
+    <div className="aspect-[4/5] rounded bg-secondary" />
+    <div className="mt-3 h-4 w-3/4 rounded bg-secondary" />
+    <div className="mt-2 h-3 w-1/2 rounded bg-secondary" />
+  </div>
+);
+
+function NewArrivalsShelf({ products: shelfProducts }: { products: Product[] }) {
+  return (
+    <section className="store-section">
+      <SectionHeader
+        label="THE EVERYDAY LINEUP"
+        title="Men's Essentials. Sorted."
+        action={<LinkText to="/new-arrivals">Shop all new arrivals →</LinkText>}
+      />
+      <p className="mb-7 max-w-lg text-sm leading-6 text-muted-foreground">
+        Start with a clean tee, add an easy layer, finish with your favourite trousers.
+      </p>
+      {shelfProducts.length === 0 ? (
+        <div className="grid grid-cols-2 gap-x-4 gap-y-9 md:grid-cols-3 lg:grid-cols-4">
+          {[0, 1, 2, 3].map(i => <SkeletonCard key={i} />)}
+        </div>
+      ) : (
+        <ProductGrid products={shelfProducts} />
+      )}
+    </section>
+  );
+}
+
+function BestSellersShelf({
+  products: shelfProducts,
+  newItems,
+}: {
+  products: Product[];
+  newItems: Product[];
+}) {
+  const [tab, setTab] = useState<"best" | "new">("best");
+  const displayed = tab === "best" ? shelfProducts : newItems;
+  return (
+    <section className="store-section bg-secondary -mx-5 px-5 sm:-mx-8 sm:px-8 lg:-mx-12 lg:px-12">
+      <SectionHeader
+        label="THE SIGNATURE EDIT"
+        title="Pieces Worth Coming Back To."
+      />
+      {/* Tab switcher */}
+      <div className="mb-7 flex gap-6 border-b border-border">
+        {(["best", "new"] as const).map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`pb-3 text-xs font-semibold uppercase tracking-[0.18em] transition-colors focus-veloura
+              ${tab === t
+                ? "border-b-2 border-foreground text-foreground"
+                : "text-muted-foreground hover:text-foreground"}`}
+          >
+            {t === "best" ? "Best Sellers" : "New In"}
+          </button>
+        ))}
+      </div>
+      {displayed.length === 0 ? (
+        <div className="grid grid-cols-2 gap-x-4 gap-y-9 md:grid-cols-3 lg:grid-cols-4">
+          {[0, 1, 2, 3].map(i => <SkeletonCard key={i} />)}
+        </div>
+      ) : (
+        <ProductGrid products={displayed} />
+      )}
+    </section>
+  );
+}
+
+function FeaturedCampaignJackets() {
+  return (
+    <section className="store-section bg-primary text-primary-foreground -mx-5 px-5 sm:-mx-8 sm:px-8 lg:-mx-12 lg:px-12">
+      <div className="mx-auto grid max-w-[1400px] items-center gap-10 lg:grid-cols-2">
+        {/* Image */}
+        <div className="overflow-hidden rounded-xl">
+          <img
+            src={campaignImages.one}
+            alt="VEL0URA APPAREL jacket campaign"
+            width={900}
+            height={1100}
+            loading="lazy"
+            className="h-full w-full object-cover"
+          />
+        </div>
+        {/* Text */}
+        <div>
+          <p className="editorial-label text-primary-foreground/70">BUILT FOR YOUR EVERYDAY</p>
+          <h2 className="mt-4 font-display text-5xl leading-tight sm:text-7xl">
+            The Jacket Edit.
+          </h2>
+          <p className="mt-5 max-w-md leading-7 text-primary-foreground/80">
+            Layers made for every season. Refined silhouettes designed to work
+            with the rest of your wardrobe.
+          </p>
+          <Button asChild variant="secondary" className="mt-8">
+            <Link to="/shop" search={{ category: "Jackets" } as never}>
+              Shop Jackets <ArrowRight />
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
 function SaleBanner(){
   const { data: dealsData } = useDeals();
   const deal = dealsData?.deals?.[0];
@@ -357,7 +475,7 @@ function MarqueeStrip() {
   );
 }
 
-// ── NEW: Deals Showcase — visual deal cards grid ─────────────────────────────
+// ── REBUILT: Deals Showcase — spec-compliant visual deal cards grid ──────────
 function DealsShowcase() {
   const { data: dealsData } = useDeals();
   const deals = (dealsData?.deals ?? []).filter(d => d.title);
@@ -366,8 +484,8 @@ function DealsShowcase() {
   return (
     <section className="store-section">
       <SectionHeader
-        label="DEALS & OFFERS"
-        title="Save more. Look better."
+        label="SELECTED STYLES"
+        title="Great Fits. Better Prices."
         action={<LinkText to="/sale">All deals</LinkText>}
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -376,7 +494,7 @@ function DealsShowcase() {
             key={deal.id}
             to={(deal.cta_href ?? "/sale") as "/sale"}
             className="group relative overflow-hidden rounded-[18px] bg-primary focus-veloura"
-            style={{ minHeight: 240 }}
+            style={{ minHeight: 280 }}
           >
             {deal.image_url && (
               <img
@@ -394,10 +512,19 @@ function DealsShowcase() {
                 </span>
               )}
               <h3 className="font-display text-2xl leading-tight">{deal.title}</h3>
-              {deal.subtitle && <p className="mt-1 text-sm text-primary-foreground/80">{deal.subtitle}</p>}
-              <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold">
-                {deal.cta_label ?? "Shop now"} <ArrowRight className="size-4" />
-              </span>
+              {deal.subtitle && (
+                <p className="mt-1 text-sm text-primary-foreground/80">{deal.subtitle}</p>
+              )}
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mt-4 w-fit"
+                asChild
+              >
+                <span className="inline-flex items-center gap-1">
+                  {deal.cta_label ?? "Shop now"} <ArrowRight className="size-4" />
+                </span>
+              </Button>
             </div>
           </Link>
         ))}
@@ -406,7 +533,7 @@ function DealsShowcase() {
   );
 }
 
-// ── NEW: Collections Strip — horizontal scrolling collection cards ────────────
+// ── REBUILT: Collections Strip — spec-compliant horizontal scroll ────────────
 function CollectionsStrip() {
   const { data: collectionsData } = useCollections();
   const collections = (collectionsData?.collections ?? []).filter(c => c.active !== false);
@@ -415,17 +542,20 @@ function CollectionsStrip() {
   return (
     <section className="store-section overflow-hidden">
       <SectionHeader
-        label="SHOP BY COLLECTION"
-        title="Find your style."
+        label="CURATED FOR YOU"
+        title="Explore the Collections."
         action={<LinkText to="/collections">All collections</LinkText>}
       />
-      <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div
+        className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory
+          [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {collections.map(col => (
           <Link
             key={col.id}
             to="/collections"
             className="group relative shrink-0 snap-start overflow-hidden rounded-2xl focus-veloura"
-            style={{ width: "clamp(220px, 28vw, 320px)", aspectRatio: "3/4" }}
+            style={{ width: "clamp(220px, 28vw, 260px)", aspectRatio: "3/4" }}
           >
             {col.image_url ? (
               <img
@@ -440,7 +570,9 @@ function CollectionsStrip() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
               <p className="font-display text-xl font-semibold leading-tight">{col.name}</p>
-              {col.tagline && <p className="mt-1 text-xs text-white/70">{col.tagline}</p>}
+              {col.tagline && (
+                <p className="mt-1 text-xs text-white/70">{col.tagline}</p>
+              )}
             </div>
           </Link>
         ))}
@@ -448,6 +580,114 @@ function CollectionsStrip() {
     </section>
   );
 }
+
+function BudgetSection({ products: budgetProducts }: { products: Product[] }) {
+  if (!budgetProducts.length) return null;
+  return (
+    <section className="store-section bg-secondary -mx-5 px-5 sm:-mx-8 sm:px-8 lg:-mx-12 lg:px-12">
+      <SectionHeader
+        label="EASY ON THE BUDGET"
+        title="Everyday Essentials Under Rs. 5,000."
+        action={<LinkText to="/shop">Shop Essentials</LinkText>}
+      />
+      <ProductGrid products={budgetProducts} />
+    </section>
+  );
+}
+
+function WatchesAccessoriesSection() {
+  const { data: catData } = useCategories();
+  const allCats = catData?.categories ?? [];
+
+  const TILES = [
+    { name: "Watches",     slug: "Watches",     gradient: "from-amber-900/80 to-stone-800/80" },
+    { name: "Accessories", slug: "Accessories", gradient: "from-stone-800/80 to-zinc-700/80"  },
+    { name: "Fragrance",   slug: "Fragrance",   gradient: "from-zinc-800/80 to-slate-700/80"  },
+  ];
+
+  return (
+    <section className="store-section">
+      <SectionHeader
+        label="THE FINISHING TOUCH"
+        title="Details Make the Difference."
+      />
+      <p className="mb-7 max-w-lg text-sm leading-6 text-muted-foreground">
+        Accessories that bring a polished finish to your everyday style.
+      </p>
+      <div className="grid gap-4 md:grid-cols-3">
+        {TILES.map(tile => {
+          const cat = allCats.find(c => c.slug === tile.slug || c.name === tile.name);
+          const img = cat?.image_url ? assetUrl(cat.image_url) : null;
+          return (
+            <Link
+              key={tile.slug}
+              to="/shop"
+              search={{ category: tile.slug } as never}
+              className="group relative overflow-hidden rounded-xl focus-veloura"
+              style={{ minHeight: 320 }}
+            >
+              {img ? (
+                <img
+                  src={img}
+                  alt={tile.name}
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              ) : (
+                <div className={`absolute inset-0 bg-gradient-to-br ${tile.gradient}`} />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                <p className="font-display text-2xl font-semibold">{tile.name}</p>
+                <p className="mt-1 text-sm text-white/70">Discover the edit →</p>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function BrandStorySection() {
+  return (
+    <section className="store-section -mx-5 px-5 sm:-mx-8 sm:px-8 lg:-mx-12 lg:px-12">
+      <div
+        className="mx-auto grid max-w-[1400px] overflow-hidden rounded-xl
+          lg:grid-cols-2"
+      >
+        {/* Image side */}
+        <div className="relative min-h-[400px] overflow-hidden lg:min-h-[560px]">
+          <img
+            src={campaignImages.two}
+            alt="VEL0URA APPAREL brand story"
+            width={900}
+            height={1100}
+            loading="lazy"
+            className="h-full w-full object-cover"
+          />
+        </div>
+        {/* Text side — charcoal bg */}
+        <div className="flex flex-col justify-center bg-primary px-8 py-12 text-primary-foreground lg:px-14">
+          <p className="editorial-label text-primary-foreground/70">OUR APPROACH</p>
+          <h2 className="mt-4 font-display text-5xl leading-tight sm:text-6xl">
+            Less Noise.<br />More Character.
+          </h2>
+          <p className="mt-6 max-w-md leading-7 text-primary-foreground/80">
+            VEL0URA APPAREL brings together modern silhouettes, versatile essentials,
+            and considered details for a wardrobe that feels personal, confident,
+            and timeless.
+          </p>
+          <Button asChild variant="secondary" className="mt-8 w-fit">
+            <Link to="/about">Discover Our Story <ArrowRight /></Link>
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
 
 function DropBanner() {
   const { data: dealsData } = useDeals();
@@ -540,7 +780,7 @@ function HeroCarousel() {
  {slides.map((hero,i)=><img key={hero.headline || i} src={hero.image} alt={i===index ? `${hero.product ?? ''} seasonal campaign` : ""} aria-hidden={i!==index} width={1600} height={1200} loading={i===0?'eager':'lazy'} fetchPriority={i===0?'high':'auto'} className={`hero-image absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${i===index?'opacity-100':'opacity-0'}`} />)}
  <div className="hero-shade absolute inset-0" />
  <div className="hero-inner relative z-10 mx-auto flex h-full max-w-[1500px] flex-col justify-end text-primary-foreground">
- <div key={index} className="hero-stagger hero-copy"><p className="text-xs font-semibold uppercase">{slide.label}</p><h1 className="hero-title mt-5 font-display">VEL0URA<br />APPAREL</h1><p className="mt-5 text-xs font-semibold">{slide.headline}</p><p className="mt-3 max-w-md text-sm leading-6 text-primary-foreground/85">{slide.text}</p><div className="mt-7 flex flex-wrap gap-3"><Button asChild variant="secondary" size="lg"><Link to={slide.ctaPath}>{slide.cta}<ArrowRight /></Link></Button><Button asChild variant="outline" size="lg" className="hero-secondary border-primary-foreground/50 text-primary-foreground hover:text-foreground"><Link to="/collections">The collection</Link></Button></div>{slide.badge ? <p className="mt-5 text-xs text-primary-foreground/85">{slide.badge}</p> : null}</div>
+ <div key={index} className="hero-stagger hero-copy"><p className="text-xs font-semibold uppercase">{slide.label}</p><h1 className="hero-title mt-5 font-display">VEL0URA<br />APPAREL</h1><p className="mt-5 text-xs font-semibold">{slide.headline}</p><p className="mt-3 max-w-md text-sm leading-6 text-primary-foreground/85">{slide.text}</p><div className="mt-7 flex flex-wrap gap-3"><Button asChild variant="secondary" size="lg"><Link to={slide.ctaPath}>{slide.cta}<ArrowRight /></Link></Button><Button asChild variant="outline" size="lg" className="hero-secondary border-primary-foreground/50 text-primary-foreground hover:text-foreground"><Link to="/collections">The Collection</Link></Button></div>{slide.badge ? <p className="mt-5 text-xs text-primary-foreground/85">{slide.badge}</p> : null}</div>
  <div className="mt-8 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-primary-foreground/30 pt-4"><div className="flex items-center gap-3"><span className="text-xs">0{index+1} / 0{slides.length}</span>{slides.map((h,i)=><Button key={h.headline || i} variant="ghost" size="icon" className="size-7 hover:bg-primary/20" aria-label={`Go to slide ${i+1}`} aria-current={i===index} onClick={()=>setIndex(i)}><span className={`block h-0.5 w-5 ${i===index?'bg-primary-foreground':'bg-primary-foreground/40'}`} /></Button>)}</div><div className="flex"><Button variant="ghost" size="icon" className="text-primary-foreground" aria-label={paused?'Play hero slides':'Pause hero slides'} onClick={()=>setPaused(v=>!v)}>{paused?<Play />:<Pause />}</Button><Button variant="ghost" size="icon" className="text-primary-foreground" onClick={()=>go(-1)} aria-label="Previous hero slide"><ArrowLeft /></Button><Button variant="ghost" size="icon" className="text-primary-foreground" onClick={()=>go(1)} aria-label="Next hero slide"><ArrowRight /></Button></div></div>
  </div></section>;
 }
@@ -556,7 +796,7 @@ export function SectionHeader({ label, title, action }: { label: string; title: 
   );
 }
 
-function LinkText({ to, children }: { to: "/shop" | "/journal" | "/about" | "/collections" | "/new-arrivals" | "/best-sellers"; children: React.ReactNode }) {
+function LinkText({ to, children }: { to: "/shop" | "/journal" | "/about" | "/collections" | "/new-arrivals" | "/best-sellers" | "/sale"; children: React.ReactNode }) {
   return (
     <Link to={to} className="focus-veloura text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground hover:text-foreground">
       {children}
@@ -569,20 +809,25 @@ export function ProductGrid({ products: shownProducts }: { products: Product[] }
 }
 
 export function ProductCard({ product }: { product: Product }) {
-  const { addToCart, toggleWishlist, isWishlisted } = useVelouraStore();
+  const { toggleWishlist, isWishlisted } = useVelouraStore();
   const wished = isWishlisted(product.id);
   const [quickOpen,setQuickOpen]=useState(false);
   return (
     <article className="group relative">
       <Link to="/product/$slug" params={{ slug: product.slug }} className="focus-veloura block">
         <Tilt max={5}>
-        <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-muted shadow-sm">
-          <img src={product.images[0]} alt={product.name} width={900} height={1200} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.035]" />
-          {product.images[1] ? <img src={product.images[1]} alt={`${product.name} alternate view`} width={900} height={1200} loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100" /> : null}
+        <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-muted shadow-sm">
+          <img src={product.images[0]} alt={product.name} width={900} height={1125} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.035]" />
+          {product.images[1] ? <img src={product.images[1]} alt={`${product.name} alternate view`} width={900} height={1125} loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100" /> : null}
           <div className="absolute left-2 top-2 flex max-w-[65%] flex-col items-start gap-1">
             {product.newArrival ? <Badge>NEW</Badge> : null}
             {product.bestSeller ? <Badge>BESTSELLER</Badge> : null}
             {product.stock < 8 ? <Badge>LOW STOCK</Badge> : null}
+            {product.salePrice && product.price > 0 && (
+              <span className="rounded-full bg-red-600 px-2.5 py-0.5 text-[0.6rem] font-bold text-white">
+                {Math.round((1 - product.salePrice / product.price) * 100)}% OFF
+              </span>
+            )}
           </div>
         </div>
         </Tilt>
@@ -597,7 +842,7 @@ export function ProductCard({ product }: { product: Product }) {
         <Heart className={wished ? "fill-current text-sage" : ""} />
       </Button>
       <div className="mt-4 min-w-0"><Link to="/product/$slug" params={{slug:product.slug}} className="block text-sm font-semibold">{product.name.replace("VEL0URA APPAREL ","")}</Link><p className="my-2 text-xs text-muted-foreground">{product.category}</p><Price product={product} /><div className="mt-3 flex gap-2">{product.colors.map(color=><span title={color} key={color} className={`swatch swatch-${color.toLowerCase()}`} />)}</div></div>
-      <Button variant="outline" size="sm" className="mt-4 w-full" onClick={()=>setQuickOpen(true)}>Quick Add <Plus /></Button>
+      <Button variant="outline" size="sm" className="mt-4 w-full md:opacity-0 md:group-hover:opacity-100 md:transition-opacity" onClick={()=>setQuickOpen(true)}>Quick Add <Plus /></Button>
       {quickOpen ? <QuickAdd product={product} onClose={()=>setQuickOpen(false)} /> : null}
     </article>
   );
@@ -629,24 +874,65 @@ function BentoTile({ to, search, img, alt, tag, title, note, className = "" }: {
   </Link>;
 }
 
-function CategorySection({ liveProducts }: { liveProducts: Product[] }) {
-  const { addManyToCart } = useVelouraStore();
-  const [added, setAdded] = useState(false);
-  const find = (c: string) => liveProducts.find(p => p.category === c);
-  const tee = find("T-Shirts"), trouser = find("Trousers"), jacket = find("Jackets"), acc = find("Accessories"), shirt = find("Shirts");
-  const uniform = [tee, trouser].filter(Boolean) as typeof liveProducts;
-  return <section className="category-section store-section"><SectionHeader label="BUILT FOR YOUR EVERYDAY" title="Find your kind of fit." />
-    <div className="bento-grid">
-      <BentoTile className="bento-hero" to="/shop" search={{category:"Jackets"}} img={jacket?.images[0] ?? campaignImages.one} alt="Men's jacket campaign" tag="01 / Outerwear" title="The Jacket Edit" note="Layers made for every season." />
-      <BentoTile className="bento-tall" to="/shop" search={{category:"T-Shirts"}} img={tee?.images[0]} alt="Men's tees" tag="02 / Tees" title="Core Tees" note="Clean everyday cotton." />
-      <BentoTile className="bento-square" to="/shop" search={{category:"Accessories"}} img={acc?.images[0]} alt="Men's accessories" tag="03 / Finish" title="Accessories" />
-      <BentoTile className="bento-square" to="/shop" search={{category:"Shirts"}} img={shirt?.images[0] ?? jacket?.images[0]} alt="Men's shirts" tag="04 / Shirts" title="Easy Shirts" />
-      <div className="bento-tile bento-wide bento-uniform">
-        <div className="bento-uniform-imgs">{uniform.map(p=><img key={p.id} src={p.images[0]} alt={p.name} width={400} height={500} loading="lazy" />)}</div>
-        <div className="bento-uniform-copy"><span className="bento-tag static">05 / The Uniform</span><h3>Complete the uniform.</h3><p>{uniform.map(p=>p.name).join(" + ")} · {formatPrice(uniform.reduce((s,p)=>s+p.price,0))}</p>
-          <Button variant="editorial" className="magnetic-btn mt-4" onClick={()=>{addManyToCart(uniform.map(product=>({product})));setAdded(true);}}>{added ? <Check /> : <Plus />}{added ? "Added to bag" : "Add both to bag"}</Button></div>
-      </div>
-    </div></section>;
+const FALLBACK_CATS = [
+  { id: "f1", name: "Jackets",     slug: "Jackets",     image_url: campaignImages.one   },
+  { id: "f2", name: "T-Shirts",    slug: "T-Shirts",    image_url: campaignImages.two   },
+  { id: "f3", name: "Shirts",      slug: "Shirts",      image_url: campaignImages.three },
+  { id: "f4", name: "Watches",     slug: "Watches",     image_url: campaignImages.four  },
+  { id: "f5", name: "Accessories", slug: "Accessories", image_url: bannerAccessories    },
+  { id: "f6", name: "Fragrance",   slug: "Fragrance",   image_url: campaignImages.one   },
+] as const;
+
+function CategorySection({ liveProducts: _liveProducts }: { liveProducts: Product[] }) {
+  const { data: catData, isLoading } = useCategories();
+  const dbCats = (catData?.categories ?? []).filter(c => (c as { active?: boolean }).active !== false);
+  const cats = dbCats.length ? dbCats : FALLBACK_CATS;
+
+  return (
+    <section className="store-section">
+      <SectionHeader
+        label="DISCOVER YOUR STYLE"
+        title="Find Your Kind of Fit."
+      />
+      {isLoading ? (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {[0, 1, 2, 3, 4, 5].map(i => (
+            <div key={i} className="animate-pulse aspect-[3/4] rounded-lg bg-secondary" />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 auto-rows-[220px]">
+          {cats.slice(0, 6).map((cat, i) => {
+            const img = typeof cat.image_url === "string"
+              ? (cat.image_url.startsWith("/") ? assetUrl(cat.image_url) : cat.image_url)
+              : "";
+            return (
+              <Link
+                key={cat.id}
+                to="/shop"
+                search={{ category: cat.slug } as never}
+                className={`group relative overflow-hidden rounded-xl focus-veloura
+                  ${i === 0 ? "row-span-2" : ""}`}
+              >
+                {img && (
+                  <img
+                    src={img}
+                    alt={cat.name}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                  <p className="font-display text-xl font-semibold leading-tight">{cat.name}</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
 }
 
 function EditorialBanner() {
@@ -738,14 +1024,56 @@ export function BuildYourLook({ liveProducts: propProducts }: { liveProducts?: P
 function JournalPreview() {
   const { data } = useBlogPosts();
   const liveArticles = data?.posts?.length
-    ? data.posts.map(p => ({ slug: p.slug, title: p.title, description: p.excerpt ?? '', image: p.image_url ? assetUrl(p.image_url) : campaignImages.one, category: p.category ?? 'Journal' }))
-    : articles.slice(0, 4);
+    ? data.posts.map(p => ({
+        slug: p.slug,
+        title: p.title,
+        description: p.excerpt ?? "",
+        image: p.image_url ? assetUrl(p.image_url) : campaignImages.one,
+        category: p.category ?? "Journal",
+      }))
+    : articles.slice(0, 3);
+
+  if (!liveArticles.length) return null;
+
   return (
-    <section className="mx-auto max-w-[1500px] px-5 py-20 sm:px-8 lg:px-12">
-      <SectionHeader label="The VEL0URA APPAREL Journal" title="Notes on modern dressing" action={<LinkText to="/journal">Read journal</LinkText>} />
-      <div className="grid gap-6 md:grid-cols-4">
-        {liveArticles.slice(0, 4).map((article) => (
-          <ArticleCard key={article.slug} article={article} />
+    <section className="store-section">
+      <SectionHeader
+        label="THE VEL0URA JOURNAL"
+        title="Notes on Modern Dressing."
+        action={<LinkText to="/journal">Read journal</LinkText>}
+      />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {liveArticles.slice(0, 3).map(article => (
+          <article key={article.slug} className="group">
+            <Link
+              to="/journal/$slug"
+              params={{ slug: article.slug }}
+              className="focus-veloura block"
+            >
+              <div className="aspect-[16/9] overflow-hidden rounded-lg bg-muted">
+                <img
+                  src={article.image}
+                  alt={article.title}
+                  width={900}
+                  height={506}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.035]"
+                />
+              </div>
+              <div className="mt-4">
+                <span className="editorial-label inline-block rounded-full bg-secondary px-3 py-1">
+                  {article.category}
+                </span>
+                <h3 className="mt-3 font-display text-2xl leading-tight">{article.title}</h3>
+                <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
+                  {article.description}
+                </p>
+                <span className="mt-4 inline-block text-xs font-semibold uppercase tracking-[0.18em] underline underline-offset-4">
+                  Read Article →
+                </span>
+              </div>
+            </Link>
+          </article>
         ))}
       </div>
     </section>
@@ -774,7 +1102,7 @@ export function NewsletterBand() {
   const [email, setEmail] = useState("");
   const [success, setSuccess] = useState(false);
   return (
-    <section className="px-5 py-20 sm:px-8 lg:px-12">
+    <section className="bg-primary text-primary-foreground px-5 py-20 sm:px-8 lg:px-12">
       <form
         className="mx-auto max-w-4xl text-center"
         onSubmit={(event) => {
@@ -782,15 +1110,15 @@ export function NewsletterBand() {
           if (email.trim()) setSuccess(true);
         }}
       >
-        <p className="editorial-label">Newsletter</p>
-        <h2 className="mt-4 font-display text-5xl leading-none sm:text-7xl">JOIN THE VELOURA LIST</h2>
-        <p className="mx-auto mt-5 max-w-xl leading-7 text-muted-foreground">Get first access to new collections, exclusive drops and stories from VEL0URA APPAREL.</p>
-        <div className="mx-auto mt-8 flex max-w-xl gap-2 border-b border-border pb-2">
+        <p className="editorial-label text-primary-foreground/70">Newsletter</p>
+        <h2 className="mt-4 font-display text-5xl leading-none text-primary-foreground sm:text-7xl">JOIN THE VELOURA LIST</h2>
+        <p className="mx-auto mt-5 max-w-xl leading-7 text-primary-foreground/70">Get first access to new collections, exclusive drops and stories from VEL0URA APPAREL.</p>
+        <div className="mx-auto mt-8 flex max-w-xl gap-2 border-b border-primary-foreground/30 pb-2">
           <label htmlFor="newsletter-email" className="sr-only">
             Email address
           </label>
           <input id="newsletter-email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email address" className="min-w-0 flex-1 bg-transparent text-center outline-hidden placeholder:text-muted-foreground focus-veloura sm:text-left" />
-          <Button type="submit" variant="ghost" size="sm">
+          <Button type="submit" variant="secondary" size="sm">
             Subscribe
           </Button>
         </div>
