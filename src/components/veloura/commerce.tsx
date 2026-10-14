@@ -1561,10 +1561,14 @@ export function TrackOrderPage() {
     }
     setSearched(true);
   };
-  // Live refresh of status every second while viewing
+  // Refresh order status every 10 seconds while actively tracking
   useEffect(() => {
     if (!apiEnabled || !remote) return;
-    const t = window.setInterval(() => { api.trackOrder(remote.order_number, email.trim()).then(r => setRemote(r.order)).catch(() => {}); }, 1000);
+    const t = window.setInterval(() => {
+      api.trackOrder(remote.order_number, email.trim())
+        .then(r => setRemote(r.order))
+        .catch(() => {});
+    }, 10_000);
     return () => window.clearInterval(t);
   }, [remote?.order_number, email]); // eslint-disable-line react-hooks/exhaustive-deps
   const steps = ["CONFIRMED", "PROCESSING", "SHIPPED", "OUT FOR DELIVERY", "DELIVERED"];
