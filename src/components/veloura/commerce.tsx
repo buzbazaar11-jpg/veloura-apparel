@@ -43,7 +43,7 @@ import {
 } from "@/lib/veloura-data";
 import { useVelouraStore, type CartItem, type Order } from "@/lib/veloura-store";
 import { useSettings, useHeroSlides, useBlogPosts, useProducts, useCollections, useDeals, useCoupons, apiEnabled, useCategories } from "@/lib/api";
-import { assetUrl, fromBackend, LiveDeals } from "@/lib/live-catalog";
+import { assetUrl, fromBackend } from "@/lib/live-catalog";
 import { api } from "@/lib/api";
 
 export function SiteChrome() {
@@ -781,7 +781,7 @@ function HeroCarousel() {
  <div className="hero-shade absolute inset-0" />
  <div className="hero-inner relative z-10 mx-auto flex h-full max-w-[1500px] flex-col justify-end text-primary-foreground">
  <div key={index} className="hero-stagger hero-copy"><p className="text-xs font-semibold uppercase">{slide.label}</p><h1 className="hero-title mt-5 font-display">VEL0URA<br />APPAREL</h1><p className="mt-5 text-xs font-semibold">{slide.headline}</p><p className="mt-3 max-w-md text-sm leading-6 text-primary-foreground/85">{slide.text}</p><div className="mt-7 flex flex-wrap gap-3"><Button asChild variant="secondary" size="lg"><Link to={slide.ctaPath}>{slide.cta}<ArrowRight /></Link></Button><Button asChild variant="outline" size="lg" className="hero-secondary border-primary-foreground/50 text-primary-foreground hover:text-foreground"><Link to="/collections">The Collection</Link></Button></div>{slide.badge ? <p className="mt-5 text-xs text-primary-foreground/85">{slide.badge}</p> : null}</div>
- <div className="mt-8 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-primary-foreground/30 pt-4"><div className="flex items-center gap-3"><span className="text-xs">0{index+1} / 0{slides.length}</span>{slides.map((h,i)=><Button key={h.headline || i} variant="ghost" size="icon" className="size-7 hover:bg-primary/20" aria-label={`Go to slide ${i+1}`} aria-current={i===index} onClick={()=>setIndex(i)}><span className={`block h-0.5 w-5 ${i===index?'bg-primary-foreground':'bg-primary-foreground/40'}`} /></Button>)}</div><div className="flex"><Button variant="ghost" size="icon" className="text-primary-foreground" aria-label={paused?'Play hero slides':'Pause hero slides'} onClick={()=>setPaused(v=>!v)}>{paused?<Play />:<Pause />}</Button><Button variant="ghost" size="icon" className="text-primary-foreground" onClick={()=>go(-1)} aria-label="Previous hero slide"><ArrowLeft /></Button><Button variant="ghost" size="icon" className="text-primary-foreground" onClick={()=>go(1)} aria-label="Next hero slide"><ArrowRight /></Button></div></div>
+ <div className="mt-8 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-primary-foreground/30 pt-4"><div className="flex items-center gap-3"><span className="text-xs">{String(index+1).padStart(2,"0")} / {String(slides.length).padStart(2,"0")}</span>{slides.map((h,i)=><Button key={h.headline || i} variant="ghost" size="icon" className="size-7 hover:bg-primary/20" aria-label={`Go to slide ${i+1}`} aria-current={i===index} onClick={()=>setIndex(i)}><span className={`block h-0.5 w-5 ${i===index?'bg-primary-foreground':'bg-primary-foreground/40'}`} /></Button>)}</div><div className="flex"><Button variant="ghost" size="icon" className="text-primary-foreground" aria-label={paused?'Play hero slides':'Pause hero slides'} onClick={()=>setPaused(v=>!v)}>{paused?<Play />:<Pause />}</Button><Button variant="ghost" size="icon" className="text-primary-foreground" onClick={()=>go(-1)} aria-label="Previous hero slide"><ArrowLeft /></Button><Button variant="ghost" size="icon" className="text-primary-foreground" onClick={()=>go(1)} aria-label="Next hero slide"><ArrowRight /></Button></div></div>
  </div></section>;
 }
 export function SectionHeader({ label, title, action }: { label: string; title: string; action?: React.ReactNode }) {
@@ -817,7 +817,7 @@ export function ProductCard({ product }: { product: Product }) {
       <Link to="/product/$slug" params={{ slug: product.slug }} className="focus-veloura block">
         <Tilt max={5}>
         <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-muted shadow-sm">
-          <img src={product.images[0]} alt={product.name} width={900} height={1125} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.035]" />
+          <img src={product.images[0] ?? ""} alt={product.name} width={900} height={1125} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.035]" />
           {product.images[1] ? <img src={product.images[1]} alt={`${product.name} alternate view`} width={900} height={1125} loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100" /> : null}
           <div className="absolute left-2 top-2 flex max-w-[65%] flex-col items-start gap-1">
             {product.newArrival ? <Badge>NEW</Badge> : null}
