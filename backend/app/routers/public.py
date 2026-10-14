@@ -130,3 +130,29 @@ def validate_coupon(body: dict, db: Session = Depends(get_db)):
     discount, err = apply_coupon(db, body.get("code"), float(body.get("subtotal") or 0))
     if err: return {"ok": False, "error": err}
     return {"ok": True, "code": (body.get("code") or "").upper(), "discount": discount}
+
+from app.models import PosSettings as _PosSettings
+
+@router.get("/pos-settings")
+def pos_settings_public(db: Session = Depends(get_db)):
+    """Public endpoint — returns only safe POS display fields for QR redirect & storefront."""
+    row = db.query(_PosSettings).first()
+    if not row:
+        return {"ok": True, "qr_product_url_base": ""}
+    return {
+        "ok": True,
+        "qr_product_url_base": row.qr_product_url_base or "",
+        "store_name": row.store_name or "VELOURA APPAREL",
+    }
+
+@router.get("/product-by-code/{va_code}")
+def product_by_va_code(va_code: str, db: Session = Depends(get_db)):
+    """Resolve a VA-XXXXXXXX code back to a product slug (for QR scan redirect)."""
+    code = va_code.upper().replace("VA-", "").replace("-", "")
+    # Match by first 8 hex chars of UUID (with dashes stripped)
+    rows = db.query(Product).filter(Product.active.is_(True)).all()
+    for p in rows:
+        pid = str(p.id).replace("-", "").upper()
+        if pid[:8] == code[:8]:
+            return {"ok": True, "slug": p.slug, "name": p.name, "image_url": p.image_url}
+    raise HTTPException(404, "Product not found")

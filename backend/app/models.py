@@ -321,3 +321,53 @@ class MetaSettings(Base):
     capi_enabled = Column(Boolean, nullable=False, default=True); marketing_api_enabled = Column(Boolean, nullable=False, default=False)
     last_sync_at = Column(DateTime(timezone=True)); last_error = Column(Text)
     created_at = created(); updated_at = updated()
+
+
+class PosSettings(Base):
+    """POS Terminal & Receipt customization — singleton row."""
+    __tablename__ = "pos_settings"
+    id = pk()
+
+    # ── Store / receipt header ──────────────────────────────────────────────
+    store_name        = Column(Text, nullable=False, default="VELOURA APPAREL")
+    store_tagline     = Column(Text, default="Modern Essentials. Everyday Style.")
+    store_address     = Column(Text, default="")
+    store_phone       = Column(Text, default="+92 317 371 2950")
+    store_email       = Column(Text, default="")
+    store_website     = Column(Text, default="")
+    logo_url          = Column(Text, default="")   # uploaded logo shown on receipt
+
+    # ── Receipt fields visibility (true = shown) ────────────────────────────
+    show_date         = Column(Boolean, nullable=False, default=True)
+    show_time         = Column(Boolean, nullable=False, default=True)
+    show_receipt_no   = Column(Boolean, nullable=False, default=True)
+    show_salesman     = Column(Boolean, nullable=False, default=True)
+    show_customer     = Column(Boolean, nullable=False, default=True)
+    show_payment_method = Column(Boolean, nullable=False, default=True)
+    show_discount     = Column(Boolean, nullable=False, default=True)
+    show_cash_recv    = Column(Boolean, nullable=False, default=True)
+    show_change       = Column(Boolean, nullable=False, default=True)
+    show_footer_qr    = Column(Boolean, nullable=False, default=True)
+    show_barcode_on_receipt = Column(Boolean, nullable=False, default=False)
+
+    # ── Custom receipt notes / footer lines ────────────────────────────────
+    receipt_note      = Column(Text, default="Thank you for shopping with us!")
+    footer_line1      = Column(Text, default="Software by AM Enterprises")
+    footer_line2      = Column(Text, default="+92 317 371 2950")
+    footer_line3      = Column(Text, default="")
+
+    # ── Salesman list (JSON array of name strings) ──────────────────────────
+    salesman_list     = Column(J, nullable=False, default=list)
+
+    # ── Label / barcode settings ────────────────────────────────────────────
+    label_show_logo   = Column(Boolean, nullable=False, default=True)
+    label_show_price  = Column(Boolean, nullable=False, default=True)
+    label_show_barcode = Column(Boolean, nullable=False, default=True)
+    label_show_qr     = Column(Boolean, nullable=False, default=True)
+    label_paper_width_mm = Column(Integer, nullable=False, default=50)  # 40/50/60mm
+
+    # ── QR code URL base (what customer gets when scanning) ─────────────────
+    # e.g. https://veloura.pk/product/  → full URL = base + slug
+    qr_product_url_base = Column(Text, default="")
+
+    created_at = created(); updated_at = updated()

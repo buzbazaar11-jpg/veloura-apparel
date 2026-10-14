@@ -35,7 +35,7 @@ RESOURCES = {
 }
 READONLY = {"order_emails": M.OrderEmail, "analytics_events": M.AnalyticsEvent, "meta_event_log": M.MetaEventLog,
             "profiles": M.Profile}
-SINGLETONS = {"site_settings": M.SiteSettings, "payment_settings": M.PaymentSettings, "meta_settings": M.MetaSettings}
+SINGLETONS = {"site_settings": M.SiteSettings, "payment_settings": M.PaymentSettings, "meta_settings": M.MetaSettings, "pos_settings": M.PosSettings}
 STATUSES = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"]
 EMAIL_ON = {"confirmed", "shipped", "delivered", "cancelled"}
 
