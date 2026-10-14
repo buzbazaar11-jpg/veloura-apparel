@@ -129,7 +129,7 @@ export function LiveCatalogProvider({ children }: { children: ReactNode }) {
     };
 
     void sync();
-    const timer = window.setInterval(sync, 1_000);
+    const timer = window.setInterval(sync, 2 * 60 * 1000); // poll every 2 min
     const onFocus = () => void sync();
     window.addEventListener("focus", onFocus);
     return () => {

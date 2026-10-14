@@ -123,15 +123,33 @@ export const api = {
 };
 
 // ─── React Query hooks ────────────────────────────────────────────────────────
+//
+// CACHING STRATEGY:
+//   staleTime: how long data is "fresh" — no refetch during this window
+//   refetchInterval: background polling interval (ONLY when tab is visible)
+//   Content that rarely changes (settings, categories, deals): 5 min stale, 2 min poll
+//   Content that changes moderately (products, hero): 2 min stale, 60s poll
+//   Live content (reviews, coupons): 30s stale, 30s poll
+//   One-time popups: 5 min stale, no poll
+//
+// WHY: previous code polled EVERY endpoint every 1 second → 10+ requests/sec
+// to Supabase Japan region (200-400ms RTT) = constant loading, slow UI.
+
+const POLL_SLOW = 2 * 60 * 1000;    // 2 minutes — settings, categories, deals
+const POLL_MED  = 60 * 1000;         // 60 seconds — products, hero slides
+const POLL_FAST = 30 * 1000;         // 30 seconds — reviews, coupons, popups
+const STALE_SLOW = 5 * 60 * 1000;   // 5 minutes stale
+const STALE_MED  = 2 * 60 * 1000;   // 2 minutes stale
+const STALE_FAST = 30 * 1000;        // 30 seconds stale
 
 export function useSettings() {
   return useQuery({
     queryKey: ["settings"],
-    queryFn: () =>
-      request<{ ok: boolean; settings: SiteSettingsPayload; payment: PaymentSettingsPayload }>("/settings"),
-    staleTime: 0,
-    refetchInterval: apiEnabled ? 1_000 : false,
-    refetchOnWindowFocus: true,
+    queryFn: () => request<{ ok: boolean; settings: SiteSettingsPayload; payment: PaymentSettingsPayload }>("/settings"),
+    staleTime: STALE_SLOW,
+    refetchInterval: apiEnabled ? POLL_SLOW : false,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
     enabled: apiEnabled,
     placeholderData: { ok: true, settings: {} as SiteSettingsPayload, payment: {} as PaymentSettingsPayload },
   });
@@ -141,9 +159,10 @@ export function useHeroSlides() {
   return useQuery({
     queryKey: ["hero-slides"],
     queryFn: () => request<{ ok: boolean; slides: HeroSlidePayload[] }>("/hero-slides"),
-    staleTime: 0,
-    refetchInterval: apiEnabled ? 1_000 : false,
-    refetchOnWindowFocus: true,
+    staleTime: STALE_MED,
+    refetchInterval: apiEnabled ? POLL_MED : false,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
     enabled: apiEnabled,
     placeholderData: { ok: true, slides: [] as HeroSlidePayload[] },
   });
@@ -153,9 +172,10 @@ export function useCategories() {
   return useQuery({
     queryKey: ["categories"],
     queryFn: () => request<{ ok: boolean; categories: CategoryPayload[] }>("/categories"),
-    staleTime: 0,
-    refetchInterval: apiEnabled ? 1_000 : false,
-    refetchOnWindowFocus: true,
+    staleTime: STALE_SLOW,
+    refetchInterval: apiEnabled ? POLL_SLOW : false,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
     enabled: apiEnabled,
     placeholderData: { ok: true, categories: [] as CategoryPayload[] },
   });
@@ -165,9 +185,10 @@ export function useBlogPosts() {
   return useQuery({
     queryKey: ["blog"],
     queryFn: () => request<{ ok: boolean; posts: BlogPostPayload[] }>("/blog"),
-    staleTime: 0,
-    refetchInterval: apiEnabled ? 1_000 : false,
-    refetchOnWindowFocus: true,
+    staleTime: STALE_SLOW,
+    refetchInterval: apiEnabled ? POLL_SLOW : false,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
     enabled: apiEnabled,
     placeholderData: { ok: true, posts: [] as BlogPostPayload[] },
   });
@@ -177,8 +198,9 @@ export function useBlogPost(slug: string) {
   return useQuery({
     queryKey: ["blog", slug],
     queryFn: () => request<{ ok: boolean; post: BlogPostPayload }>(`/blog/${encodeURIComponent(slug)}`),
-    staleTime: 0,
-    refetchInterval: apiEnabled ? 1_000 : false,
+    staleTime: STALE_SLOW,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
     enabled: apiEnabled,
     placeholderData: { ok: true, post: null as unknown as BlogPostPayload },
   });
@@ -194,9 +216,10 @@ export function useReviews(productId?: string) {
       }
       return result;
     },
-    staleTime: 0,
-    refetchInterval: apiEnabled ? 1_000 : false,
-    refetchOnWindowFocus: true,
+    staleTime: STALE_FAST,
+    refetchInterval: apiEnabled ? POLL_FAST : false,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
     enabled: apiEnabled,
     placeholderData: { ok: true, reviews: [] as ReviewPayload[] },
   });
@@ -206,8 +229,9 @@ export function usePopups() {
   return useQuery({
     queryKey: ["popups"],
     queryFn: () => request<{ ok: boolean; popups: PopupPayload[] }>("/popups"),
-    staleTime: 0,
-    refetchInterval: apiEnabled ? 1_000 : false,
+    staleTime: STALE_SLOW,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
     enabled: apiEnabled,
     placeholderData: { ok: true, popups: [] as PopupPayload[] },
   });
@@ -251,9 +275,10 @@ export function useProducts() {
   return useQuery({
     queryKey: ["products"],
     queryFn: () => request<{ ok: boolean; products: BackendProductPayload[] }>("/products"),
-    staleTime: 0,
-    refetchInterval: apiEnabled ? 1_000 : false,
-    refetchOnWindowFocus: true,
+    staleTime: STALE_MED,
+    refetchInterval: apiEnabled ? POLL_MED : false,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
     enabled: apiEnabled,
     placeholderData: { ok: true, products: [] as BackendProductPayload[] },
   });
@@ -263,15 +288,16 @@ export function useCollections() {
   return useQuery({
     queryKey: ["collections"],
     queryFn: () => request<{ ok: boolean; collections: CollectionPayload[] }>("/collections"),
-    staleTime: 0,
-    refetchInterval: apiEnabled ? 1_000 : false,
-    refetchOnWindowFocus: true,
+    staleTime: STALE_SLOW,
+    refetchInterval: apiEnabled ? POLL_SLOW : false,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
     enabled: apiEnabled,
     placeholderData: { ok: true, collections: [] as CollectionPayload[] },
   });
 }
 
-// ─── Homepage content (all from the database, no fallbacks) ──────────────────
+// ─── Homepage content ─────────────────────────────────────────────────────────
 
 export type FaqPayload = { id: string; question: string; answer: string; category?: string | null };
 export type TrustPayload = { id: string; group_name: string; heading: string; body?: string | null; bullets?: string[]; icon?: string | null };
@@ -281,28 +307,25 @@ export type DealPayload = {
   ends_at?: string | null;
 };
 
-function liveQuery<T>(key: string[], path: string, empty: T) {
+function liveQuery<T>(key: string[], path: string, empty: T, staleMs = STALE_MED, pollMs = POLL_MED) {
   return {
     queryKey: key,
     queryFn: () => request<T>(path),
-    staleTime: 0,
-    refetchInterval: apiEnabled ? 1_000 : (false as const),
-    refetchOnWindowFocus: true,
+    staleTime: staleMs,
+    refetchInterval: apiEnabled ? pollMs : (false as const),
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
     enabled: apiEnabled,
     placeholderData: empty,
   };
 }
 
-export const useFaqs = () => useQuery(liveQuery(["faqs"], "/faqs", { ok: true, faqs: [] as FaqPayload[] }));
-export const useTrust = () => useQuery(liveQuery(["trust"], "/trust", { ok: true, sections: [] as TrustPayload[] }));
-export const useDeals = () => useQuery(liveQuery(["deals-home"], "/deals", { ok: true, deals: [] as DealPayload[] }));
+export const useFaqs    = () => useQuery(liveQuery(["faqs"],          "/faqs",    { ok: true, faqs:     [] as FaqPayload[]    }, STALE_SLOW, POLL_SLOW));
+export const useTrust   = () => useQuery(liveQuery(["trust"],         "/trust",   { ok: true, sections: [] as TrustPayload[] }, STALE_SLOW, POLL_SLOW));
+export const useDeals   = () => useQuery(liveQuery(["deals-home"],    "/deals",   { ok: true, deals:    [] as DealPayload[]   }, STALE_MED,  POLL_MED));
 
 export type CouponPublicPayload = {
-  id: string;
-  code: string;
-  discount_type: string;
-  discount_value: number;
-  description?: string | null;
+  id: string; code: string; discount_type: string; discount_value: number; description?: string | null;
 };
 
-export const useCoupons = () => useQuery(liveQuery(["coupons-public"], "/coupons", { ok: true, coupons: [] as CouponPublicPayload[] }));
+export const useCoupons = () => useQuery(liveQuery(["coupons-public"], "/coupons", { ok: true, coupons: [] as CouponPublicPayload[] }, STALE_FAST, POLL_FAST));

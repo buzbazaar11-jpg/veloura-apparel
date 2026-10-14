@@ -189,13 +189,43 @@ function Navbar() {
 export function HomePage() {
   const { data: productsData } = useProducts();
   const liveProducts = productsData?.products?.map(fromBackend) ?? [];
-  const newArrivalItems = liveProducts.filter(p => p.newArrival).slice(0, 4);
-  const signatureItems = liveProducts.filter(p => p.bestSeller || p.featured).slice(0, 4);
-  return <main><HeroCarousel /><TrustStrip /><CategorySection liveProducts={liveProducts} />
-    {newArrivalItems.length > 0 && <section className="store-section"><SectionHeader label="THE EVERYDAY LINEUP" title="Men's essentials. Sorted." action={<LinkText to="/shop">Shop all menswear</LinkText>} /><p className="mb-7 max-w-lg text-sm leading-6 text-muted-foreground">Start with a clean tee, add an easy shirt, finish with your favorite trousers.</p><ProductGrid products={newArrivalItems} /></section>}
-    <SaleBanner /><LiveDeals /><HomeDeals />
-    {signatureItems.length > 0 && <section className="store-section"><SectionHeader label="THE SIGNATURE EDIT" title="Your next go-to pieces." action={<LinkText to="/best-sellers">Explore the edit</LinkText>} /><ProductGrid products={signatureItems} /></section>}
-    <EditorialBanner /><ShoppingConfidence /><BuildYourLook liveProducts={liveProducts} /><NewsletterBand />
+  const newArrivalItems  = liveProducts.filter(p => p.newArrival).slice(0, 4);
+  const bestSellerItems  = liveProducts.filter(p => p.bestSeller).slice(0, 4);
+  const signatureItems   = liveProducts.filter(p => p.bestSeller || p.featured).slice(0, 4);
+
+  return <main>
+    <HeroCarousel />
+    <TrustStrip />
+    <CategorySection liveProducts={liveProducts} />
+    {newArrivalItems.length > 0 && (
+      <section className="store-section">
+        <SectionHeader label="THE EVERYDAY LINEUP" title="Men's essentials. Sorted." action={<LinkText to="/new-arrivals">Shop new arrivals</LinkText>} />
+        <p className="mb-7 max-w-lg text-sm leading-6 text-muted-foreground">Start with a clean tee, add an easy shirt, finish with your favorite trousers.</p>
+        <ProductGrid products={newArrivalItems} />
+      </section>
+    )}
+    <SaleBanner />
+    <LiveDeals />
+    {bestSellerItems.length > 0 && (
+      <section className="store-section bg-secondary -mx-0">
+        <SectionHeader label="BEST SELLERS" title="What everyone's wearing." action={<LinkText to="/best-sellers">See all best sellers</LinkText>} />
+        <ProductGrid products={bestSellerItems} />
+      </section>
+    )}
+    <HomeDeals />
+    {signatureItems.length > 0 && (
+      <section className="store-section">
+        <SectionHeader label="THE SIGNATURE EDIT" title="Your next go-to pieces." action={<LinkText to="/best-sellers">Explore the edit</LinkText>} />
+        <ProductGrid products={signatureItems} />
+      </section>
+    )}
+    <DealsShowcase />
+    <CollectionsStrip />
+    <EditorialBanner />
+    <JournalPreview />
+    <ShoppingConfidence />
+    <BuildYourLook liveProducts={liveProducts} />
+    <NewsletterBand />
   </main>;
 }
 function TrustStrip(){const { data } = useSettings();const freeAbove = data?.payment?.free_delivery_above ?? storeConfig.freeShippingThreshold;return <section aria-label="Shopping benefits" className="border-b border-border bg-secondary"><div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-5 px-5 py-5 md:grid-cols-4">{[[Truck,`Free delivery from ${formatPrice(freeAbove)}`],[RotateCcw,"Find your fit \u00b7 size guides"],[ShieldCheck,"Cash on Delivery available"],[Sparkles,"Exclusive member deals"]].map(([Icon,label])=>{const Symbol=Icon as typeof Truck; return <div key={String(label)} className="flex items-center justify-center gap-2 text-xs"><Symbol className="size-5 shrink-0 text-sage" /><span>{String(label)}</span></div>;})}</div></section>;}
@@ -324,6 +354,98 @@ function MarqueeStrip() {
         ))}
       </div>
     </div>
+  );
+}
+
+// ── NEW: Deals Showcase — visual deal cards grid ─────────────────────────────
+function DealsShowcase() {
+  const { data: dealsData } = useDeals();
+  const deals = (dealsData?.deals ?? []).filter(d => d.title);
+  if (!deals.length) return null;
+
+  return (
+    <section className="store-section">
+      <SectionHeader
+        label="DEALS & OFFERS"
+        title="Save more. Look better."
+        action={<LinkText to="/sale">All deals</LinkText>}
+      />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {deals.slice(0, 3).map(deal => (
+          <Link
+            key={deal.id}
+            to={(deal.cta_href ?? "/sale") as "/sale"}
+            className="group relative overflow-hidden rounded-[18px] bg-primary focus-veloura"
+            style={{ minHeight: 240 }}
+          >
+            {deal.image_url && (
+              <img
+                src={assetUrl(deal.image_url)}
+                alt={deal.title}
+                loading="lazy"
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            )}
+            <div className="hero-shade absolute inset-0" />
+            <div className="relative flex h-full flex-col justify-end p-6 text-primary-foreground">
+              {deal.badge && (
+                <span className="mb-2 inline-flex w-fit items-center rounded-full bg-amber-400 px-2.5 py-0.5 text-xs font-bold text-amber-900">
+                  {deal.badge}
+                </span>
+              )}
+              <h3 className="font-display text-2xl leading-tight">{deal.title}</h3>
+              {deal.subtitle && <p className="mt-1 text-sm text-primary-foreground/80">{deal.subtitle}</p>}
+              <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold">
+                {deal.cta_label ?? "Shop now"} <ArrowRight className="size-4" />
+              </span>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ── NEW: Collections Strip — horizontal scrolling collection cards ────────────
+function CollectionsStrip() {
+  const { data: collectionsData } = useCollections();
+  const collections = (collectionsData?.collections ?? []).filter(c => c.active !== false);
+  if (!collections.length) return null;
+
+  return (
+    <section className="store-section overflow-hidden">
+      <SectionHeader
+        label="SHOP BY COLLECTION"
+        title="Find your style."
+        action={<LinkText to="/collections">All collections</LinkText>}
+      />
+      <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {collections.map(col => (
+          <Link
+            key={col.id}
+            to="/collections"
+            className="group relative shrink-0 snap-start overflow-hidden rounded-2xl focus-veloura"
+            style={{ width: "clamp(220px, 28vw, 320px)", aspectRatio: "3/4" }}
+          >
+            {col.image_url ? (
+              <img
+                src={assetUrl(col.image_url)}
+                alt={col.name}
+                loading="lazy"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            ) : (
+              <div className="h-full w-full bg-secondary" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+              <p className="font-display text-xl font-semibold leading-tight">{col.name}</p>
+              {col.tagline && <p className="mt-1 text-xs text-white/70">{col.tagline}</p>}
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 
