@@ -7,6 +7,8 @@
   <title>Veloura Apparel — Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <style>
     :root {
       --bg: #F8FAFC;
@@ -930,22 +932,26 @@
         width: 80mm;
         margin: 0 auto;
         font-size: 11px;
-        padding: 4mm
+        padding: 4mm;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact
       }
       #printArea .ph { text-align: center; margin-bottom: 4mm }
-      #printArea .ph .brand { font-size: 16px; font-weight: 900; letter-spacing: .08em }
-      #printArea .ph .sub { font-size: 10px; color: #333 }
-      #printArea .pr { display: flex; justify-content: space-between; padding: 1.5mm 0 }
-      #printArea .pr.hd { font-weight: 700; border-bottom: 1px solid #000; margin-bottom: 1mm }
-      #printArea hr { border: 0; border-top: 1px dashed #000; margin: 3mm 0 }
+      #printArea .ph .brand { font-size: 15px; font-weight: 900; letter-spacing: .1em }
+      #printArea .ph .sub { font-size: 10px; color: #444; margin:1mm 0 }
+      #printArea .pr { display: flex; justify-content: space-between; padding: 1mm 0; gap:4mm }
+      #printArea .pr span:first-child { flex:1 }
+      #printArea .pr span:last-child { text-align:right; white-space:nowrap }
+      #printArea .pr.hd { font-weight: 700; border-bottom: 1px solid #000; margin-bottom: 1mm; font-size:10px }
+      #printArea hr { border: 0; border-top: 1px dashed #000; margin: 2.5mm 0 }
       #printArea .tot-pr { display: flex; justify-content: space-between; padding: 1mm 0 }
-      #printArea .tot-pr.big { font-size: 14px; font-weight: 900; border-top: 2px solid #000; padding-top: 2mm }
-      #printArea .footer { text-align: center; margin-top: 4mm; font-size: 10px; color: #555 }
-      #printArea .qr-wrap { display: flex; justify-content: center; margin: 3mm 0 }
-      #printArea .qr-wrap svg { width: 20mm; height: 20mm }
+      #printArea .tot-pr.big { font-size: 14px; font-weight: 900; border-top: 2px solid #000; padding-top: 2mm; margin-top:1mm }
+      #printArea .footer { text-align: center; margin-top: 3mm; font-size: 9.5px; color: #555; border-top:1px dashed #000; padding-top:2mm }
+      #printArea .qr-wrap { display: flex; justify-content: center; margin: 2mm 0 }
+      #printArea .qr-wrap svg { width: 22mm !important; height: 22mm !important }
+      #printArea .receipt-logo { display:block; margin:0 auto 2mm; max-height:14mm; max-width:50mm; object-fit:contain }
       #printArea .lbl {
         display: inline-block;
-        width: 45mm;
         text-align: center;
         padding: 3mm;
         border: 1px solid #000;
@@ -954,15 +960,13 @@
         vertical-align: top
       }
       #printArea .lbl .lbl-brand { font-size: 8px; font-weight: 900; letter-spacing: .1em }
-      #printArea .lbl svg { width: 32mm; height: 32mm }
-      #printArea .lbl svg.bc { width: 40mm; height: 12mm }
-      #printArea .lbl .lbl-code { font-size: 9px; font-weight: 700; font-family: monospace; margin: 1mm 0 }
-      #printArea .lbl .lbl-name { font-size: 8px }
-      #printArea .lbl .lbl-price { font-size: 10px; font-weight: 900 }
+      #printArea .lbl svg { display:block; margin:0 auto }
+      #printArea .lbl svg.bc { height: 10mm }
+      #printArea .lbl .lbl-code { font-size: 8px; font-weight: 700; font-family: monospace; margin: 1mm 0 }
+      #printArea .lbl .lbl-name { font-size: 7.5px; max-width:42mm; word-break:break-word }
+      #printArea .lbl .lbl-price { font-size: 10px; font-weight: 900; margin-top:1mm }
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 </head>
 
 <body>
@@ -988,15 +992,14 @@
     }
     function logout() { TOKEN = null; localStorage.removeItem("va_admin_token"); render(); }
 
-    const MENU = [["Overview", [["dashboard", "Dashboard", "◎"], ["pos", "POS terminal", "⌸"], ["orders", "Orders", "▤"], ["cart_leads", "Leads", "◌"]]],
-    ["Catalog", [["products", "Products", "▦"], ["collections", "Collections", "◫"], ["categories", "Categories", "⌗"]]],
-    ["Marketing", [["hero_slides", "Hero slides", "▭"], ["deals", "Deals", "✦"], ["coupons", "Coupons", "%"], ["popups", "Popups", "◳"]]],
-    ["Content", [["reviews", "Reviews", "★"], ["blog_posts", "Journal", "✎"], ["faqs", "FAQs", "?"], ["trust_sections", "Trust", "◇"]]],
-    ["Insights", [["order_emails", "Emails sent", "✉"], ["analytics_events", "Analytics", "∿"], ["meta_event_log", "Meta events", "ⓜ"], ["profiles", "Customers", "☺"], ["users", "Users & roles", "⚑"]]],
-    ["Settings", [["site_settings", "Store settings", "⚙"], ["payment_settings", "Payments", "₨"], ["pos_settings", "POS & Receipt", "🧾"], ["meta_settings", "Meta pixel", "◈"]]]];,
-    ["Content", [["reviews", "Reviews", "★"], ["blog_posts", "Journal", "✎"], ["faqs", "FAQs", "?"], ["trust_sections", "Trust", "◇"]]],
-    ["Insights", [["order_emails", "Emails sent", "✉"], ["analytics_events", "Analytics", "∿"], ["meta_event_log", "Meta events", "ⓜ"], ["profiles", "Customers", "☺"], ["users", "Users & roles", "⚑"]]],
-    ["Settings", [["site_settings", "Store settings", "⚙"], ["payment_settings", "Payments", "₨"], ["meta_settings", "Meta pixel", "◈"]]]];
+    const MENU = [
+      ["Overview",  [["dashboard","Dashboard","◎"],["pos","POS terminal","⌸"],["orders","Orders","▤"],["cart_leads","Leads","◌"]]],
+      ["Catalog",   [["products","Products","▦"],["collections","Collections","◫"],["categories","Categories","⌗"]]],
+      ["Marketing", [["hero_slides","Hero slides","▭"],["deals","Deals","✦"],["coupons","Coupons","%"],["popups","Popups","◳"]]],
+      ["Content",   [["reviews","Reviews","★"],["blog_posts","Journal","✎"],["faqs","FAQs","?"],["trust_sections","Trust","◇"]]],
+      ["Insights",  [["order_emails","Emails sent","✉"],["analytics_events","Analytics","∿"],["meta_event_log","Meta events","ⓜ"],["profiles","Customers","☺"],["users","Users & roles","⚑"]]],
+      ["Settings",  [["site_settings","Store settings","⚙"],["payment_settings","Payments","₨"],["pos_settings","POS & Receipt","🧾"],["meta_settings","Meta pixel","◈"]]]
+    ];
     const LABEL = Object.fromEntries(MENU.flatMap(g => g[1]).map(([k, l]) => [k, l]));
 
     function loginView() {
@@ -1061,14 +1064,14 @@
       return p.code; // fallback: VA code
     };
 
-    // QR code SVG via qrcode-generator lib
+    // QR code SVG via qrcode-generator lib — waits for lib to load
     const qrSvg = (txt, cell = 3) => {
-      if (!window.qrcode) return `<small class="mut">${esc(txt)}</small>`;
+      if (!window.qrcode) return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10" width="20mm" height="20mm"><rect width="10" height="10" fill="#eee"/><text x="5" y="6" text-anchor="middle" font-size="2" fill="#999">QR N/A</text></svg>`;
       try {
         const q = qrcode(0, "M");
         q.addData(String(txt || "VA")); q.make();
         return q.createSvgTag({ cellSize: cell, margin: 1, scalable: true });
-      } catch { return `<small class="mut">${esc(txt)}</small>`; }
+      } catch(e) { return `<small style="font-size:10px;color:#999">${esc(String(txt))}</small>`; }
     };
 
     // Barcode SVG via JsBarcode lib (always uses VA code for barcode)
@@ -1571,15 +1574,15 @@
         .mf textarea { min-height:90px;resize:vertical }
         .mf textarea.tall { min-height:160px }
         .mf .hint { font-size:11px;color:var(--mut);font-weight:600 }
-        /* Toggle switch */
-        .sw-wrap { display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--soft);border-radius:12px;border:1px solid var(--line) }
-        .sw-wrap label { font-size:13px;font-weight:700;flex:1 }
-        .sw { position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0 }
-        .sw input { opacity:0;width:0;height:0 }
+        /* Toggle switch — compact inline */
+        .sw-wrap { display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--soft);border-radius:10px;border:1px solid var(--line);min-height:42px }
+        .sw-wrap label { font-size:12.5px;font-weight:600;flex:1;color:var(--ink);line-height:1.3 }
+        .sw { position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0 }
+        .sw input { opacity:0;width:0;height:0;position:absolute }
         .sw-sl { position:absolute;inset:0;background:#CBD5E1;border-radius:999px;cursor:pointer;transition:.2s }
-        .sw-sl:before { content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2) }
+        .sw-sl:before { content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2) }
         input:checked+.sw-sl { background:var(--em) }
-        input:checked+.sw-sl:before { transform:translateX(20px) }
+        input:checked+.sw-sl:before { transform:translateX(18px) }
         /* Image uploader */
         .img-up { border:2px dashed var(--line);border-radius:14px;padding:16px;text-align:center;cursor:pointer;transition:.2s;background:var(--soft) }
         .img-up:hover { border-color:var(--co);background:#EFF6FF }
@@ -1626,7 +1629,7 @@
     const DATE_COLS = new Set(["starts_at","ends_at","expires_at","published_at","feature_ends_at","estimated_delivery","last_sync_at"]);
     const SKIP_COLS = new Set(["id","created_at","updated_at","used_count","purchase_event_id","idempotency_key","utm_source","utm_medium","utm_campaign","utm_content","utm_term","fbclid","fbp","fbc","attribution","status_history"]);
     const TEXTAREA_COLS = new Set(["description","content","body","answer","message","notes","excerpt","seo_description","address","payment_note","warranty_note"]);
-    const JSON_ARRAY_COLS = new Set(["gallery","videos","images","colors","sizes","features","top_notes","heart_notes","base_notes","bullets","marquee_items","featured_in","nav_links","footer_links"]);
+    const JSON_ARRAY_COLS = new Set(["gallery","videos","images","colors","sizes","features","top_notes","heart_notes","base_notes","bullets","marquee_items","featured_in","nav_links","footer_links","salesman_list"]);
     const IMG_COLS = new Set(["image_url","logo_url","avatar_url","feature_image_url","hero_video_url","video_wrist_url","video_showcase_url","video_ugc_url"]);
 
     function fmtDateForInput(v, dt = false) {
@@ -1846,6 +1849,53 @@
       ],
     };
 
+    // ── pos_settings handled by singleton() with custom FORMS spec ──
+    FORMS.pos_settings = (row) => [
+      { title:"Store Header (shown on receipt & labels)", cols:"half", fields:[
+        {n:"store_name",    label:"Store name",    hint:"e.g. VELOURA APPAREL"},
+        {n:"store_tagline", label:"Tagline",        hint:"e.g. Modern Essentials. Everyday Style."},
+        {n:"store_address", label:"Address",        hint:"e.g. Shop 12, Main Market, Lahore"},
+        {n:"store_phone",   label:"Phone",          hint:"e.g. +92 317 371 2950"},
+        {n:"store_email",   label:"Email",          hint:"e.g. orders@veloura.pk"},
+        {n:"store_website", label:"Website",        hint:"e.g. www.veloura.pk"},
+      ]},
+      { title:"Logo", cols:"full", fields:[
+        {n:"logo_url", label:"Logo image (shown on receipt)", kind:"img"}
+      ]},
+      { title:"Receipt — show / hide fields", cols:"third", fields:[
+        {n:"show_receipt_no",    label:"Receipt number",    kind:"bool"},
+        {n:"show_date",          label:"Date",              kind:"bool"},
+        {n:"show_time",          label:"Time",              kind:"bool"},
+        {n:"show_salesman",      label:"Salesman name",     kind:"bool"},
+        {n:"show_customer",      label:"Customer name",     kind:"bool"},
+        {n:"show_payment_method",label:"Payment method",    kind:"bool"},
+        {n:"show_discount",      label:"Discount line",     kind:"bool"},
+        {n:"show_cash_recv",     label:"Cash received",     kind:"bool"},
+        {n:"show_change",        label:"Change amount",     kind:"bool"},
+        {n:"show_footer_qr",     label:"Footer QR code",   kind:"bool"},
+        {n:"show_barcode_on_receipt",label:"Item barcode on receipt",kind:"bool"},
+      ]},
+      { title:"Receipt — footer text", cols:"half", fields:[
+        {n:"receipt_note", label:"Thank-you note",   hint:"e.g. Thank you for shopping with us!"},
+        {n:"footer_line1", label:"Footer line 1",    hint:"e.g. Software by AM Enterprises"},
+        {n:"footer_line2", label:"Footer line 2",    hint:"e.g. +92 317 371 2950"},
+        {n:"footer_line3", label:"Footer line 3",    hint:"e.g. www.veloura.pk"},
+      ]},
+      { title:"Salesman list", cols:"full", fields:[
+        {n:"salesman_list", label:"Salesmen (one per chip — add names)", kind:"tags", hint:"These appear in the POS salesman dropdown"}
+      ]},
+      { title:"Label / Barcode settings", cols:"third", fields:[
+        {n:"label_show_logo",    label:"Show brand name",  kind:"bool"},
+        {n:"label_show_qr",      label:"Show QR code",     kind:"bool"},
+        {n:"label_show_barcode", label:"Show barcode",     kind:"bool"},
+        {n:"label_show_price",   label:"Show price",       kind:"bool"},
+        {n:"label_paper_width_mm",label:"Label width (mm)",kind:"int", hint:"40, 50 or 60"},
+      ]},
+      { title:"Smart QR — customer scan URL", cols:"full", fields:[
+        {n:"qr_product_url_base", label:"Product URL base", hint:"e.g. https://veloura.pk/product/ — customer scans QR → this URL + product slug opens in browser"}
+      ]},
+    ];
+
     /* ── Render one section ── */
     function renderSection(sec, row, ro) {
       const fields = sec.fields.map(f => renderField(f, row[f.n], ro)).join("");
@@ -1877,19 +1927,19 @@
       if (kind === "select") {
         inp = `<select id="${id}" ${dis}>${(f.opts||[]).map(o=>`<option value="${esc(o)}" ${o===(v||"")?"selected":""}>${esc(o)}</option>`).join("")}</select>`;
       } else if (kind === "textarea" || kind === "textarea-tall") {
-        inp = `<textarea id="${id}" ${dis} class="${kind==="textarea-tall"?"tall":""}">${esc(v??'')}</textarea>`;
+        inp = `<textarea id="${id}" ${dis} class="${kind==="textarea-tall"?"tall":""}" placeholder="${esc(f.hint||f.label||f.n.replace(/_/g,' '))}">${esc(v??'')}</textarea>`;
       } else if (kind === "date") {
         inp = `<input type="date" id="${id}" value="${fmtDateForInput(v,false)}" ${dis}>`;
       } else if (kind === "datetime") {
         inp = `<input type="datetime-local" id="${id}" value="${fmtDateForInput(v,true)}" ${dis}>`;
       } else if (kind === "num") {
-        inp = `<input type="number" id="${id}" step="any" value="${esc(v??'')}" ${dis}>`;
+        inp = `<input type="number" id="${id}" step="any" value="${esc(v??'')}" placeholder="${esc(f.hint||'0')}" ${dis}>`;
       } else if (kind === "int") {
-        inp = `<input type="number" id="${id}" step="1" value="${esc(v??'')}" ${dis}>`;
+        inp = `<input type="number" id="${id}" step="1" value="${esc(v??'')}" placeholder="${esc(f.hint||'0')}" ${dis}>`;
       } else if (kind === "json") {
-        inp = `<textarea id="${id}" ${dis}>${esc(v==null?'':JSON.stringify(v,null,1))}</textarea>`;
+        inp = `<textarea id="${id}" ${dis} placeholder="JSON array or object">${esc(v==null?'':JSON.stringify(v,null,1))}</textarea>`;
       } else {
-        inp = `<input type="text" id="${id}" value="${esc(v??'')}" ${dis}>`;
+        inp = `<input type="text" id="${id}" value="${esc(v??'')}" placeholder="${esc(f.hint||f.label||f.n.replace(/_/g,' '))}" ${dis}>`;
       }
       return `<div class="mf">${label}${inp}${hint}</div>`;
     }
@@ -2021,37 +2071,65 @@
     async function singleton(name) {
       const { row } = await api("/admin/settings/" + name);
       const meta = SCHEMA[name];
-      const cols = meta.columns.filter(c => !SKIP_COLS.has(c.name));
       WIDGET_FIELDS.clear();
 
-      const fields = cols.map(c => {
-        const kind = DATE_COLS.has(c.name) ? "datetime" : TEXTAREA_COLS.has(c.name) ? "textarea" : IMG_COLS.has(c.name) ? "img" : JSON_ARRAY_COLS.has(c.name) ? "tags" : c.kind;
-        return renderField({n:c.name, label:c.name.replace(/_/g," "), kind}, row[c.name], false);
-      }).join("");
+      // Use custom FORMS spec if available (e.g. pos_settings)
+      const spec = FORMS[name];
+      let bodyHtml = "";
+      if (spec) {
+        bodyHtml = spec(row).map(sec => renderSection(sec, row, false)).join("");
+      } else {
+        const cols = meta.columns.filter(c => !SKIP_COLS.has(c.name));
+        const fields = cols.map(c => {
+          const kind = DATE_COLS.has(c.name) ? "datetime" : TEXTAREA_COLS.has(c.name) ? "textarea" : IMG_COLS.has(c.name) ? "img" : JSON_ARRAY_COLS.has(c.name) ? "tags" : c.kind;
+          return renderField({n:c.name, label:c.name.replace(/_/g," "), kind, hint:""}, row[c.name], false);
+        }).join("");
+        bodyHtml = `<div class="msec"><div class="mrow">${fields}</div></div>`;
+      }
 
-      $("#main").innerHTML = `<div class="card"><div class="msec"><div class="mrow">${fields}</div></div><p style="margin:20px 0 0"><button id="sv" style="background:linear-gradient(135deg,var(--in),var(--pk))">Save settings</button></p></div>`;
+      $("#main").innerHTML = `<div class="card"><div class="mhdr" style="position:static;border-radius:12px 12px 0 0"><h2>${esc(LABEL[name]||name.replace(/_/g," "))}</h2></div><div class="mbody">${bodyHtml}</div><div class="mfooter" style="position:static;border-radius:0 0 12px 12px"><button id="sv" style="background:linear-gradient(135deg,var(--in),var(--pk))">Save settings</button></div></div>`;
       mountWidgets();
 
       $("#sv").onclick = async () => {
-        const btn = $("#sv"); btn.textContent = "Saving…";
+        const btn = $("#sv"); btn.classList.add("saving"); btn.textContent = "Saving…";
         try {
-          const out = {};
-          for (const c of cols) {
-            const id = "f_" + c.name;
-            const widget = document.getElementById(id);
-            if (widget && widget._getVal !== undefined) { out[c.name] = widget._getVal(); continue; }
-            const el = document.getElementById(id); if (!el || el.disabled) continue;
-            const kind = IMG_COLS.has(c.name) ? "img" : JSON_ARRAY_COLS.has(c.name) ? "tags" : DATE_COLS.has(c.name) ? "datetime" : c.kind;
-            if (c.kind === "bool") out[c.name] = el.type === "checkbox" ? el.checked : el.value === "true";
-            else if (c.kind === "json") { try { out[c.name] = el.value.trim() ? JSON.parse(el.value) : null; } catch { throw new Error(c.name + ": invalid JSON"); } }
-            else if (c.kind === "int" || c.kind === "num") out[c.name] = el.value === "" ? null : Number(el.value);
-            else if (kind === "datetime" || kind === "date") out[c.name] = el.value ? new Date(el.value).toISOString() : null;
-            else out[c.name] = el.value === "" ? null : el.value;
+          let out = {};
+          if (spec) {
+            // Collect from FORMS spec
+            const allFields = spec(row).flatMap(s => s.fields);
+            for (const f of allFields) {
+              const id = "f_" + f.n;
+              const widget = document.getElementById(id);
+              if (widget && widget._getVal !== undefined) { out[f.n] = widget._getVal(); continue; }
+              const el = document.getElementById(id); if (!el || el.disabled) continue;
+              const kind = f.kind || "text";
+              if (kind === "bool") out[f.n] = el.type === "checkbox" ? el.checked : el.value === "true";
+              else if (kind === "num") out[f.n] = el.value === "" ? null : parseFloat(el.value);
+              else if (kind === "int") out[f.n] = el.value === "" ? null : parseInt(el.value, 10);
+              else if (kind === "date" || kind === "datetime") out[f.n] = el.value ? new Date(el.value).toISOString() : null;
+              else out[f.n] = el.value === "" ? null : el.value;
+            }
+          } else {
+            const cols = meta.columns.filter(c => !SKIP_COLS.has(c.name));
+            for (const c of cols) {
+              const id = "f_" + c.name;
+              const widget = document.getElementById(id);
+              if (widget && widget._getVal !== undefined) { out[c.name] = widget._getVal(); continue; }
+              const el = document.getElementById(id); if (!el || el.disabled) continue;
+              const kind = IMG_COLS.has(c.name) ? "img" : JSON_ARRAY_COLS.has(c.name) ? "tags" : DATE_COLS.has(c.name) ? "datetime" : c.kind;
+              if (c.kind === "bool") out[c.name] = el.type === "checkbox" ? el.checked : el.value === "true";
+              else if (c.kind === "json") { try { out[c.name] = el.value.trim() ? JSON.parse(el.value) : null; } catch { throw new Error(c.name + ": invalid JSON"); } }
+              else if (c.kind === "int" || c.kind === "num") out[c.name] = el.value === "" ? null : Number(el.value);
+              else if (kind === "datetime" || kind === "date") out[c.name] = el.value ? new Date(el.value).toISOString() : null;
+              else out[c.name] = el.value === "" ? null : el.value;
+            }
           }
           await api("/admin/settings/" + name, { method: "PUT", body: JSON.stringify(out) });
           toast("✓ Settings saved — live on store");
+          // Reload POS config cache if pos_settings saved
+          if (name === "pos_settings") POS_CFG = out;
         } catch(e) { toast("⚠ " + e.message); }
-        btn.textContent = "Save settings";
+        btn.classList.remove("saving"); btn.textContent = "Save settings";
       };
     }
     async function users() {
