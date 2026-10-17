@@ -1,4 +1,4 @@
-// Client for the FastAPI backend in /backend. Set VITE_API_URL (e.g. https://api.yourdomain.com)
+// Client for the FastAPI backend in /backend. Set VITE_API_URL (e.g. https://api.velouraapparel.store)
 // to enable it; without it the storefront keeps working on local device storage.
 import { useQuery } from "@tanstack/react-query";
 import { products } from "./veloura-data";

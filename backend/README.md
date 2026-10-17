@@ -55,7 +55,7 @@ All 23 tables are created automatically on startup via `Base.metadata.create_all
 ```powershell
 # From inside backend/ with venv active:
 python -m scripts.import_json data_export
-python -m scripts.create_admin admin@yourdomain.com YourPassword
+python -m scripts.create_admin admin@velouraapparel.store YourPassword
 ```
 
 ## Run on a VPS (Docker)
