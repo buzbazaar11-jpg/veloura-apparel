@@ -1,6 +1,7 @@
 import { Logo } from "./logo";
 import { MobileShoppingNav } from "./mobile-shopping-nav";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { CustomerExtras, ShoppingConfidence } from "./customer-confidence";
 import { CouponInput, Price, Rating, QuickAdd, LiveReviews, ReviewForm } from "./shopping-ui";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
@@ -207,27 +208,64 @@ function Navbar() {
       </div>
       <Button variant="ghost" size="icon" className="menu-toggle xl:hidden" aria-label="Open menu" aria-expanded={mobileOpen} onClick={()=>setMobileOpen(true)}><Menu /></Button>
     </nav>
-    <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
-      <DialogContent className="mobile-menu-panel">
-        <DialogTitle className="sr-only">VEL0URA APPAREL menu</DialogTitle>
-        <Logo />
-        <div className="mt-3">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Currency & Region</p>
-          <CurrencySelector className="w-full" />
+    <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+      <SheetContent side="right" className="w-[85vw] max-w-[340px] p-0 flex flex-col justify-between bg-background border-l border-border z-50">
+        <SheetTitle className="sr-only">VEL0URA APPAREL menu</SheetTitle>
+        <div className="flex flex-col h-full overflow-y-auto p-6">
+          <div className="flex items-center justify-between pb-4 border-b border-border">
+            <Logo />
+          </div>
+
+          <div className="mt-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Currency & Region</p>
+            <CurrencySelector className="w-full" />
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <Button variant="outline" size="sm" onClick={() => { setMobileOpen(false); openSearch(); }} className="gap-2">
+              <Search className="size-4" /> Search
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => { setMobileOpen(false); openCart(); }} className="gap-2">
+              <ShoppingBag className="size-4" /> Bag ({cartCount})
+            </Button>
+          </div>
+
+          <div className="mt-5 flex flex-col divide-y divide-border/60">
+            {navItems.map(([label, path]) => (
+              <Link
+                key={label}
+                to={path}
+                onClick={() => setMobileOpen(false)}
+                className="py-3 text-sm font-semibold tracking-wide hover:text-sage transition-colors"
+              >
+                {label}
+              </Link>
+            ))}
+            <Link to="/account" onClick={() => setMobileOpen(false)} className="py-3 text-sm font-semibold hover:text-sage transition-colors">
+              My Account & Orders
+            </Link>
+            <Link to="/track" onClick={() => setMobileOpen(false)} className="py-3 text-sm font-semibold hover:text-sage transition-colors">
+              Track Orders
+            </Link>
+            <Link to="/wishlist" onClick={() => setMobileOpen(false)} className="py-3 text-sm font-semibold hover:text-sage transition-colors flex items-center justify-between">
+              <span>Wishlist</span>
+              {wishlist.length > 0 && <span className="text-xs px-2 py-0.5 rounded-full bg-primary text-primary-foreground font-bold">{wishlist.length}</span>}
+            </Link>
+            <Link to="/contact" onClick={() => setMobileOpen(false)} className="py-3 text-sm font-semibold hover:text-sage transition-colors">
+              Contact Concierge
+            </Link>
+          </div>
+
+          <div className="mt-auto pt-6 border-t border-border/60 text-xs text-muted-foreground flex flex-col gap-1.5">
+            <p className="font-semibold text-foreground">VEL0URA APPAREL</p>
+            <p className="text-[11px]">Modern Men's Luxury & Couture</p>
+            <a href="https://wa.me/923173712950" target="_blank" rel="noreferrer" className="text-sage font-semibold flex items-center gap-1.5 mt-1">
+              💬 WhatsApp Concierge
+            </a>
+          </div>
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <Button variant="outline" onClick={()=>{setMobileOpen(false);openSearch();}}><Search />Search</Button>
-          <Button variant="outline" onClick={()=>{setMobileOpen(false);openCart();}}><ShoppingBag />Bag ({cartCount})</Button>
-        </div>
-        <div className="mt-4 flex flex-col">
-          {navItems.map(([label,path])=><Link key={label} to={path} onClick={()=>setMobileOpen(false)} className="border-b border-border py-3 text-sm font-semibold">{label}</Link>)}
-          <Link to="/account" onClick={()=>setMobileOpen(false)} className="border-b border-border py-3 text-sm font-semibold">My Account & Orders</Link>
-          <Link to="/track" onClick={()=>setMobileOpen(false)} className="border-b border-border py-3 text-sm font-semibold">Orders & tracking</Link>
-          <Link to="/wishlist" onClick={()=>setMobileOpen(false)} className="border-b border-border py-3 text-sm font-semibold">Wishlist ({wishlist.length})</Link>
-          <Link to="/contact" onClick={()=>setMobileOpen(false)} className="py-3 text-sm font-semibold">Contact</Link>
-        </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   </header>;
 }
 
