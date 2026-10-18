@@ -56,6 +56,7 @@ export function fromBackend(b: BackendProductPayload): Product {
     slug: b.slug,
     name: b.name,
     category: b.category ?? base?.category ?? "Accessories",
+    collection: b.collection ?? base?.collection ?? null,
     price: Number(b.price),
     salePrice:
       b.sale_price != null && Number(b.sale_price) < Number(b.price)

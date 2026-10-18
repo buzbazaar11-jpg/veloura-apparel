@@ -97,13 +97,95 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return data as T;
 }
 
+export type UserProfile = {
+  id: string;
+  email: string;
+  phone?: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  is_verified?: boolean;
+};
+
+export type AuthResponse = {
+  ok: boolean;
+  token?: string;
+  user?: UserProfile;
+  roles?: string[];
+  requires_otp?: boolean;
+  email?: string;
+  message?: string;
+};
+
+export type ProfileResponse = {
+  ok: boolean;
+  profile?: {
+    full_name?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    postal_code?: string;
+    avatar_url?: string;
+  } | null;
+  orders?: any[];
+  user?: UserProfile;
+};
+
+export const authStorage = {
+  getToken: () => (typeof window !== "undefined" ? localStorage.getItem("va_user_token") : null),
+  setToken: (token: string) => { if (typeof window !== "undefined") localStorage.setItem("va_user_token", token); },
+  removeToken: () => { if (typeof window !== "undefined") localStorage.removeItem("va_user_token"); },
+  getUser: (): UserProfile | null => {
+    try {
+      const u = typeof window !== "undefined" ? localStorage.getItem("va_user_data") : null;
+      return u ? JSON.parse(u) : null;
+    } catch { return null; }
+  },
+  setUser: (user: UserProfile) => { if (typeof window !== "undefined") localStorage.setItem("va_user_data", JSON.stringify(user)); },
+  clear: () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("va_user_token");
+      localStorage.removeItem("va_user_data");
+    }
+  }
+};
+
 export const api = {
   health: () => request<{ ok: boolean }>("/health"),
   validateCoupon: (code: string, subtotal: number) =>
     request<{ ok: boolean; discount?: number; error?: string }>("/coupons/validate", { method: "POST", body: JSON.stringify({ code, subtotal }) }),
-  createOrder: (order: Omit<Order, "id" | "date" | "status">, idempotencyKey: string) =>
-    request<{ ok: boolean; order: { order_number: string; status: string; total: number } }>("/orders", {
+  trackLead: (body: {
+    session_id?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    stage?: string;
+    items?: unknown[];
+    item_count?: number;
+    cart_value?: number;
+    currency?: string;
+    notes?: string;
+  }) => {
+    let sid = body.session_id;
+    if (!sid && typeof window !== "undefined") {
+      sid = localStorage.getItem("va_session_id") || "";
+      if (!sid) {
+        sid = "sid_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+        localStorage.setItem("va_session_id", sid);
+      }
+    }
+    return request<{ ok: boolean; lead_id?: string; session_id?: string }>("/track/lead", {
       method: "POST",
+      body: JSON.stringify({ ...body, session_id: sid }),
+    }).catch(() => ({ ok: false }));
+  },
+  createOrder: (order: Omit<Order, "id" | "date" | "status">, idempotencyKey: string) => {
+    const token = authStorage.getToken();
+    const sid = typeof window !== "undefined" ? localStorage.getItem("va_session_id") || undefined : undefined;
+    return request<{ ok: boolean; order: { order_number: string; status: string; total: number } }>("/orders", {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: JSON.stringify({
         customer_name: order.customer.name,
         customer_email: order.customer.email,
@@ -113,13 +195,47 @@ export const api = {
         payment_method: order.paymentMethod === "Cash on Delivery" ? "cod" : "card",
         coupon_code: order.coupon,
         idempotency_key: idempotencyKey,
+        session_id: sid,
         items: order.items.map((i: CartItem) => ({ slug: i.slug ?? products.find(p => p.id === i.productId)?.slug, quantity: i.quantity, color: i.color, size: i.size })),
       }),
-    }),
+    });
+  },
   trackOrder: (orderNumber: string, email: string) =>
     request<{ ok: boolean; order: { order_number: string; status: string; status_history: { status: string; at: string }[]; total: number } }>(`/orders/${encodeURIComponent(orderNumber)}?email=${encodeURIComponent(email)}`),
   submitReview: (body: { product_id?: string; customer_name: string; rating: number; title?: string; body?: string }) =>
     request<{ ok: boolean; message: string }>("/reviews", { method: "POST", body: JSON.stringify(body) }),
+  auth: {
+    signup: (body: { email: string; password: string; full_name?: string; phone?: string }) =>
+      request<AuthResponse>("/auth/signup", { method: "POST", body: JSON.stringify(body) }),
+    verifyOtp: (body: { email: string; otp: string }) =>
+      request<AuthResponse>("/auth/verify-otp", { method: "POST", body: JSON.stringify(body) }),
+    resendOtp: (email: string) =>
+      request<{ ok: boolean; message: string }>("/auth/resend-otp", { method: "POST", body: JSON.stringify({ email }) }),
+    login: (body: { email: string; password: string }) =>
+      request<AuthResponse>("/auth/login", { method: "POST", body: JSON.stringify(body) }),
+    getProfile: (token: string) =>
+      request<ProfileResponse>("/auth/profile", { headers: { Authorization: `Bearer ${token}` } }),
+    updateProfile: (token: string, body: { full_name?: string; phone?: string; address?: string; city?: string; postal_code?: string; avatar_url?: string }) =>
+      request<{ ok: boolean; profile: any }>("/auth/profile", { method: "PUT", headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(body) }),
+    uploadAvatar: async (token: string, file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`${API_URL}/api/v1/auth/avatar`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((data as { detail?: string }).detail ?? `Upload failed (${res.status})`);
+      return data as { ok: boolean; avatar_url: string };
+    },
+    changePassword: (token: string, body: { current_password: string; new_password: string }) =>
+      request<{ ok: boolean; message: string }>("/auth/change-password", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+      }),
+  },
 };
 
 // ─── React Query hooks ────────────────────────────────────────────────────────
@@ -243,6 +359,7 @@ export type BackendProductPayload = {
   name: string;
   brand?: string;
   category: string | null;
+  collection?: string | null;
   price: number;
   sale_price: number | null;
   compare_at?: number | null;

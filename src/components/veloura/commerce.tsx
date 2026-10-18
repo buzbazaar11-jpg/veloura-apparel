@@ -42,9 +42,10 @@ import {
   type Product,
 } from "@/lib/veloura-data";
 import { useVelouraStore, type CartItem, type Order } from "@/lib/veloura-store";
-import { useSettings, useHeroSlides, useBlogPosts, useProducts, useCollections, useDeals, useCoupons, apiEnabled, useCategories } from "@/lib/api";
+import { useSettings, useHeroSlides, useBlogPosts, useProducts, useCollections, useDeals, useCoupons, apiEnabled, useCategories, usePopups } from "@/lib/api";
 import { assetUrl, fromBackend } from "@/lib/live-catalog";
-import { api } from "@/lib/api";
+import { api, authStorage } from "@/lib/api";
+import { useCurrency, CURRENCIES, getActiveCurrency, type CurrencyCode } from "@/lib/currency";
 
 export function SiteChrome() {
   return (
@@ -55,6 +56,7 @@ export function SiteChrome() {
       <MiniCart />
       <CustomerExtras />
       <MobileShoppingNav />
+      <StorefrontPopup />
     </>
   );
 }
@@ -160,6 +162,27 @@ function linkForFooter(item: string) {
   return "/shop";
 }
 
+export function CurrencySelector({ className = "" }: { className?: string }) {
+  const [currency, setCurrency] = useCurrency();
+  return (
+    <div className={`relative inline-flex items-center ${className}`}>
+      <select
+        value={currency}
+        onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+        aria-label="Select currency"
+        className="appearance-none rounded-full border border-border/80 bg-secondary/80 py-1.5 pl-2.5 pr-6 text-[11px] font-bold uppercase tracking-wider text-foreground hover:bg-secondary focus-veloura cursor-pointer"
+      >
+        {Object.values(CURRENCIES).map((c) => (
+          <option key={c.code} value={c.code} className="bg-background text-foreground text-xs py-1">
+            {c.flag} {c.code} ({c.symbol})
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3 -translate-y-1/2 text-muted-foreground" />
+    </div>
+  );
+}
+
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -175,14 +198,36 @@ function Navbar() {
     <nav aria-label="Main navigation" className="nav-shell">
       <Link to="/" aria-label="VEL0URA APPAREL home" className="nav-logo focus-veloura"><Logo /></Link>
       <div className="hidden min-w-0 items-center gap-5 xl:flex">{navItems.map(([label,path])=><Link key={label} to={path} className="text-xs font-semibold uppercase hover:text-sage">{label}</Link>)}</div>
-      <div className="nav-actions flex shrink-0 items-center gap-0.5">
+      <div className="nav-actions flex shrink-0 items-center gap-1">
+        <CurrencySelector className="hidden sm:inline-flex mr-1" />
         <Button variant="ghost" size="icon" onClick={openSearch} aria-label="Search VEL0URA APPAREL"><Search /></Button>
+        <Button asChild variant="ghost" size="icon" className="hidden sm:inline-flex"><Link to="/account" aria-label="My Account"><UserRound /></Link></Button>
         <Button asChild variant="ghost" size="icon" className="hidden xl:inline-flex"><Link to="/wishlist" aria-label={`Wishlist, ${wishlist.length} items`}><Heart /></Link></Button>
         <Button variant="ghost" size="icon" onClick={openCart} aria-label={`Open cart, ${cartCount} items`} className="relative"><ShoppingBag />{cartCount ? <span className="absolute right-0 top-0 grid size-4 place-items-center rounded-full bg-primary text-[9px] text-primary-foreground">{cartCount}</span>:null}</Button>
       </div>
       <Button variant="ghost" size="icon" className="menu-toggle xl:hidden" aria-label="Open menu" aria-expanded={mobileOpen} onClick={()=>setMobileOpen(true)}><Menu /></Button>
     </nav>
-    <Dialog open={mobileOpen} onOpenChange={setMobileOpen}><DialogContent className="mobile-menu-panel"><DialogTitle className="sr-only">VEL0URA APPAREL menu</DialogTitle><Logo /><div className="mt-3 grid grid-cols-2 gap-3"><Button variant="outline" onClick={()=>{setMobileOpen(false);openSearch();}}><Search />Search</Button><Button variant="outline" onClick={()=>{setMobileOpen(false);openCart();}}><ShoppingBag />Bag ({cartCount})</Button></div><div className="mt-4 flex flex-col">{navItems.map(([label,path])=><Link key={label} to={path} onClick={()=>setMobileOpen(false)} className="border-b border-border py-3 text-sm font-semibold">{label}</Link>)}<Link to="/track" onClick={()=>setMobileOpen(false)} className="border-b border-border py-3 text-sm font-semibold">Orders & tracking</Link><Link to="/wishlist" onClick={()=>setMobileOpen(false)} className="border-b border-border py-3 text-sm font-semibold">Wishlist ({wishlist.length})</Link><Link to="/contact" onClick={()=>setMobileOpen(false)} className="py-3 text-sm font-semibold">Contact</Link></div></DialogContent></Dialog>
+    <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
+      <DialogContent className="mobile-menu-panel">
+        <DialogTitle className="sr-only">VEL0URA APPAREL menu</DialogTitle>
+        <Logo />
+        <div className="mt-3">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Currency & Region</p>
+          <CurrencySelector className="w-full" />
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <Button variant="outline" onClick={()=>{setMobileOpen(false);openSearch();}}><Search />Search</Button>
+          <Button variant="outline" onClick={()=>{setMobileOpen(false);openCart();}}><ShoppingBag />Bag ({cartCount})</Button>
+        </div>
+        <div className="mt-4 flex flex-col">
+          {navItems.map(([label,path])=><Link key={label} to={path} onClick={()=>setMobileOpen(false)} className="border-b border-border py-3 text-sm font-semibold">{label}</Link>)}
+          <Link to="/account" onClick={()=>setMobileOpen(false)} className="border-b border-border py-3 text-sm font-semibold">My Account & Orders</Link>
+          <Link to="/track" onClick={()=>setMobileOpen(false)} className="border-b border-border py-3 text-sm font-semibold">Orders & tracking</Link>
+          <Link to="/wishlist" onClick={()=>setMobileOpen(false)} className="border-b border-border py-3 text-sm font-semibold">Wishlist ({wishlist.length})</Link>
+          <Link to="/contact" onClick={()=>setMobileOpen(false)} className="py-3 text-sm font-semibold">Contact</Link>
+        </div>
+      </DialogContent>
+    </Dialog>
   </header>;
 }
 
@@ -204,7 +249,7 @@ export function HomePage() {
       <DealsShowcase />
       <CollectionsStrip />
       {budgetItems.length > 0 && <BudgetSection products={budgetItems} />}
-      <WatchesAccessoriesSection />
+      <MensOutfitsSection />
       <BrandStorySection />
       <JournalPreview />
       <HomeDeals />
@@ -224,19 +269,132 @@ function TrustStrip() {
     [Sparkles,    "Exclusive offers",  "Members get first access"],
   ];
   return (
-    <section aria-label="Shopping benefits" className="border-y border-border bg-secondary">
-      <div className="mx-auto flex max-w-[1400px] overflow-x-auto divide-x divide-border">
+    <section aria-label="Shopping benefits" className="border-y border-border bg-secondary overflow-hidden">
+      {/* Desktop Divided Bar */}
+      <div className="hidden md:flex mx-auto max-w-[1400px] divide-x divide-border">
         {items.map(([Icon, label, sub]) => (
-          <div key={label} className="flex shrink-0 flex-1 items-center gap-3 px-6 py-4 min-w-[180px]">
+          <div key={label} className="flex flex-1 items-center gap-3 px-6 py-4">
             <Icon className="size-5 shrink-0 text-sage" />
             <div>
-              <p className="text-xs font-semibold">{label}</p>
+              <p className="text-xs font-semibold text-foreground">{label}</p>
               <p className="text-[11px] text-muted-foreground">{sub}</p>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Mobile Continuous Marquee */}
+      <div className="flex md:hidden marquee-container py-3 bg-secondary">
+        <div className="marquee-track flex items-center">
+          {[...items, ...items, ...items].map(([Icon, label, sub], idx) => (
+            <div key={`${label}-${idx}`} className="flex shrink-0 items-center gap-2.5 px-5">
+              <Icon className="size-4 shrink-0 text-sage" />
+              <div className="flex items-center gap-1.5 whitespace-nowrap">
+                <span className="text-xs font-bold text-foreground">{label}:</span>
+                <span className="text-[11px] text-muted-foreground">{sub}</span>
+              </div>
+              <span className="ml-4 text-border font-light select-none">|</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </section>
+  );
+}
+
+export function StorefrontPopup() {
+  const { data } = usePopups();
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const popup = data?.popups?.find((p) => p.active !== false);
+
+  useEffect(() => {
+    if (!popup) return;
+    const key = `va_popup_dismissed_${popup.id}`;
+    if (sessionStorage.getItem(key)) return;
+
+    const delay = (popup.delay_seconds ?? 3) * 1000;
+    const timer = setTimeout(() => {
+      setOpen(true);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [popup]);
+
+  if (!popup || !open) return null;
+
+  const handleDismiss = () => {
+    if (popup) sessionStorage.setItem(`va_popup_dismissed_${popup.id}`, "1");
+    setOpen(false);
+  };
+
+  const copyCoupon = () => {
+    if (popup.coupon_code) {
+      navigator.clipboard.writeText(popup.coupon_code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(val) => { if (!val) handleDismiss(); }}>
+      <DialogContent className="max-w-[460px] p-0 overflow-hidden border border-border shadow-2xl rounded-2xl bg-card">
+        <DialogTitle className="sr-only">{popup.title || "Special Offer"}</DialogTitle>
+        <div className="relative p-6 sm:p-8 text-center flex flex-col items-center">
+          <button
+            onClick={handleDismiss}
+            aria-label="Close offer"
+            className="absolute right-4 top-4 rounded-full p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition"
+          >
+            <X className="size-4" />
+          </button>
+
+          {popup.badge && (
+            <span className="inline-block px-3 py-1 mb-3 text-[10px] font-bold tracking-widest uppercase rounded-full bg-primary/10 text-primary">
+              {popup.badge}
+            </span>
+          )}
+
+          <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            {popup.title || "Enjoy 10% Off Your First Order"}
+          </h3>
+
+          <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+            {popup.message || "Use code WELCOME10 at checkout to save on all premium apparel."}
+          </p>
+
+          {popup.coupon_code && (
+            <div className="mt-5 w-full bg-secondary/80 border border-dashed border-border rounded-xl p-3.5 flex items-center justify-between gap-3">
+              <div className="text-left">
+                <span className="block text-[10px] uppercase font-bold tracking-wider text-muted-foreground">PROMO CODE</span>
+                <span className="text-base font-extrabold tracking-widest font-mono text-foreground">{popup.coupon_code}</span>
+              </div>
+              <Button size="sm" variant="outline" onClick={copyCoupon} className="font-semibold text-xs h-8">
+                {copied ? <><Check className="size-3.5 mr-1 text-emerald-600" /> Copied!</> : "Copy Code"}
+              </Button>
+            </div>
+          )}
+
+          <div className="mt-6 w-full flex flex-col gap-2">
+            <Button
+              asChild
+              className="w-full h-11 font-bold text-sm tracking-wide"
+              onClick={handleDismiss}
+            >
+              <Link to={popup.cta_href || "/collections"}>
+                {popup.cta_label || "Explore Collection"}
+              </Link>
+            </Button>
+            <button
+              onClick={handleDismiss}
+              className="mt-1 text-xs text-muted-foreground hover:text-foreground transition underline-offset-4 hover:underline"
+            >
+              No thanks, continue browsing
+            </button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 const SkeletonCard = () => (
@@ -554,6 +712,7 @@ function CollectionsStrip() {
           <Link
             key={col.id}
             to="/collections"
+            search={{ collection: col.slug } as never}
             className="group relative shrink-0 snap-start overflow-hidden rounded-2xl focus-veloura"
             style={{ width: "clamp(220px, 28vw, 260px)", aspectRatio: "3/4" }}
           >
@@ -595,34 +754,34 @@ function BudgetSection({ products: budgetProducts }: { products: Product[] }) {
   );
 }
 
-function WatchesAccessoriesSection() {
+function MensOutfitsSection() {
   const { data: catData } = useCategories();
   const allCats = catData?.categories ?? [];
 
   const TILES = [
-    { name: "Watches",     slug: "Watches",     gradient: "from-amber-900/80 to-stone-800/80" },
-    { name: "Accessories", slug: "Accessories", gradient: "from-stone-800/80 to-zinc-700/80"  },
-    { name: "Fragrance",   slug: "Fragrance",   gradient: "from-zinc-800/80 to-slate-700/80"  },
+    { name: "Men's Outfits",     slug: "mens-outfits",     category: "mens-outfits",     fallbackImg: campaignImages.two,   gradient: "from-stone-900/80 to-zinc-800/80" },
+    { name: "Leather Jackets",   slug: "leather-jackets",   category: "leather-jackets",   fallbackImg: campaignImages.one,   gradient: "from-amber-950/80 to-stone-900/80" },
+    { name: "Shirts & Trousers", slug: "shirts",            category: "shirts",            fallbackImg: campaignImages.three, gradient: "from-zinc-900/80 to-slate-800/80" },
   ];
 
   return (
     <section className="store-section">
       <SectionHeader
-        label="THE FINISHING TOUCH"
-        title="Details Make the Difference."
+        label="COMPLETE THE LOOK"
+        title="Men's Outfits & Signature Layers."
       />
       <p className="mb-7 max-w-lg text-sm leading-6 text-muted-foreground">
-        Accessories that bring a polished finish to your everyday style.
+        Contemporary silhouettes, genuine leather jackets, and coordinated sets designed for confident modern style.
       </p>
       <div className="grid gap-4 md:grid-cols-3">
         {TILES.map(tile => {
           const cat = allCats.find(c => c.slug === tile.slug || c.name === tile.name);
-          const img = cat?.image_url ? assetUrl(cat.image_url) : null;
+          const img = cat?.image_url ? assetUrl(cat.image_url) : tile.fallbackImg;
           return (
             <Link
               key={tile.slug}
-              to="/shop"
-              search={{ category: tile.slug } as never}
+              to="/collections"
+              search={{ category: tile.category } as never}
               className="group relative overflow-hidden rounded-xl focus-veloura"
               style={{ minHeight: 320 }}
             >
@@ -878,7 +1037,7 @@ const FALLBACK_CATS = [
   { id: "f1", name: "Jackets",     slug: "Jackets",     image_url: campaignImages.one   },
   { id: "f2", name: "T-Shirts",    slug: "T-Shirts",    image_url: campaignImages.two   },
   { id: "f3", name: "Shirts",      slug: "Shirts",      image_url: campaignImages.three },
-  { id: "f4", name: "Watches",     slug: "Watches",     image_url: campaignImages.four  },
+  { id: "f4", name: "Men's Outfits", slug: "Men's Outfits", image_url: campaignImages.two },
   { id: "f5", name: "Accessories", slug: "Accessories", image_url: bannerAccessories    },
   { id: "f6", name: "Fragrance",   slug: "Fragrance",   image_url: campaignImages.one   },
 ] as const;
@@ -909,7 +1068,7 @@ function CategorySection({ liveProducts: _liveProducts }: { liveProducts: Produc
             return (
               <Link
                 key={cat.id}
-                to="/shop"
+                to="/collections"
                 search={{ category: cat.slug } as never}
                 className={`group relative overflow-hidden rounded-xl focus-veloura
                   ${i === 0 ? "row-span-2" : ""}`}
@@ -1147,9 +1306,15 @@ export function ArticleCard({ article }: { article: (typeof articles)[number] })
 export function ShopPage({ mode = "all", initialCategory = "All" }: { mode?: "all" | "new" | "best" | "sale"; initialCategory?: string }) {
   const { data: productsData } = useProducts();
   const liveProducts = productsData?.products?.map(fromBackend) ?? [];
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState(initialCategory);
-  useEffect(()=>setCategory(initialCategory),[initialCategory]);
+  const routerState = useRouterState();
+  const searchParams = (routerState.location.search || {}) as Record<string, string | undefined>;
+  const activeUrlCat = searchParams.category || initialCategory;
+  const [query, setQuery] = useState(searchParams.q || "");
+  const [category, setCategory] = useState(activeUrlCat);
+  useEffect(() => {
+    if (searchParams.category) setCategory(searchParams.category);
+    else setCategory(initialCategory);
+  }, [searchParams.category, initialCategory]);
   const [limit,setLimit]=useState(12);
   const [size, setSize] = useState("All");
   const [color, setColor] = useState("All");
@@ -1161,7 +1326,15 @@ export function ShopPage({ mode = "all", initialCategory = "All" }: { mode?: "al
   const filtered = useMemo(() => {
     let list = liveProducts.filter((product) => {
       const matchesQuery = [product.name, product.category, product.description, product.tags.join(" ")].join(" ").toLowerCase().includes(query.toLowerCase());
-      const matchesCategory = category === "All" || product.category === category || product.audience === category || category === "New Arrivals" && product.newArrival || category === "Sale" && Boolean(product.salePrice);
+      const normCat = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const matchesCategory =
+        category === "All" ||
+        product.category === category ||
+        product.audience === category ||
+        normCat(product.category) === normCat(category) ||
+        (normCat(category).includes("leather") && normCat(product.category).includes("leather")) ||
+        (category === "New Arrivals" && product.newArrival) ||
+        (category === "Sale" && Boolean(product.salePrice));
       const matchesMode = mode === "all" || mode === "new" && product.newArrival || mode === "best" && product.bestSeller || mode === "sale" && Boolean(product.salePrice);
       const matchesSize = size === "All" || product.sizes.includes(size);
       const matchesColor = color === "All" || product.colors.includes(color);
@@ -1290,6 +1463,262 @@ function FilterSelect({ label, value, onChange, options }: { label: string; valu
   );
 }
 
+function StylistConcierge({ product, selectedSize, selectedColor }: { product: Product; selectedSize: string; selectedColor: string }) {
+  const { data: settingsData } = useSettings();
+  const phone = settingsData?.settings?.whatsapp_number || "923000000000";
+  const cleanPhone = phone.replace(/[^0-9]/g, "");
+
+  const msg = encodeURIComponent(
+    `Hello Veloura Styling Concierge, I am viewing the ${product.name} (${formatPrice(productPrice(product))}) in Color: ${selectedColor}, Size: ${selectedSize}. Could you advise on tailoring fit, outfit pairing, and delivery?`
+  );
+  const waUrl = `https://wa.me/${cleanPhone}?text=${msg}`;
+
+  return (
+    <div className="mt-4 rounded-xl border border-border/80 bg-secondary/40 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-sage">
+            <span className="size-1.5 rounded-full bg-sage animate-pulse" />
+            VIP Styling Concierge
+          </span>
+          <p className="mt-1 font-display text-base font-semibold">Need Personalized Styling or Fit Advice?</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Our menswear stylists are available on WhatsApp for direct bespoke sizing, leather jacket care, and complete outfit coordination.
+          </p>
+        </div>
+      </div>
+      <a
+        href={waUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition"
+      >
+        💬 Chat with Stylist on WhatsApp
+      </a>
+    </div>
+  );
+}
+
+function RestockAlertModal({ product, selectedSize }: { product: Product; selectedSize: string }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [chosenSize, setChosenSize] = useState(selectedSize);
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setChosenSize(selectedSize);
+  }, [selectedSize]);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!phone.trim()) return;
+    setLoading(true);
+    await api.trackLead({
+      name: name.trim() || undefined,
+      phone: phone.trim(),
+      stage: "waitlist",
+      notes: `Restock alert requested for ${product.name} (Size: ${chosenSize})`,
+    });
+    setLoading(false);
+    setSubmitted(true);
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-2.5 text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground transition flex items-center gap-1.5"
+      >
+        🔔 Don't see your size? Get VIP Restock Alert
+      </button>
+
+      {open && (
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent className="sm:max-w-md p-6">
+            <DialogTitle className="font-display text-2xl font-bold">
+              VIP Restock & Size Notification
+            </DialogTitle>
+            <p className="mt-1 text-xs text-muted-foreground">
+              We produce in limited handcrafted batches. Enter your details to get first priority alert on WhatsApp when this size returns.
+            </p>
+
+            {submitted ? (
+              <div className="mt-6 rounded-xl bg-secondary p-5 text-center">
+                <Check className="size-8 text-sage mx-auto mb-2" />
+                <p className="font-display text-lg font-bold">You're on the Priority List</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  We'll message you at <strong>{phone}</strong> the moment {product.name} (Size {chosenSize}) is restocked.
+                </p>
+                <Button variant="outline" size="sm" onClick={() => setOpen(false)} className="mt-4">
+                  Close
+                </Button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                    Select Desired Size
+                  </label>
+                  <select
+                    value={chosenSize}
+                    onChange={(e) => setChosenSize(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-semibold focus-veloura"
+                  >
+                    {product.sizes.map((s) => (
+                      <option key={s} value={s}>
+                        Size {s}
+                      </option>
+                    ))}
+                    <option value="Custom Bespoke Measurement">Custom Bespoke Measurement</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                    Your Name
+                  </label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Ali Khan"
+                    className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-xs focus-veloura"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                    WhatsApp / Mobile Number *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="0300 1234567"
+                    className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-xs focus-veloura"
+                  />
+                </div>
+
+                <Button type="submit" variant="editorial" disabled={loading} className="w-full mt-2">
+                  {loading ? "Joining Waitlist..." : "Notify Me on WhatsApp"}
+                </Button>
+              </form>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
+  );
+}
+
+function SaveBagToWhatsApp({ cart, liveProducts, cartTotal }: { cart: CartItem[]; liveProducts: Product[]; cartTotal: number }) {
+  const [open, setOpen] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
+  const [saving, setSaving] = useState(false);
+  const { data: settingsData } = useSettings();
+  const supportPhone = settingsData?.settings?.whatsapp_number || "923000000000";
+  const cleanSupport = supportPhone.replace(/[^0-9]/g, "");
+
+  const handleSave = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!phone.trim()) return;
+    setSaving(true);
+
+    // Save lead into database!
+    await api.trackLead({
+      name: name.trim() || undefined,
+      phone: phone.trim(),
+      stage: "cart",
+      items: cart,
+      item_count: cart.length,
+      cart_value: cartTotal,
+      currency: getActiveCurrency(),
+      notes: "Customer used Save Bag to WhatsApp",
+    });
+
+    setSaving(false);
+    setOpen(false);
+
+    // Generate WhatsApp text
+    const lines = cart.map((it) => {
+      const p = liveProducts.find((x) => x.id === it.productId);
+      return `• ${p?.name || "Item"} (Size: ${it.size}, Color: ${it.color}) x ${it.quantity}`;
+    });
+
+    const text = encodeURIComponent(
+      `Hello Veloura, I am saving my bag:\n\n${lines.join("\n")}\n\nTotal: ${formatPrice(cartTotal)}\nName: ${name || "Guest"}\nWhatsApp: ${phone}\n\nPlease reserve these items for me.`
+    );
+    window.open(`https://wa.me/${cleanSupport}?text=${text}`, "_blank");
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-600/40 bg-emerald-500/10 py-2.5 text-xs font-bold text-emerald-700 hover:bg-emerald-500/20 transition cursor-pointer"
+      >
+        💬 Save Bag to WhatsApp & Reserve Look
+      </button>
+
+      {open && (
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent className="sm:max-w-md p-6">
+            <DialogTitle className="font-display text-2xl font-bold">
+              Save Bag & Send to WhatsApp
+            </DialogTitle>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Enter your mobile number. We will save your bag, reserve your sizes in our system, and text your look directly to your WhatsApp.
+            </p>
+
+            <form onSubmit={handleSave} className="mt-5 space-y-4">
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                  Your Name
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Usman Malik"
+                  className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-xs focus-veloura"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">
+                  WhatsApp Number *
+                </label>
+                <input
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="0300 1234567"
+                  className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-xs focus-veloura"
+                />
+              </div>
+
+              <div className="rounded-lg bg-secondary/70 p-3 text-xs text-muted-foreground">
+                📦 {cart.length} items reserved in your bag ({formatPrice(cartTotal)})
+              </div>
+
+              <Button type="submit" variant="editorial" disabled={saving} className="w-full mt-2">
+                {saving ? "Saving Bag..." : "Save & Open WhatsApp"}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
+  );
+}
+
 export function ProductDetailPage({ product }: { product: Product }) {
   const { data: productsData } = useProducts();
   const liveProducts = productsData?.products?.map(fromBackend) ?? [];
@@ -1339,6 +1768,7 @@ export function ProductDetailPage({ product }: { product: Product }) {
                 </Button>
               ))}
             </div>
+            <RestockAlertModal product={product} selectedSize={selectedSize} />
           </div>
           <p className="mt-6 text-sm text-muted-foreground">{product.stock < 8 ? `LOW STOCK — ${product.stock} LEFT` : "IN STOCK"}</p>
           <div className="mt-6 flex items-center gap-3">
@@ -1361,6 +1791,7 @@ export function ProductDetailPage({ product }: { product: Product }) {
               <Heart className={wished ? "fill-current text-sage" : ""} /> Wishlist
             </Button>
           </div>
+          <StylistConcierge product={product} selectedSize={selectedSize} selectedColor={selectedColor} />
           <ProductAccordions product={product} />
         </aside>
       </div>
@@ -1618,6 +2049,9 @@ function CartDrawer() {
           <Button asChild variant="editorial" className="mt-5 w-full" disabled={!cart.length} onClick={closeCart}>
             <Link to="/checkout">Checkout</Link>
           </Button>
+          {cart.length > 0 && (
+            <SaveBagToWhatsApp cart={cart} liveProducts={liveProducts} cartTotal={cartTotal} />
+          )}
         </div>
       </div>
     </div>
@@ -1711,32 +2145,101 @@ export function CheckoutPage() {
   const { cart, cartSubtotal, shipping, cartTotal, discount, coupon, deliveryMethod, setDeliveryMethod, createOrder } = useVelouraStore();
   const { data: settingsData } = useSettings();
 
+  const user = authStorage.getUser();
+  const [formData, setFormData] = useState(() => {
+    let saved = null;
+    if (typeof window !== "undefined") {
+      try {
+        saved = JSON.parse(localStorage.getItem("va_checkout_draft") || "null");
+      } catch {
+        saved = null;
+      }
+    }
+    return {
+      name: saved?.name || user?.name || "",
+      email: saved?.email || user?.email || "",
+      phone: saved?.phone || user?.phone || "",
+      address: saved?.address || user?.address || "",
+      city: saved?.city || user?.city || "",
+      state: saved?.state || "Punjab",
+      postalCode: saved?.postalCode || user?.postal_code || "",
+      country: saved?.country || "Pakistan",
+    };
+  });
+
+  const leadTimeoutRef = useRef<number | null>(null);
+
+  const captureLead = (data: typeof formData, immediate = false) => {
+    if (!data.phone && !data.email && !data.name) return;
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("va_checkout_draft", JSON.stringify(data));
+      } catch {}
+    }
+    const send = () => {
+      void api.trackLead({
+        name: data.name.trim() || undefined,
+        phone: data.phone.trim() || undefined,
+        email: data.email.trim() || undefined,
+        address: data.address.trim() || undefined,
+        city: data.city.trim() || undefined,
+        stage: "checkout",
+        items: cart,
+        item_count: cart.length,
+        cart_value: cartTotal,
+        currency: getActiveCurrency(),
+        notes: "Checkout in progress — details auto-saved",
+      });
+    };
+
+    if (immediate) {
+      if (leadTimeoutRef.current) window.clearTimeout(leadTimeoutRef.current);
+      send();
+      return;
+    }
+
+    if (leadTimeoutRef.current) window.clearTimeout(leadTimeoutRef.current);
+    leadTimeoutRef.current = window.setTimeout(send, 750);
+  };
+
+  const handleFieldChange = (field: keyof typeof formData, value: string) => {
+    const updated = { ...formData, [field]: value };
+    setFormData(updated);
+    captureLead(updated, false);
+  };
+
+  const handleFieldBlur = () => {
+    captureLead(formData, true);
+  };
+
   const paymentMethods: string[] = [];
   if (settingsData?.payment?.cod_enabled !== false) paymentMethods.push('Cash on Delivery');
-  if (settingsData?.payment?.easypaisa_enabled) paymentMethods.push(`EasyPaisa � ${settingsData.payment.easypaisa_number ?? ''}`);
-  if (settingsData?.payment?.jazzcash_enabled) paymentMethods.push(`JazzCash � ${settingsData.payment.jazzcash_number ?? ''}`);
-  if (settingsData?.payment?.bank_enabled) paymentMethods.push(`Bank Transfer � ${settingsData.payment.bank_name ?? ''}`);
-  if (!paymentMethods.length) paymentMethods.push('Cash on Delivery', 'Card � Demo', 'Online Payment � Demo');
+  if (settingsData?.payment?.easypaisa_enabled) paymentMethods.push(`EasyPaisa · ${settingsData.payment.easypaisa_number ?? ''}`);
+  if (settingsData?.payment?.jazzcash_enabled) paymentMethods.push(`JazzCash · ${settingsData.payment.jazzcash_number ?? ''}`);
+  if (settingsData?.payment?.bank_enabled) paymentMethods.push(`Bank Transfer · ${settingsData.payment.bank_name ?? ''}`);
+  if (!paymentMethods.length) paymentMethods.push('Cash on Delivery');
 
   const [paymentMethod, setPaymentMethod] = useState(paymentMethods[0] ?? "Cash on Delivery");
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    captureLead(formData, true);
     const order = createOrder({
       customer: {
-        name: String(form.get("name") ?? ""),
-        email: String(form.get("email") ?? ""),
-        phone: String(form.get("phone") ?? ""),
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
       },
       address: {
-        address: String(form.get("address") ?? ""),
-        city: String(form.get("city") ?? ""),
-        postalCode: String(form.get("postalCode") ?? ""),
-        country: String(form.get("country") ?? ""),
-        state: String(form.get("state") ?? ""),
+        address: formData.address,
+        city: formData.city,
+        postalCode: formData.postalCode,
+        country: formData.country,
+        state: formData.state,
       },
-      paymentMethod, discount, coupon,
+      paymentMethod,
+      discount,
+      coupon,
       items: cart,
       subtotal: cartSubtotal,
       shipping,
@@ -1761,31 +2264,108 @@ export function CheckoutPage() {
   return (
     <main className="mx-auto max-w-[1300px] px-5 pb-20 pt-32 sm:px-8 lg:px-12">
       <p className="editorial-label">Checkout</p>
-      <Logo className="mt-5 size-24" /><h1 className="mt-3 font-display text-5xl leading-none sm:text-7xl">CHECKOUT</h1><p className="mt-4 text-sm text-muted-foreground">Local demo checkout. No real payment is taken and no order is sent.</p>
+      <Logo className="mt-5 size-24" />
+      <h1 className="mt-3 font-display text-5xl leading-none sm:text-7xl">CHECKOUT</h1>
+      <p className="mt-4 text-sm text-muted-foreground">
+        Secure checkout. 100% Cash on Delivery available nationwide with verified SMS & WhatsApp tracking.
+      </p>
       <form onSubmit={submit} className="mt-12 grid gap-8 lg:grid-cols-[1fr_420px]">
         <div className="space-y-8">
-          <CheckoutGroup title="Contact">
-            <CheckoutInput name="name" label="Name" required />
-            <CheckoutInput name="email" label="Email" type="email" required />
-            <CheckoutInput name="phone" label="Phone" type="tel" required />
+          <CheckoutGroup title="Contact Details">
+            <CheckoutInput
+              name="name"
+              label="Full Name"
+              required
+              value={formData.name}
+              onChange={(v) => handleFieldChange("name", v)}
+              onBlur={handleFieldBlur}
+            />
+            <CheckoutInput
+              name="email"
+              label="Email Address"
+              type="email"
+              required
+              value={formData.email}
+              onChange={(v) => handleFieldChange("email", v)}
+              onBlur={handleFieldBlur}
+            />
+            <CheckoutInput
+              name="phone"
+              label="WhatsApp / Mobile Number"
+              type="tel"
+              required
+              value={formData.phone}
+              onChange={(v) => handleFieldChange("phone", v)}
+              onBlur={handleFieldBlur}
+            />
           </CheckoutGroup>
-          <CheckoutGroup title="Delivery">
-            <CheckoutInput name="address" label="Address" required />
+          <CheckoutGroup title="Delivery Address">
+            <CheckoutInput
+              name="address"
+              label="Street Address / House No."
+              required
+              value={formData.address}
+              onChange={(v) => handleFieldChange("address", v)}
+              onBlur={handleFieldBlur}
+            />
             <div className="grid gap-4 sm:grid-cols-3">
-              <CheckoutInput name="city" label="City" required />
-              <CheckoutInput name="state" label="Province / State" required />
-               <CheckoutInput name="postalCode" label="Postal Code" required />
-              <CheckoutInput name="country" label="Country" required />
+              <CheckoutInput
+                name="city"
+                label="City"
+                required
+                value={formData.city}
+                onChange={(v) => handleFieldChange("city", v)}
+                onBlur={handleFieldBlur}
+              />
+              <CheckoutInput
+                name="state"
+                label="Province / State"
+                required
+                value={formData.state}
+                onChange={(v) => handleFieldChange("state", v)}
+                onBlur={handleFieldBlur}
+              />
+              <CheckoutInput
+                name="postalCode"
+                label="Postal Code"
+                value={formData.postalCode}
+                onChange={(v) => handleFieldChange("postalCode", v)}
+                onBlur={handleFieldBlur}
+              />
             </div>
           </CheckoutGroup>
-          <CheckoutGroup title="Delivery method"><div className="flex flex-wrap gap-3">{["Standard","Express"].map(method=><Button type="button" key={method} variant={deliveryMethod===method?"editorial":"outline"} onClick={()=>setDeliveryMethod(method)}>{method} · {method==="Express"?"1–2 days":"3–5 days"}</Button>)}</div></CheckoutGroup>
-          <CheckoutGroup title="Payment">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {paymentMethods.map((method) => (
-                <button key={method} type="button" onClick={() => setPaymentMethod(method)} className={`rounded-sm border border-border p-4 text-left text-sm focus-veloura ${paymentMethod === method ? "bg-secondary ring-2 ring-sage" : "bg-transparent"}`}>{method}</button>
+          <CheckoutGroup title="Delivery Method">
+            <div className="flex flex-wrap gap-3">
+              {["Standard", "Express"].map((method) => (
+                <Button
+                  type="button"
+                  key={method}
+                  variant={deliveryMethod === method ? "editorial" : "outline"}
+                  onClick={() => setDeliveryMethod(method)}
+                >
+                  {method} · {method === "Express" ? "1–2 days priority" : "3–5 days standard"}
+                </Button>
               ))}
             </div>
-            {settingsData?.payment?.payment_note ? <p className="mt-3 text-sm text-muted-foreground">{settingsData.payment.payment_note}</p> : null}
+          </CheckoutGroup>
+          <CheckoutGroup title="Payment Method">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {paymentMethods.map((method) => (
+                <button
+                  key={method}
+                  type="button"
+                  onClick={() => setPaymentMethod(method)}
+                  className={`rounded-sm border border-border p-4 text-left text-sm focus-veloura transition ${
+                    paymentMethod === method ? "bg-secondary ring-2 ring-sage shadow-xs" : "bg-transparent"
+                  }`}
+                >
+                  {method}
+                </button>
+              ))}
+            </div>
+            {settingsData?.payment?.payment_note ? (
+              <p className="mt-3 text-sm text-muted-foreground">{settingsData.payment.payment_note}</p>
+            ) : null}
           </CheckoutGroup>
         </div>
         <OrderSummary cart={cart} subtotal={cartSubtotal} shipping={shipping} total={cartTotal} actionLabel="Place Order" />
@@ -1798,11 +2378,37 @@ function CheckoutGroup({ title, children }: { title: string; children: React.Rea
   return <section className="rounded-sm bg-secondary p-5"><h2 className="editorial-label text-foreground">{title}</h2><div className="mt-5 grid gap-4">{children}</div></section>;
 }
 
-function CheckoutInput({ name, label, type = "text", required }: { name: string; label: string; type?: string; required?: boolean }) {
+function CheckoutInput({
+  name,
+  label,
+  type = "text",
+  required,
+  value,
+  onChange,
+  onBlur,
+}: {
+  name: string;
+  label: string;
+  type?: string;
+  required?: boolean;
+  value?: string;
+  onChange?: (val: string) => void;
+  onBlur?: () => void;
+}) {
   return (
-    <label>
+    <label className="block">
       <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{label}</span>
-      <input name={name} type={type} required={required} minLength={name === "name" ? 2 : name === "address" ? 5 : undefined} pattern={name === "phone" ? "[+0-9() -]{7,20}" : name === "postalCode" ? "[A-Za-z0-9 -]{3,10}" : undefined} className="mt-2 w-full rounded-sm border border-border bg-background px-4 py-3 text-sm focus-veloura" />
+      <input
+        name={name}
+        type={type}
+        required={required}
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
+        onBlur={onBlur}
+        minLength={name === "name" ? 2 : name === "address" ? 5 : undefined}
+        pattern={name === "phone" ? "[+0-9() -]{7,20}" : name === "postalCode" ? "[A-Za-z0-9 -]{3,10}" : undefined}
+        className="mt-2 w-full rounded-sm border border-border bg-background px-4 py-3 text-sm focus-veloura"
+      />
     </label>
   );
 }
@@ -1980,19 +2586,521 @@ export function AboutPage() {
   );
 }
 
+// ─── Curated Collections Page ────────────────────────────────────────────────
+const FALLBACK_COLLECTIONS = [
+  {
+    id: "col-leather",
+    name: "Men's Leather Collection",
+    slug: "mens-leather-collection",
+    tagline: "Signature Genuine Biker, Aviator & Suede Jackets",
+    image_url: campaignImages.one,
+    description: "Handcrafted genuine leather jackets featuring structured shoulders, heavy-gauge YKK hardware, and tailored silhouettes for everyday distinction.",
+  },
+  {
+    id: "col-shirts",
+    name: "Shirts & Overshirts Edit",
+    slug: "shirts-overshirts-edit",
+    tagline: "Oxford Button-Downs, Twill Utility & Flannels",
+    image_url: campaignImages.three,
+    description: "Breathable crisp Oxford button-downs, heavyweight twill utility shirts, and relaxed camp-collar linen tops.",
+  },
+  {
+    id: "col-pants",
+    name: "Pants & Tailored Trousers",
+    slug: "pants-tailored-trousers",
+    tagline: "Pleated Trousers, Stretch Chinos & Utility Cargos",
+    image_url: campaignImages.four,
+    description: "Relaxed pleated trousers, structured utility cargo pants, and Japanese selvedge denim built for daily rotation.",
+  },
+  {
+    id: "col-outfits",
+    name: "Complete Men's Outfits",
+    slug: "complete-mens-outfits",
+    tagline: "Coordinated Sets, Merino Knitwear & Tailored Suits",
+    image_url: campaignImages.two,
+    description: "Curated head-to-toe styling: relaxed two-piece suits, camel wool overcoats, 450 GSM hoodies, and fine knitwear.",
+  },
+];
+
+const COLLECTION_CATEGORIES = [
+  { label: "All Categories", slug: "all" },
+  { label: "Leather Jackets", slug: "leather-jackets" },
+  { label: "Shirts", slug: "shirts" },
+  { label: "Trousers & Pants", slug: "trousers-pants" },
+  { label: "Men's Outfits", slug: "mens-outfits" },
+  { label: "Hoodies & Knitwear", slug: "hoodies-knitwear" },
+  { label: "Jackets & Outerwear", slug: "jackets-outerwear" },
+];
+
 export function CollectionsPage() {
   const { data: productsData } = useProducts();
   const liveProducts = productsData?.products?.map(fromBackend) ?? [];
+  const { data: collectionsData } = useCollections();
+  const dbCollections = (collectionsData?.collections ?? []).filter((c) => c.active !== false);
+
+  const collectionsList = useMemo(() => {
+    if (!dbCollections.length) return FALLBACK_COLLECTIONS;
+    return dbCollections.map((dbCol) => {
+      const fb = FALLBACK_COLLECTIONS.find(
+        (f) => f.slug === dbCol.slug || f.name.toLowerCase() === dbCol.name.toLowerCase()
+      );
+      return {
+        id: dbCol.id,
+        name: dbCol.name,
+        slug: dbCol.slug,
+        tagline: dbCol.tagline || fb?.tagline || "Curated Menswear Edit",
+        image_url: dbCol.image_url ? assetUrl(dbCol.image_url) : (fb?.image_url || campaignImages.one),
+        description: fb?.description || "Modern menswear essentials designed around clean silhouettes and durable craftsmanship.",
+      };
+    });
+  }, [dbCollections]);
+
+  const routerState = useRouterState();
+  const navigate = useNavigate();
+  const searchParams = (routerState.location.search || {}) as {
+    collection?: string;
+    category?: string;
+    sort?: string;
+  };
+
+  const [activeCollection, setActiveCollection] = useState<string>(searchParams.collection || "all");
+  const [activeCategory, setActiveCategory] = useState<string>(searchParams.category || "all");
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<string>(searchParams.sort || "Featured");
+
+  // Keep state synchronized with URL search params
+  useEffect(() => {
+    setActiveCollection(searchParams.collection || "all");
+    setActiveCategory(searchParams.category || "all");
+  }, [searchParams.collection, searchParams.category]);
+
+  const norm = (s?: string | null) => (s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  const handleSelectCollection = (slug: string) => {
+    const nextCol = activeCollection === slug ? "all" : slug;
+    setActiveCollection(nextCol);
+    navigate({
+      to: "/collections",
+      search: {
+        collection: nextCol === "all" ? undefined : nextCol,
+        category: activeCategory === "all" ? undefined : activeCategory,
+        sort: sort !== "Featured" ? sort : undefined,
+      } as never,
+      replace: true,
+    });
+  };
+
+  const handleSelectCategory = (catSlug: string) => {
+    const nextCat = activeCategory === catSlug ? "all" : catSlug;
+    setActiveCategory(nextCat);
+    navigate({
+      to: "/collections",
+      search: {
+        collection: activeCollection === "all" ? undefined : activeCollection,
+        category: nextCat === "all" ? undefined : nextCat,
+        sort: sort !== "Featured" ? sort : undefined,
+      } as never,
+      replace: true,
+    });
+  };
+
+  const handleClearFilters = () => {
+    setActiveCollection("all");
+    setActiveCategory("all");
+    setQuery("");
+    navigate({
+      to: "/collections",
+      search: {} as never,
+      replace: true,
+    });
+  };
+
+  // Strict, mutually exclusive filtering
+  const filteredProducts = useMemo(() => {
+    let list = liveProducts.filter((product) => {
+      // 1. Keyword search
+      if (query.trim()) {
+        const q = query.toLowerCase().trim();
+        const hay = [
+          product.name,
+          product.description,
+          product.category,
+          product.collection,
+          ...(product.tags || []),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+
+      // 2. Strict Collection Match
+      if (activeCollection && activeCollection !== "all") {
+        const targetCol = norm(activeCollection);
+        const pCol = norm(product.collection);
+
+        let colMatches = false;
+        if (pCol && (pCol === targetCol || pCol.includes(targetCol) || targetCol.includes(pCol))) {
+          colMatches = true;
+        } else if (targetCol.includes("leather") && (norm(product.category).includes("leather") || product.tags?.some((t) => norm(t).includes("leather")))) {
+          colMatches = true;
+        } else if (targetCol.includes("shirt") && (norm(product.category) === "shirts" || norm(product.category) === "shirt")) {
+          colMatches = true;
+        } else if ((targetCol.includes("pant") || targetCol.includes("trouser")) && (norm(product.category).includes("trouser") || norm(product.category).includes("pant"))) {
+          colMatches = true;
+        } else if (targetCol.includes("outfit") && (norm(product.category).includes("outfit") || norm(product.category).includes("hoodie") || norm(product.category).includes("knitwear") || pCol.includes("outfit"))) {
+          colMatches = true;
+        }
+        if (!colMatches) return false;
+      }
+
+      // 3. Strict Category Match (mutually exclusive)
+      if (activeCategory && activeCategory !== "all") {
+        const targetCat = norm(activeCategory);
+        const pCat = norm(product.category);
+
+        if (targetCat.includes("leather")) {
+          // STRICT: MUST be Leather Jackets only!
+          const isLeather = pCat.includes("leather") || product.tags?.some((t) => norm(t).includes("leather"));
+          if (!isLeather) return false;
+        } else if (targetCat === "shirts" || targetCat === "shirt") {
+          // STRICT: MUST be Shirts only!
+          if (pCat !== "shirts" && pCat !== "shirt") return false;
+        } else if (targetCat.includes("trouser") || targetCat.includes("pant")) {
+          // STRICT: MUST be Trousers / Pants only!
+          if (!pCat.includes("trouser") && !pCat.includes("pant") && !pCat.includes("cargo") && !pCat.includes("denim")) return false;
+        } else if (targetCat.includes("mensoutfit") || targetCat === "outfits" || targetCat === "outfit") {
+          // STRICT: MUST be Men's Outfits only!
+          if (!pCat.includes("outfit") && !pCat.includes("suit")) return false;
+        } else if (targetCat.includes("hoodie") || targetCat.includes("knitwear")) {
+          // STRICT: MUST be Hoodies & Knitwear only!
+          if (!pCat.includes("hoodie") && !pCat.includes("knitwear") && !pCat.includes("sweater") && !pCat.includes("cardigan")) return false;
+        } else if (targetCat.includes("outerwear") || targetCat === "jackets") {
+          // STRICT: Outerwear (non-leather)
+          if ((!pCat.includes("outerwear") && pCat !== "jackets") || pCat.includes("leather")) return false;
+        } else {
+          if (pCat !== targetCat) return false;
+        }
+      }
+
+      return true;
+    });
+
+    // Sorting
+    if (sort === "Price: Low to High") list = [...list].sort((a, b) => productPrice(a) - productPrice(b));
+    else if (sort === "Price: High to Low") list = [...list].sort((a, b) => productPrice(b) - productPrice(a));
+    else if (sort === "Newest") list = [...list].sort((a, b) => Number(b.newArrival) - Number(a.newArrival));
+    else if (sort === "Best Rated") list = [...list].sort((a, b) => b.rating - a.rating);
+    else if (sort === "Best Selling") list = [...list].sort((a, b) => b.reviewCount - a.reviewCount);
+    else if (sort === "Featured") list = [...list].sort((a, b) => Number(b.featured) - Number(a.featured));
+
+    return list;
+  }, [liveProducts, activeCollection, activeCategory, query, sort]);
+
+  // Current collection object
+  const currentCollectionMeta = collectionsList.find(
+    (c) => c.slug === activeCollection || norm(c.name) === norm(activeCollection)
+  );
+
+  // Active Category label
+  const currentCategoryMeta = COLLECTION_CATEGORIES.find((c) => c.slug === activeCategory);
+
   return (
-    <main>
-      <EditorialBanner />
-      <section className="mx-auto max-w-[1500px] px-5 py-20 sm:px-8 lg:px-12">
-        <SectionHeader label="VEL0URA APPAREL Collection" title="Signature essentials" />
-        {liveProducts.length > 0
-          ? <ProductGrid products={liveProducts.filter((product) => product.tags.includes("signature") || product.featured)} />
-          : null}
+    <main className="pb-24 pt-28">
+      {/* ── Editorial Header ────────────────────────────── */}
+      <section className="relative overflow-hidden bg-primary text-primary-foreground">
+        <div className="absolute inset-0 opacity-20">
+          <img
+            src={currentCollectionMeta?.image_url || campaignImages.one}
+            alt="Collection background"
+            className="h-full w-full object-cover"
+          />
+        </div>
+        <div className="relative mx-auto max-w-[1500px] px-5 py-16 sm:px-8 lg:px-12">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="editorial-label text-primary-foreground/75">
+              VELOURA MENSWEAR / CURATED EDITS
+            </span>
+            <span className="h-1 w-1 rounded-full bg-sage" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-sage">
+              100% Cash on Delivery Nationwide
+            </span>
+          </div>
+
+          <h1 className="mt-4 font-display text-5xl leading-none tracking-tight sm:text-7xl lg:text-8xl">
+            {currentCollectionMeta
+              ? currentCollectionMeta.name.toUpperCase()
+              : activeCategory !== "all"
+              ? (currentCategoryMeta?.label || "CATEGORY").toUpperCase()
+              : "THE CURATED COLLECTIONS"}
+          </h1>
+
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-primary-foreground/80 sm:text-lg">
+            {currentCollectionMeta?.description ||
+              (activeCategory !== "all"
+                ? `Explore our dedicated ${currentCategoryMeta?.label} edit — exclusively tailored with refined silhouettes and premium textiles.`
+                : "Explore our four dedicated menswear collections. Each piece is designed for quiet confidence, architectural tailoring, and effortless everyday rotation.")}
+          </p>
+
+          <div className="mt-8 flex flex-wrap items-center gap-6 text-xs text-primary-foreground/70">
+            <span className="flex items-center gap-1.5">
+              <Check className="size-4 text-sage" /> Free Delivery over Rs. 4,999
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Check className="size-4 text-sage" /> Genuine Leather & Tailored Textiles
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Check className="size-4 text-sage" /> Verified Order Tracking
+            </span>
+          </div>
+        </div>
       </section>
-      <BuildYourLook />
+
+      {/* ── Collection Selector Cards ───────────────────── */}
+      <section className="border-b border-border bg-secondary/50 py-8">
+        <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              Select Collection
+            </p>
+            {activeCollection !== "all" && (
+              <button
+                onClick={() => handleSelectCollection("all")}
+                className="text-xs font-semibold text-primary underline underline-offset-4 hover:opacity-80"
+              >
+                View All Collections
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {/* All Collections Tile */}
+            <button
+              onClick={() => handleSelectCollection("all")}
+              className={`group flex flex-col justify-between rounded-xl border p-4 text-left transition-all ${
+                activeCollection === "all"
+                  ? "border-primary bg-primary text-primary-foreground shadow-md"
+                  : "border-border bg-card text-foreground hover:border-primary/40"
+              }`}
+            >
+              <div>
+                <span className={`text-[10px] font-bold uppercase tracking-widest ${activeCollection === "all" ? "text-primary-foreground/75" : "text-muted-foreground"}`}>
+                  Complete Catalog
+                </span>
+                <p className="mt-1 font-display text-lg font-semibold leading-snug">
+                  All Collections
+                </p>
+              </div>
+              <p className={`mt-4 text-xs ${activeCollection === "all" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                {liveProducts.length} Total Pieces
+              </p>
+            </button>
+
+            {/* Collection Cards */}
+            {collectionsList.map((col) => {
+              const isSelected = activeCollection === col.slug;
+              const colCount = liveProducts.filter((p) => {
+                const targetCol = norm(col.slug);
+                const pCol = norm(p.collection);
+                if (pCol && (pCol === targetCol || pCol.includes(targetCol) || targetCol.includes(pCol))) return true;
+                if (targetCol.includes("leather") && (norm(p.category).includes("leather") || p.tags?.some((t) => norm(t).includes("leather")))) return true;
+                if (targetCol.includes("shirt") && (norm(p.category) === "shirts" || norm(p.category) === "shirt")) return true;
+                if ((targetCol.includes("pant") || targetCol.includes("trouser")) && (norm(p.category).includes("trouser") || norm(p.category).includes("pant"))) return true;
+                if (targetCol.includes("outfit") && (norm(p.category).includes("outfit") || norm(p.category).includes("hoodie") || norm(p.category).includes("knitwear") || pCol.includes("outfit"))) return true;
+                return false;
+              }).length;
+
+              return (
+                <button
+                  key={col.id}
+                  onClick={() => handleSelectCollection(col.slug)}
+                  className={`group relative overflow-hidden rounded-xl border text-left transition-all ${
+                    isSelected
+                      ? "border-primary ring-2 ring-primary/40 shadow-lg"
+                      : "border-border bg-card hover:border-primary/40"
+                  }`}
+                >
+                  <div className="relative aspect-[16/10] overflow-hidden bg-muted">
+                    <img
+                      src={col.image_url}
+                      alt={col.name}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    {isSelected && (
+                      <span className="absolute right-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground shadow">
+                        Active
+                      </span>
+                    )}
+                    <span className="absolute bottom-2 left-2 rounded-sm bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-xs">
+                      {colCount} Pieces
+                    </span>
+                  </div>
+                  <div className="p-3">
+                    <p className="font-display text-sm font-semibold leading-tight line-clamp-1">
+                      {col.name}
+                    </p>
+                    <p className="mt-1 line-clamp-1 text-[11px] text-muted-foreground">
+                      {col.tagline}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Main Catalog with Strict Category Filtering ── */}
+      <section className="mx-auto max-w-[1500px] px-5 pt-10 sm:px-8 lg:px-12">
+        {/* Category Pills Strip */}
+        <div className="flex items-center justify-between gap-4 border-b border-border pb-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="mr-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hidden sm:inline-block">
+              Filter By Category:
+            </span>
+            {COLLECTION_CATEGORIES.map((cat) => {
+              const isCatActive = activeCategory === cat.slug;
+              return (
+                <button
+                  key={cat.slug}
+                  onClick={() => handleSelectCategory(cat.slug)}
+                  className={`rounded-full px-4 py-2 text-xs font-semibold transition-all ${
+                    isCatActive
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "border border-border bg-secondary/80 text-foreground hover:bg-secondary hover:border-foreground/30"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="hidden lg:flex items-center gap-3">
+            <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">
+              {filteredProducts.length} pieces found
+            </span>
+          </div>
+        </div>
+
+        {/* Filter Controls Bar (Search + Sort + Active Indicators) */}
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-card p-4">
+          {/* Search within collection */}
+          <div className="relative min-w-[240px] flex-1">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Filter by title, material, color, tag..."
+              className="w-full rounded-full border border-border bg-secondary/60 py-2.5 pl-10 pr-4 text-xs focus-veloura placeholder:text-muted-foreground"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Sort:</span>
+            <div className="relative">
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+                className="appearance-none rounded-full border border-border bg-secondary/60 py-2 pl-3.5 pr-8 text-xs font-semibold focus-veloura"
+              >
+                <option value="Featured">Featured</option>
+                <option value="Price: Low to High">Price: Low to High</option>
+                <option value="Price: High to Low">Price: High to Low</option>
+                <option value="Newest">Newest Arrivals</option>
+                <option value="Best Rated">Customer Rating</option>
+                <option value="Best Selling">Best Selling</option>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            </div>
+          </div>
+        </div>
+
+        {/* Active Filters Summary Chips */}
+        {(activeCollection !== "all" || activeCategory !== "all" || query) && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+            <span className="text-muted-foreground font-medium">Active filters:</span>
+            {activeCollection !== "all" && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 font-semibold text-foreground border border-border">
+                Collection: {currentCollectionMeta?.name || activeCollection}
+                <button
+                  onClick={() => handleSelectCollection("all")}
+                  className="hover:text-destructive"
+                  aria-label="Remove collection filter"
+                >
+                  <X className="size-3" />
+                </button>
+              </span>
+            )}
+            {activeCategory !== "all" && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 font-semibold text-foreground border border-border">
+                Category: {currentCategoryMeta?.label || activeCategory}
+                <button
+                  onClick={() => handleSelectCategory("all")}
+                  className="hover:text-destructive"
+                  aria-label="Remove category filter"
+                >
+                  <X className="size-3" />
+                </button>
+              </span>
+            )}
+            {query && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 font-semibold text-foreground border border-border">
+                Search: "{query}"
+                <button
+                  onClick={() => setQuery("")}
+                  className="hover:text-destructive"
+                  aria-label="Clear search"
+                >
+                  <X className="size-3" />
+                </button>
+              </span>
+            )}
+            <button
+              onClick={handleClearFilters}
+              className="font-semibold text-primary underline underline-offset-4 hover:opacity-80 ml-2"
+            >
+              Reset All Filters
+            </button>
+          </div>
+        )}
+
+        {/* ── Products Grid or Empty State ───────────────── */}
+        <div className="mt-8">
+          {filteredProducts.length > 0 ? (
+            <ProductGrid products={filteredProducts} />
+          ) : (
+            <div className="rounded-2xl border border-dashed border-border py-20 text-center">
+              <p className="font-display text-2xl font-semibold">No products found</p>
+              <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                No items match your active filters ({activeCategory !== "all" ? currentCategoryMeta?.label : ""}
+                {activeCollection !== "all" ? ` in ${currentCollectionMeta?.name}` : ""}).
+              </p>
+              <Button onClick={handleClearFilters} variant="editorial" className="mt-6">
+                Clear Filters & Show All Products
+              </Button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── Lookbook & Customer Confidence ──────────────── */}
+      <section className="mt-20">
+        <BuildYourLook liveProducts={liveProducts} />
+      </section>
+      <ShoppingConfidence />
+      <NewsletterBand />
     </main>
   );
 }

@@ -1399,40 +1399,412 @@
     }
 
     const STATUSES = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"];
+    const ORDERS_MAP = new Map();
+
+    function waPhone(p) {
+      let s = String(p || "").replace(/[^0-9]/g, "");
+      if (s.startsWith("0")) s = "92" + s.slice(1);
+      else if (s.startsWith("92")) s = s;
+      else if (s.length === 10) s = "92" + s;
+      return s;
+    }
+
+    function waOrderMsg(o) {
+      const itemsText = (o.items || []).map(i => `• ${i.name} (${[i.size, i.color].filter(Boolean).join('/')}) x${i.quantity} = Rs. ${Number((i.price || i.sale_price || 0) * (i.quantity || 1)).toLocaleString()}`).join("\n");
+      return `Assalam-o-Alaikum ${o.customer_name || 'Customer'},\nThis is VELOURA APPAREL regarding your Order #${o.order_number}.\n\nOrder Status: ${String(o.status || '').toUpperCase()}\nItems:\n${itemsText}\n\nGrand Total: Rs. ${Number(o.total || 0).toLocaleString()}\nDelivery Address: ${o.shipping_address || ''}, ${o.city || ''}\n\nThank you for choosing VELOURA APPAREL!`;
+    }
+
+    async function printAdminReceipt(o) {
+      if (!POS_CFG) {
+        try {
+          const cfgRes = await api("/settings/pos_settings");
+          POS_CFG = cfgRes.row || {};
+        } catch(e) {}
+      }
+      const cfg = POS_CFG || {};
+      const dateStr = new Date(o.created_at || Date.now()).toLocaleDateString();
+      const timeStr = new Date(o.created_at || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      const items = Array.isArray(o.items) ? o.items : [];
+
+      $("#printArea").innerHTML = `
+        <div class="ph">
+          ${cfg.logo_url ? `<img src="${esc(cfg.logo_url)}" class="receipt-logo">` : ""}
+          <div class="brand">${esc(cfg.store_name || "VELOURA APPAREL")}</div>
+          <div class="sub">${esc(cfg.store_tagline || "Modern Men's Luxury & Couture")}</div>
+          ${cfg.store_address ? `<div class="sub">${esc(cfg.store_address)}</div>` : `<div class="sub">Shop 12, Main Market, Gulberg, Lahore</div>`}
+          <div class="sub">📞 ${esc(cfg.store_phone || "+92 317 371 2950")}</div>
+          <div class="sub">${esc(cfg.store_website || "www.veloura.pk")}</div>
+        </div>
+        <hr>
+        <div style="text-align:center;font-weight:800;letter-spacing:.05em;margin:1.5mm 0">OFFICIAL ORDER DISPATCH RECEIPT</div>
+        <div class="pr"><span>Order #</span><span><b>${esc(o.order_number)}</b></span></div>
+        <div class="pr"><span>Date</span><span>${dateStr} ${timeStr}</span></div>
+        <div class="pr"><span>Status</span><span><b>${esc(String(o.status || "").toUpperCase())}</b></span></div>
+        <div class="pr"><span>Payment</span><span>${esc(o.payment_method || "Cash on Delivery")}</span></div>
+        <hr>
+        <div style="font-weight:800;margin-bottom:1mm;font-size:10.5px">CUSTOMER DETAILS:</div>
+        <div class="pr"><span>Name</span><span><b>${esc(o.customer_name || "Customer")}</b></span></div>
+        <div class="pr"><span>Phone</span><span><b>${esc(o.customer_phone || "-")}</b></span></div>
+        ${o.customer_email ? `<div class="pr"><span>Email</span><span>${esc(o.customer_email)}</span></div>` : ""}
+        <div class="pr"><span>Address</span><span>${esc(o.shipping_address || "")}, ${esc(o.city || "")}</span></div>
+        ${o.courier || o.tracking_number ? `<div class="pr"><span>Courier</span><span>${esc(o.courier || "")} · ${esc(o.tracking_number || "")}</span></div>` : ""}
+        ${o.notes ? `<div class="pr"><span>Notes</span><span>${esc(o.notes)}</span></div>` : ""}
+        <hr>
+        <div class="pr hd"><span>Item</span><span style="text-align:center">Qty</span><span>Total</span></div>
+        ${items.map(i => `
+          <div class="pr">
+            <span>${esc(i.name)}<br><small style="opacity:.75">${[i.size, i.color].filter(Boolean).join(" · ")} · ${rs(i.price || i.sale_price || i.unit || 0)}</small></span>
+            <span style="text-align:center">${i.quantity || 1}</span>
+            <span>${rs((i.price || i.sale_price || i.unit || 0) * (i.quantity || 1))}</span>
+          </div>
+        `).join("")}
+        <hr>
+        <div class="tot-pr"><span>Subtotal</span><span>${rs(o.subtotal || o.total)}</span></div>
+        ${o.shipping_fee ? `<div class="tot-pr"><span>Shipping Fee</span><span>${rs(o.shipping_fee)}</span></div>` : `<div class="tot-pr"><span>Shipping</span><span>FREE</span></div>`}
+        ${o.discount_amount ? `<div class="tot-pr"><span>Coupon (${esc(o.coupon_code || "Discount")})</span><span>−${rs(o.discount_amount)}</span></div>` : ""}
+        <div class="tot-pr big"><span>NET TOTAL</span><span>${rs(o.total)}</span></div>
+        <hr>
+        <div style="text-align:center;margin:2mm 0;font-size:10px">Thank you for your order with Veloura Apparel!</div>
+        ${window.qrcode ? `<div class="qr-wrap">${qrSvg(o.order_number, 2)}</div>` : ""}
+        <div class="footer">
+          <div style="font-weight:800;letter-spacing:.05em;color:#222">${esc(cfg.footer_line1 || "SOFTWARE POWERED BY AM ENTERPRISES")}</div>
+          <div style="margin-top:0.5mm">${esc(cfg.footer_line2 || "Helpline / Support: +92 317 371 2950")}</div>
+          <div>${esc(cfg.footer_line3 || "www.veloura.pk")}</div>
+        </div>
+      `;
+      window.print();
+    }
+
+    function openOrderModal(o) {
+      const cleanPhone = waPhone(o.customer_phone);
+      const msg = waOrderMsg(o);
+      const items = Array.isArray(o.items) ? o.items : [];
+
+      $("#mbody").innerHTML = `
+        <div class="mhdr">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="logo" style="width:38px;height:38px;font-size:14px;border-radius:10px">VA</div>
+            <div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <h2 style="margin:0;font-size:18px;font-weight:800">Order #${esc(o.order_number)}</h2>
+                <span class="chip s-${o.status}" id="m_status_badge" style="font-weight:800;font-size:11px;text-transform:uppercase">${esc(o.status)}</span>
+              </div>
+              <small class="mut">Placed on ${new Date(o.created_at).toLocaleString()}</small>
+            </div>
+          </div>
+          <button class="cl" id="m_close" title="Close">✕</button>
+        </div>
+
+        <!-- Quick Action Bar -->
+        <div style="background:var(--soft);padding:12px 26px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            ${o.status === "pending" ? `
+              <button id="m_btn_approve" style="background:var(--em);color:#fff;padding:8px 16px;border-radius:10px;font-weight:700;display:inline-flex;align-items:center;gap:6px">
+                <span>✓</span> Approve Order
+              </button>
+            ` : ""}
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:12px;font-weight:700;color:var(--mut)">Status:</span>
+              <select id="m_sel_status" style="width:auto;padding:6px 10px;border-radius:8px;font-weight:700">
+                ${STATUSES.map(s => `<option value="${s}" ${s === o.status ? "selected" : ""}>${s}</option>`).join("")}
+              </select>
+              <button class="ghost sm" id="m_btn_set_status">Update</button>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button class="sm" id="m_btn_print" style="background:var(--ink);color:#fff;display:inline-flex;align-items:center;gap:6px">
+              🖨️ Print Admin Receipt
+            </button>
+            ${cleanPhone ? `
+              <a href="https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}" target="_blank" class="ghost sm" style="display:inline-flex;align-items:center;gap:6px;color:#059669;font-weight:700;text-decoration:none">
+                💬 WhatsApp Customer
+              </a>
+            ` : ""}
+          </div>
+        </div>
+
+        <div class="mbody" style="padding:22px 26px">
+          <!-- Two Column Info Grid -->
+          <div class="mrow half" style="gap:20px;margin-bottom:24px">
+            <!-- Customer & Shipping Card -->
+            <div class="card" style="padding:18px;border:1px solid var(--line);background:var(--bg)">
+              <div class="msec-title" style="margin-bottom:10px">👤 Customer & Shipping Information</div>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+                <div><span class="mut" style="width:75px;display:inline-block">Name:</span><b>${esc(o.customer_name || 'N/A')}</b></div>
+                <div><span class="mut" style="width:75px;display:inline-block">Phone:</span><b>${esc(o.customer_phone || 'N/A')}</b> ${cleanPhone ? `<a href="tel:${esc(o.customer_phone)}" style="margin-left:8px;font-size:11px;color:var(--co);text-decoration:underline">Call</a> <a href="https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}" target="_blank" style="margin-left:6px;font-size:11px;color:#059669;text-decoration:underline">WhatsApp</a>` : ""}</div>
+                <div><span class="mut" style="width:75px;display:inline-block">Email:</span><span>${esc(o.customer_email || 'N/A')}</span></div>
+                <div><span class="mut" style="width:75px;display:inline-block">Address:</span><b>${esc(o.shipping_address || 'N/A')}, ${esc(o.city || 'N/A')}</b></div>
+                ${o.notes ? `<div><span class="mut" style="width:75px;display:inline-block">Notes:</span><em>${esc(o.notes)}</em></div>` : ""}
+              </div>
+
+              <!-- Courier & Tracking inputs -->
+              <div style="margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)">
+                <div style="font-size:11px;font-weight:800;color:var(--mut);text-transform:uppercase;margin-bottom:8px">Fulfillment / Dispatch Tracking</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+                  <input id="m_courier" placeholder="Courier (e.g. TCS)" value="${esc(o.courier || '')}" style="font-size:12px;padding:8px">
+                  <input id="m_tracking" placeholder="Tracking #" value="${esc(o.tracking_number || '')}" style="font-size:12px;padding:8px">
+                </div>
+                <button class="ghost sm" id="m_btn_save_tracking" style="width:100%">Save Tracking Info</button>
+              </div>
+            </div>
+
+            <!-- Financial & Order Summary Card -->
+            <div class="card" style="padding:18px;border:1px solid var(--line);background:var(--bg)">
+              <div class="msec-title" style="margin-bottom:10px">₨ Payment & Financial Breakdown</div>
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+                <div style="display:flex;justify-content:space-between">
+                  <span class="mut">Payment Method:</span>
+                  <span class="chip s-off" style="font-weight:700">${esc(o.payment_method || 'Cash on Delivery')}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between">
+                  <span class="mut">Subtotal:</span>
+                  <b>${rs(o.subtotal || o.total)}</b>
+                </div>
+                <div style="display:flex;justify-content:space-between">
+                  <span class="mut">Shipping / Delivery Fee:</span>
+                  <span>${o.shipping_fee ? rs(o.shipping_fee) : '<span style="color:var(--em);font-weight:700">FREE</span>'}</span>
+                </div>
+                ${o.discount_amount ? `
+                  <div style="display:flex;justify-content:space-between;color:var(--cr)">
+                    <span>Coupon Discount (${esc(o.coupon_code || 'PROMO')}):</span>
+                    <b>−${rs(o.discount_amount)}</b>
+                  </div>
+                ` : ""}
+                <div style="display:flex;justify-content:space-between;border-top:2px solid var(--line);padding-top:10px;margin-top:6px;font-size:16px">
+                  <span style="font-weight:800">Grand Total:</span>
+                  <b style="color:var(--ink);font-size:18px">${rs(o.total)}</b>
+                </div>
+                <div style="margin-top:8px;padding:10px;background:var(--card);border-radius:10px;border:1px solid var(--line);display:flex;gap:8px;align-items:center;font-size:11.5px">
+                  <span>📦</span>
+                  <span>${items.reduce((acc, it) => acc + (it.quantity || 1), 0)} items in this shipment</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Itemized Products Section -->
+          <div class="msec-title">🛍️ Itemized Products Breakdown (${items.length} items)</div>
+          <div class="tw" style="margin:0 0 16px">
+            <table style="width:100%">
+              <thead>
+                <tr style="background:var(--soft)">
+                  <th style="width:60px">Image</th>
+                  <th>Product</th>
+                  <th>Attributes</th>
+                  <th style="text-align:right">Price</th>
+                  <th style="text-align:center">Qty</th>
+                  <th style="text-align:right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${items.length ? items.map(item => `
+                  <tr>
+                    <td>
+                      ${item.image_url ? `<img src="${esc(item.image_url)}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--line)">` : `<div style="width:48px;height:48px;border-radius:8px;background:var(--soft);display:grid;place-items:center;font-size:18px">👕</div>`}
+                    </td>
+                    <td>
+                      <b>${esc(item.name || 'Product')}</b>
+                      ${item.code ? `<div class="mut" style="font-size:11px">${esc(item.code)}</div>` : ""}
+                    </td>
+                    <td>
+                      <span class="chip s-processing" style="font-size:11px">${esc([item.size, item.color].filter(Boolean).join(" · ") || "Standard")}</span>
+                    </td>
+                    <td style="text-align:right">${rs(item.price || item.sale_price || item.unit || 0)}</td>
+                    <td style="text-align:center;font-weight:700">${item.quantity || 1}</td>
+                    <td style="text-align:right"><b>${rs((item.price || item.sale_price || item.unit || 0) * (item.quantity || 1))}</b></td>
+                  </tr>
+                `).join("") : `<tr><td colspan="6" class="mut" style="text-align:center;padding:16px">No item details recorded</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="mfooter" style="justify-content:space-between">
+          <div style="font-size:11px;color:var(--mut);display:flex;align-items:center;gap:6px">
+            <span>⚡</span>
+            <span>Customer automatically receives update emails when status changes.</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="ghost" id="m_btn_resend_email">Resend Email</button>
+            <button class="ghost" id="m_btn_close">Close</button>
+          </div>
+        </div>
+      `;
+
+      $("#modal").style.display = "flex";
+
+      // Bind Close
+      const closeModal = () => { $("#modal").style.display = "none"; };
+      $("#m_close").onclick = closeModal;
+      $("#m_btn_close").onclick = closeModal;
+      $("#modal").onclick = e => { if (e.target === $("#modal")) closeModal(); };
+
+      // Bind Print Receipt
+      $("#m_btn_print").onclick = () => printAdminReceipt(o);
+
+      // Bind Approve
+      const btnApprove = $("#m_btn_approve");
+      if (btnApprove) {
+        btnApprove.onclick = async () => {
+          btnApprove.disabled = true;
+          btnApprove.textContent = "Approving...";
+          try {
+            await api("/admin/orders/" + o.id, { method: "PATCH", body: JSON.stringify({ status: "confirmed" }) });
+            o.status = "confirmed";
+            toast("Order #" + o.order_number + " approved successfully!");
+            $("#m_status_badge").className = "chip s-confirmed";
+            $("#m_status_badge").textContent = "CONFIRMED";
+            $("#m_sel_status").value = "confirmed";
+            btnApprove.style.display = "none";
+            if (window.REFRESH_ORDERS) window.REFRESH_ORDERS();
+          } catch(e) {
+            toast("Error: " + e.message);
+            btnApprove.disabled = false;
+            btnApprove.textContent = "✓ Approve Order";
+          }
+        };
+      }
+
+      // Bind Set Status
+      $("#m_btn_set_status").onclick = async () => {
+        const newSt = $("#m_sel_status").value;
+        try {
+          await api("/admin/orders/" + o.id, { method: "PATCH", body: JSON.stringify({ status: newSt }) });
+          o.status = newSt;
+          $("#m_status_badge").className = "chip s-" + newSt;
+          $("#m_status_badge").textContent = newSt.toUpperCase();
+          toast("Status updated to " + newSt);
+          if (btnApprove && newSt !== "pending") btnApprove.style.display = "none";
+          if (window.REFRESH_ORDERS) window.REFRESH_ORDERS();
+        } catch(e) { toast("Error: " + e.message); }
+      };
+
+      // Bind Tracking
+      $("#m_btn_save_tracking").onclick = async () => {
+        const courier = $("#m_courier").value.trim();
+        const tracking = $("#m_tracking").value.trim();
+        try {
+          await api("/admin/orders/" + o.id, { method: "PATCH", body: JSON.stringify({ courier, tracking_number: tracking }) });
+          o.courier = courier;
+          o.tracking_number = tracking;
+          toast("Tracking information saved!");
+          if (window.REFRESH_ORDERS) window.REFRESH_ORDERS();
+        } catch(e) { toast("Error: " + e.message); }
+      };
+
+      // Bind Resend Email
+      $("#m_btn_resend_email").onclick = async () => {
+        const t = prompt("Template name (placed, confirmed, processing, shipped, delivered, cancelled)", o.status === "pending" ? "placed" : o.status);
+        if (!t) return;
+        try {
+          await api(`/admin/orders/${o.id}/email`, { method: "POST", body: JSON.stringify({ template: t }) });
+          toast("Email queued to " + o.customer_email);
+        } catch(e) { toast("Error: " + e.message); }
+      };
+    }
+
     function orderTable(list, compact) {
       if (!list.length) return `<div class="empty">No orders yet</div>`;
-      return `<div style="overflow:auto"><table><tr><th>Order</th><th>Customer</th>${compact ? "" : "<th>Items</th>"}<th>Total</th><th>Status</th>${compact ? "" : "<th></th>"}</tr>
+      list.forEach(o => ORDERS_MAP.set(String(o.id), o));
+
+      return `<div style="overflow:auto"><table><tr><th>Order</th><th>Customer</th>${compact ? "" : "<th>Items</th>"}<th>Total</th><th>Status</th><th style="text-align:right">Actions</th></tr>
   ${list.map(o => `<tr><td><b>${esc(o.order_number)}</b><br><span class="mut">${new Date(o.created_at).toLocaleString()}</span>${o.tracking_number ? `<br><span class="chip s-shipped" style="margin-top:4px">${esc(o.courier || "Courier")} · ${esc(o.tracking_number)}</span>` : ""}</td>
-   <td><b>${esc(o.customer_name)}</b><br><span class="mut">${esc(o.customer_email)}<br>${esc(o.customer_phone)}${compact ? "" : `<br>${esc(o.shipping_address)} ${esc(o.city)}`}</span></td>
-   ${compact ? "" : `<td>${(o.items || []).map(i => `<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">${i.image_url ? `<img class="th" style="width:34px;height:34px" src="${esc(i.image_url)}">` : ""}<span>${esc(i.name)} × ${i.quantity}<br><span class="mut">${esc([i.size, i.color].filter(Boolean).join(" · "))}</span></span></div>`).join("")}</td>`}
+   <td><b>${esc(o.customer_name)}</b><br><span class="mut">${esc(o.customer_email || "")}<br>${esc(o.customer_phone || "")}${compact ? "" : `<br>${esc(o.shipping_address || "")} ${esc(o.city || "")}`}</span></td>
+   ${compact ? "" : `<td>${(o.items || []).map(i => `<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">${i.image_url ? `<img class="th" style="width:34px;height:34px;object-fit:cover;border-radius:6px" src="${esc(i.image_url)}">` : ""}<span>${esc(i.name)} × ${i.quantity}<br><span class="mut">${esc([i.size, i.color].filter(Boolean).join(" · "))}</span></span></div>`).join("")}</td>`}
    <td><b>${rs(o.total)}</b><br><span class="chip s-off" style="margin-top:4px">${esc(o.payment_method)}</span>${o.coupon_code ? `<br><span class="chip s-pending" style="margin-top:4px">${esc(o.coupon_code)}</span>` : ""}</td>
-   <td><select data-id="${o.id}" class="st" style="min-width:130px">${STATUSES.map(s => `<option ${s === o.status ? "selected" : ""}>${s}</option>`).join("")}</select>
-   ${compact ? "" : `<input placeholder="Courier" value="${esc(o.courier)}" data-c="${o.id}" style="margin-top:6px"><input placeholder="Tracking #" value="${esc(o.tracking_number)}" data-t="${o.id}" style="margin-top:6px">`}</td>
-   ${compact ? "" : `<td><button class="sm" data-save="${o.id}">Save</button><br><br><button class="ghost sm" data-mail="${o.id}">Resend email</button></td>`}</tr>`).join("")}</table></div>`;
+   <td><select data-id="${o.id}" class="st" style="min-width:120px">${STATUSES.map(s => `<option ${s === o.status ? "selected" : ""}>${s}</option>`).join("")}</select>
+   ${compact ? "" : `<input placeholder="Courier" value="${esc(o.courier || '')}" data-c="${o.id}" style="margin-top:6px"><input placeholder="Tracking #" value="${esc(o.tracking_number || '')}" data-t="${o.id}" style="margin-top:6px">`}</td>
+   <td style="text-align:right">
+     <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
+       <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">
+         <button class="sm" data-view="${o.id}" style="background:var(--ink);color:#fff" title="View complete order details & receipt">👁️ View Order</button>
+         ${o.status === "pending" ? `<button class="sm" data-approve="${o.id}" style="background:var(--em);color:#fff" title="One-click Approve & Confirm">✓ Approve</button>` : ""}
+       </div>
+       <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">
+         <button class="ghost sm" data-print="${o.id}" title="Print Admin Receipt">🖨️ Receipt</button>
+         ${!compact ? `<button class="ghost sm" data-save="${o.id}" title="Save status & tracking">Save</button><button class="ghost sm" data-mail="${o.id}" title="Resend email">✉</button>` : ""}
+       </div>
+     </div>
+   </td></tr>`).join("")}</table></div>`;
     }
+
     function bindOrders() {
+      // View Order Modal
+      $$("[data-view]").forEach(b => b.onclick = () => {
+        const o = ORDERS_MAP.get(String(b.dataset.view));
+        if (o) openOrderModal(o);
+      });
+
+      // Quick Approve
+      $$("[data-approve]").forEach(b => b.onclick = async () => {
+        const id = b.dataset.approve;
+        const o = ORDERS_MAP.get(String(id));
+        b.disabled = true;
+        b.textContent = "Approving...";
+        try {
+          await api("/admin/orders/" + id, { method: "PATCH", body: JSON.stringify({ status: "confirmed" }) });
+          if (o) o.status = "confirmed";
+          toast(`Order #${o?.order_number || id} approved & confirmed!`);
+          if (window.REFRESH_ORDERS) window.REFRESH_ORDERS();
+        } catch(e) {
+          toast("Error: " + e.message);
+          b.disabled = false;
+          b.textContent = "✓ Approve";
+        }
+      });
+
+      // Print Receipt
+      $$("[data-print]").forEach(b => b.onclick = () => {
+        const o = ORDERS_MAP.get(String(b.dataset.print));
+        if (o) printAdminReceipt(o);
+      });
+
       $$(".st").forEach(sel => sel.onchange = async () => {
         if (document.querySelector(`[data-save="${sel.dataset.id}"]`)) return;
-        try { await api("/admin/orders/" + sel.dataset.id, { method: "PATCH", body: JSON.stringify({ status: sel.value }) }); toast("Status updated → " + sel.value); } catch (e) { toast(e.message); }
+        try {
+          await api("/admin/orders/" + sel.dataset.id, { method: "PATCH", body: JSON.stringify({ status: sel.value }) });
+          const o = ORDERS_MAP.get(String(sel.dataset.id));
+          if (o) o.status = sel.value;
+          toast("Status updated → " + sel.value);
+          if (window.REFRESH_ORDERS) window.REFRESH_ORDERS();
+        } catch (e) { toast(e.message); }
       });
+
       $$("[data-save]").forEach(b => b.onclick = async () => {
         const id = b.dataset.save;
         try {
-          await api("/admin/orders/" + id, { method: "PATCH", body: JSON.stringify({ status: $(`.st[data-id="${id}"]`).value, courier: $(`[data-c="${id}"]`).value, tracking_number: $(`[data-t="${id}"]`).value }) });
+          const status = $(`.st[data-id="${id}"]`).value;
+          const courier = $(`[data-c="${id}"]`).value;
+          const tracking_number = $(`[data-t="${id}"]`).value;
+          await api("/admin/orders/" + id, { method: "PATCH", body: JSON.stringify({ status, courier, tracking_number }) });
+          const o = ORDERS_MAP.get(String(id));
+          if (o) { o.status = status; o.courier = courier; o.tracking_number = tracking_number; }
           toast("Saved — customer emailed on confirmed / shipped / delivered / cancelled");
+          if (window.REFRESH_ORDERS) window.REFRESH_ORDERS();
         } catch (e) { toast(e.message); }
       });
+
       $$("[data-mail]").forEach(b => b.onclick = async () => {
         const t = prompt("Template (placed, confirmed, processing, shipped, delivered, cancelled)", "placed"); if (!t) return;
         await api(`/admin/orders/${b.dataset.mail}/email`, { method: "POST", body: JSON.stringify({ template: t }) }); toast("Email queued");
       });
     }
+
     let OF = "";
     async function orders() {
       const { orders: all } = await api("/admin/orders");
       const draw = () => {
         const q = ($("#oq")?.value || "").toLowerCase(); const list = all.filter(o => (!OF || o.status === OF) && (!q || JSON.stringify(o).toLowerCase().includes(q)));
         $("#otbl").innerHTML = `<div class="tw" style="border:0;box-shadow:none">${orderTable(list)}</div>`; bindOrders();
+      };
+      window.REFRESH_ORDERS = async () => {
+        try {
+          const res = await api("/admin/orders");
+          all.length = 0;
+          all.push(...res.orders);
+          draw();
+        } catch(e) {}
       };
       $("#main").innerHTML = `<div class="bar"><input id="oq" placeholder="Search order #, name, phone…"></div><div class="tabs">${["", ...STATUSES].map(s => `<button data-f="${s}" class="${s === OF ? "on" : ""}">${s || "All"} · ${s ? all.filter(o => o.status === s).length : all.length}</button>`).join("")}</div><div class="tw" id="otbl"></div>`;
       $$("[data-f]").forEach(b => b.onclick = () => { OF = b.dataset.f; $$("[data-f]").forEach(x => x.classList.toggle("on", x === b)); draw(); });
@@ -2133,15 +2505,268 @@
       };
     }
     async function users() {
-      const { users } = await api("/admin/users");
-      $("#main").innerHTML = `<div class="tw"><table><tr><th>Email</th><th>Joined</th><th>Roles</th><th></th></tr>
-  ${users.map(u => `<tr><td><b>${esc(u.email)}</b></td><td class="mut">${new Date(u.created_at).toLocaleDateString()}</td><td>${u.roles.map(r => `<span class="chip ${r === "admin" ? "s-processing" : "s-off"}">${r}</span>`).join(" ") || "—"}</td>
-  <td style="text-align:right"><button class="ghost sm" data-g="${u.id}" data-on="${u.roles.includes("admin") ? 1 : ""}">${u.roles.includes("admin") ? "Remove admin" : "Make admin"}</button></td></tr>`).join("")}</table></div>`;
-      $$("[data-g]").forEach(b => b.onclick = async () => {
-        try {
-          await api(`/admin/users/${b.dataset.g}/role`, { method: "POST", body: JSON.stringify({ role: "admin", grant: !b.dataset.on }) }); render();
-        } catch (e) { toast(e.message); }
-      });
+      const { users: allUsers } = await api("/admin/users");
+      let filterQ = "", filterRole = "all", filterVer = "all";
+
+      const renderUsers = () => {
+        const filtered = allUsers.filter(u => {
+          const q = filterQ.toLowerCase();
+          const matchQ = !q || (u.full_name||"").toLowerCase().includes(q) || (u.email||"").toLowerCase().includes(q) || (u.phone||"").toLowerCase().includes(q) || (u.city||"").toLowerCase().includes(q);
+          const matchRole = filterRole === "all" || u.roles.includes(filterRole);
+          const matchVer = filterVer === "all" || (filterVer === "verified" ? u.is_verified : !u.is_verified);
+          return matchQ && matchRole && matchVer;
+        });
+
+        const totalUsers = allUsers.length;
+        const verifiedUsers = allUsers.filter(u => u.is_verified).length;
+        const totalOrders = allUsers.reduce((s, u) => s + (u.orders_count || 0), 0);
+        const totalSpent = allUsers.reduce((s, u) => s + (u.total_spent || 0), 0);
+
+        $("#main").innerHTML = `
+          <div class="kpis">
+            <div class="card kpi" style="--g:var(--in)"><div class="l"><span class="dot">☺</span>Registered Customers</div><b>${totalUsers}</b><small>Total customer accounts</small></div>
+            <div class="card kpi" style="--g:var(--em)"><div class="l"><span class="dot">✓</span>OTP Verified</div><b>${verifiedUsers}</b><small>${totalUsers ? Math.round(verifiedUsers/totalUsers*100) : 0}% verification rate</small></div>
+            <div class="card kpi" style="--g:var(--co)"><div class="l"><span class="dot">▤</span>Customer Orders</div><b>${totalOrders}</b><small>Total orders linked to users</small></div>
+            <div class="card kpi" style="--g:var(--am)"><div class="l"><span class="dot">₨</span>Customer Revenue</div><b>${rs(totalSpent)}</b><small>Lifetime customer volume</small></div>
+          </div>
+
+          <div class="card">
+            <div class="bar" style="justify-content:space-between">
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <input id="u_search" placeholder="Search by name, email, phone, city…" value="${esc(filterQ)}" style="min-width:280px">
+                <select id="u_role">
+                  <option value="all" ${filterRole==="all"?"selected":""}>All Roles</option>
+                  <option value="user" ${filterRole==="user"?"selected":""}>Customers</option>
+                  <option value="admin" ${filterRole==="admin"?"selected":""}>Admins</option>
+                  <option value="staff" ${filterRole==="staff"?"selected":""}>Staff</option>
+                </select>
+                <select id="u_ver">
+                  <option value="all" ${filterVer==="all"?"selected":""}>All Statuses</option>
+                  <option value="verified" ${filterVer==="verified"?"selected":""}>Verified Only</option>
+                  <option value="unverified" ${filterVer==="unverified"?"selected":""}>Unverified Only</option>
+                </select>
+              </div>
+              <button id="u_add" style="background:linear-gradient(135deg,var(--in),var(--pk));display:flex;align-items:center;gap:6px">
+                <span>+</span><span>Add New Customer</span>
+              </button>
+            </div>
+
+            <div class="tw">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Customer / User</th>
+                    <th>Contact & Outreach</th>
+                    <th>Status</th>
+                    <th>Role</th>
+                    <th>Orders & Spend</th>
+                    <th>Joined</th>
+                    <th style="text-align:right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filtered.length === 0 ? `<tr><td colspan="7" class="empty">No customers found matching your criteria.</td></tr>` : filtered.map(u => {
+                    const initials = (u.full_name || u.email || "U").split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
+                    const cleanPhone = (u.phone || "").replace(/[^0-9]/g, "");
+                    const waLink = cleanPhone ? (cleanPhone.startsWith("92") ? cleanPhone : (cleanPhone.startsWith("0") ? "92" + cleanPhone.slice(1) : cleanPhone)) : null;
+                    return `
+                      <tr>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:12px">
+                            <div style="width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#EEF2FF,#E0E7FF);color:var(--in);display:grid;place-items:center;font-weight:800;font-size:13px;flex-shrink:0">
+                              ${initials}
+                            </div>
+                            <div>
+                              <div style="font-weight:800;font-size:14px">${esc(u.full_name || "—")}</div>
+                              <div class="mut" style="font-size:12px">${esc(u.email)}</div>
+                              ${u.city ? `<div class="mut" style="font-size:11px">📍 ${esc(u.city)}</div>` : ""}
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div style="display:flex;flex-direction:column;gap:4px">
+                            ${u.phone ? `<div style="font-weight:700;font-size:13px"><a href="tel:${esc(u.phone)}" style="color:var(--ink)">📞 ${esc(u.phone)}</a></div>` : `<span class="mut" style="font-size:12px">No phone</span>`}
+                            <div style="display:flex;gap:6px;margin-top:2px">
+                              ${waLink ? `<a href="https://wa.me/${waLink}" target="_blank" class="chip s-paid" style="font-size:11px;text-decoration:none;padding:2px 8px" title="Chat on WhatsApp">💬 WhatsApp</a>` : ""}
+                              <a href="mailto:${esc(u.email)}" class="chip s-processing" style="font-size:11px;text-decoration:none;padding:2px 8px" title="Send Email">✉ Email</a>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          ${u.is_verified ?
+                            `<span class="chip s-paid" style="display:inline-flex;align-items:center;gap:4px">✓ Verified</span>` :
+                            `<span class="chip s-off" style="color:#D97706;background:#FEF3C7;display:inline-flex;align-items:center;gap:4px">⏳ Unverified</span>`}
+                        </td>
+                        <td>
+                          ${u.roles.map(r => `<span class="chip ${r === 'admin' ? 's-processing' : (r === 'staff' ? 's-partial' : 's-off')}">${r === 'user' ? 'customer' : r}</span>`).join(' ') || '—'}
+                        </td>
+                        <td>
+                          <div><b>${u.orders_count}</b> <span class="mut" style="font-size:12px">order${u.orders_count === 1 ? '' : 's'}</span></div>
+                          <div style="font-weight:800;color:var(--em2);font-size:13px">${rs(u.total_spent)}</div>
+                        </td>
+                        <td>
+                          <div class="mut" style="font-size:12px">${u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}</div>
+                        </td>
+                        <td style="text-align:right">
+                          <div style="display:inline-flex;gap:6px">
+                            <button class="ghost sm edit-u" data-uid="${u.id}">Edit</button>
+                            <button class="ghost sm del-u" data-uid="${u.id}" style="color:var(--cr);border-color:var(--line)">✕</button>
+                          </div>
+                        </td>
+                      </tr>
+                    `;
+                  }).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+
+        $("#u_search").oninput = e => { filterQ = e.target.value; renderUsers(); };
+        $("#u_role").onchange = e => { filterRole = e.target.value; renderUsers(); };
+        $("#u_ver").onchange = e => { filterVer = e.target.value; renderUsers(); };
+        $("#u_add").onclick = () => openUserModal();
+
+        $$(".edit-u").forEach(b => {
+          b.onclick = () => {
+            const u = allUsers.find(x => x.id === b.dataset.uid);
+            if (u) openUserModal(u);
+          };
+        });
+
+        $$(".del-u").forEach(b => {
+          b.onclick = async () => {
+            const u = allUsers.find(x => x.id === b.dataset.uid);
+            if (!u) return;
+            if (!confirm(`Delete customer account "${u.full_name || u.email}"? This action cannot be undone.`)) return;
+            try {
+              await api(`/admin/users/${u.id}`, { method: "DELETE" });
+              toast("User deleted");
+              await users();
+            } catch (err) { toast("⚠ " + err.message); }
+          };
+        });
+      };
+
+      const openUserModal = (u = null) => {
+        const isEdit = !!u;
+        $("#mbody").innerHTML = `
+          <div class="mhdr">
+            <div style="display:flex;align-items:center;gap:10px">
+              <h2>${isEdit ? "Edit Customer Account" : "Add New Customer"}</h2>
+              <span class="badge" style="background:#EEF2FF;color:var(--in)">${isEdit ? esc(u.email) : "New User"}</span>
+            </div>
+            <button class="cl" id="u_cl">✕</button>
+          </div>
+          <div class="mbody">
+            <div class="msec">
+              <div class="stitle">Account Credentials</div>
+              <div class="mrow half">
+                <div>
+                  <label style="font-size:12px;font-weight:700;color:var(--mut);display:block;margin-bottom:6px">Email address *</label>
+                  <input id="uf_email" type="email" placeholder="customer@example.com" value="${esc(u ? u.email : '')}" required>
+                </div>
+                <div>
+                  <label style="font-size:12px;font-weight:700;color:var(--mut);display:block;margin-bottom:6px">Password ${isEdit ? '(leave blank to keep current)' : '*'}</label>
+                  <input id="uf_password" type="password" placeholder="${isEdit ? '••••••••' : 'Min 6 characters'}" ${isEdit ? '' : 'required'}>
+                </div>
+              </div>
+            </div>
+
+            <div class="msec">
+              <div class="stitle">Profile & Contact Information</div>
+              <div class="mrow half">
+                <div>
+                  <label style="font-size:12px;font-weight:700;color:var(--mut);display:block;margin-bottom:6px">Full Name</label>
+                  <input id="uf_name" type="text" placeholder="e.g. Muhammad Ali" value="${esc(u ? (u.full_name || '') : '')}">
+                </div>
+                <div>
+                  <label style="font-size:12px;font-weight:700;color:var(--mut);display:block;margin-bottom:6px">Phone Number (WhatsApp Outreach)</label>
+                  <input id="uf_phone" type="tel" placeholder="03001234567 or +923001234567" value="${esc(u ? (u.phone || '') : '')}">
+                </div>
+              </div>
+              <div class="mrow half" style="margin-top:12px">
+                <div>
+                  <label style="font-size:12px;font-weight:700;color:var(--mut);display:block;margin-bottom:6px">City</label>
+                  <input id="uf_city" type="text" placeholder="Lahore, Karachi, Islamabad…" value="${esc(u ? (u.city || '') : '')}">
+                </div>
+                <div>
+                  <label style="font-size:12px;font-weight:700;color:var(--mut);display:block;margin-bottom:6px">Street Address</label>
+                  <input id="uf_address" type="text" placeholder="House #, Street, Sector" value="${esc(u ? (u.address || '') : '')}">
+                </div>
+              </div>
+            </div>
+
+            <div class="msec">
+              <div class="stitle">Status & Permissions</div>
+              <div class="mrow half">
+                <div>
+                  <label style="font-size:12px;font-weight:700;color:var(--mut);display:block;margin-bottom:6px">User Role</label>
+                  <select id="uf_role">
+                    <option value="user" ${u && u.roles.includes('user') ? 'selected' : ''}>Customer (Standard User)</option>
+                    <option value="staff" ${u && u.roles.includes('staff') ? 'selected' : ''}>Staff (Store Manager)</option>
+                    <option value="admin" ${u && u.roles.includes('admin') ? 'selected' : ''}>Admin (Full Access)</option>
+                  </select>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding-top:24px">
+                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer">
+                    <input id="uf_verified" type="checkbox" style="width:auto;accent-color:var(--em)" ${(!u || u.is_verified) ? 'checked' : ''}>
+                    <span>Email & Phone Verified (Account Active)</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mfooter">
+            <button id="uf_save" style="background:linear-gradient(135deg,var(--in),var(--pk))">${isEdit ? 'Save Changes' : 'Create Customer'}</button>
+            <button class="ghost" id="uf_cancel" style="margin-left:auto">Cancel</button>
+          </div>
+        `;
+
+        $("#modal").style.display = "flex";
+        const closeModal = () => { $("#modal").style.display = "none"; };
+        $("#u_cl").onclick = closeModal;
+        $("#uf_cancel").onclick = closeModal;
+        $("#modal").onclick = e => { if (e.target === $("#modal")) closeModal(); };
+
+        $("#uf_save").onclick = async () => {
+          const btn = $("#uf_save");
+          const email = $("#uf_email").value.trim();
+          const password = $("#uf_password").value;
+          const full_name = $("#uf_name").value.trim();
+          const phone = $("#uf_phone").value.trim();
+          const city = $("#uf_city").value.trim();
+          const address = $("#uf_address").value.trim();
+          const role = $("#uf_role").value;
+          const is_verified = $("#uf_verified").checked;
+
+          if (!email) { toast("Email address is required"); return; }
+          if (!isEdit && !password) { toast("Password is required for new accounts"); return; }
+          if (password && password.length < 6) { toast("Password must be at least 6 characters"); return; }
+
+          btn.classList.add("saving"); btn.textContent = "Saving…";
+          try {
+            const payload = { email, full_name, phone, city, address, role, is_verified };
+            if (password) payload.password = password;
+
+            if (isEdit) {
+              await api(`/admin/users/${u.id}`, { method: "PUT", body: JSON.stringify(payload) });
+              toast("✓ Customer profile updated");
+            } else {
+              await api(`/admin/users`, { method: "POST", body: JSON.stringify(payload) });
+              toast("✓ Customer created successfully");
+            }
+            closeModal();
+            await users();
+          } catch (err) {
+            toast("⚠ " + err.message);
+            btn.classList.remove("saving");
+            btn.textContent = isEdit ? "Save Changes" : "Create Customer";
+          }
+        };
+      };
+
+      renderUsers();
     }
     render();
   </script>

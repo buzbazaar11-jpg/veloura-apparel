@@ -1,5 +1,5 @@
 import { Link, useRouterState } from '@tanstack/react-router';
-import { Heart, Home, PackageCheck, ShoppingBag } from 'lucide-react';
+import { Heart, Home, PackageCheck, ShoppingBag, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useVelouraStore } from '@/lib/veloura-store';
 
@@ -12,6 +12,7 @@ export function MobileShoppingNav() {
     { label: 'Shop', to: '/shop' as const, icon: ShoppingBag },
     { label: 'Orders', to: '/track' as const, icon: PackageCheck },
     { label: 'Wishlist', to: '/wishlist' as const, icon: Heart },
+    { label: 'Account', to: '/account' as const, icon: UserRound },
   ];
   return <nav aria-label="Mobile shopping navigation" className="mobile-shopping-nav">
     {items.map(({ label, to, icon: Icon }) => {

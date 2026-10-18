@@ -74,3 +74,50 @@ def send_order_email(db: Session, order, template: str) -> OrderEmail:
         log.status, log.error = "failed", str(e)[:500]
     db.commit()
     return log
+
+
+def send_otp_email(recipient_email: str, recipient_name: str, otp_code: str) -> bool:
+    """Send a 6-digit verification code to the customer's email."""
+    subject = f"{otp_code} is your VELOURA APPAREL verification code"
+    body_html = f"""<div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;max-width:520px;margin:auto;padding:32px 24px;background:#fcfcfc;border:1px solid #eee;border-radius:12px;color:#111">
+    <div style="text-align:center;margin-bottom:28px">
+        <h2 style="margin:0;letter-spacing:4px;font-size:22px;font-weight:700;color:#111;text-transform:uppercase">VEL0URA APPAREL</h2>
+        <p style="margin:6px 0 0;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#777">Account Verification</p>
+    </div>
+    <p style="font-size:15px;line-height:1.6;margin:0 0 16px">Hi {recipient_name or 'there'},</p>
+    <p style="font-size:15px;line-height:1.6;color:#444;margin:0 0 24px">Thank you for joining VELOURA APPAREL. Please enter the 6-digit verification code below to activate your account and start shopping:</p>
+    <div style="margin:28px 0;padding:20px;background:#18181b;color:#ffffff;text-align:center;font-size:36px;letter-spacing:10px;font-weight:700;border-radius:8px;font-family:monospace">
+        {otp_code}
+    </div>
+    <p style="font-size:13px;line-height:1.5;color:#666;margin:24px 0 0">This security code expires in <b>15 minutes</b>. Never share this code with anyone.</p>
+    <hr style="border:none;border-top:1px solid #e4e4e7;margin:28px 0" />
+    <p style="color:#a1a1aa;font-size:11px;text-align:center;margin:0">VELOURA APPAREL — Contemporary Menswear Essentials</p>
+    </div>"""
+
+    print(f"[OTP-DISPATCH] Code {otp_code} generated for {recipient_email}")
+    if not settings.SMTP_HOST:
+        print("[OTP-DISPATCH] SMTP not configured; code logged above.")
+        return True
+
+    try:
+        msg = EmailMessage()
+        msg["Subject"] = subject
+        msg["From"] = settings.SMTP_FROM or "Veloura Apparel <orders@velouraapparel.pk>"
+        msg["To"] = recipient_email
+        msg.set_content(f"Your VELOURA APPAREL verification code is: {otp_code}. Valid for 15 minutes.")
+        msg.add_alternative(body_html, subtype="html")
+
+        if settings.SMTP_SSL:
+            with smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, context=ssl.create_default_context(), timeout=12) as srv:
+                if settings.SMTP_USER: srv.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                srv.send_message(msg)
+        else:
+            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=12) as srv:
+                srv.starttls(context=ssl.create_default_context())
+                if settings.SMTP_USER: srv.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                srv.send_message(msg)
+        print(f"[OTP-DISPATCH] Email delivered to {recipient_email} via SMTP")
+        return True
+    except Exception as e:
+        print(f"[OTP-DISPATCH WARNING] SMTP delivery failed ({e}), code {otp_code} is still valid in DB.")
+        return False

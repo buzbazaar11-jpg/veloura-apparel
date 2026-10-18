@@ -386,4 +386,51 @@ main > .pt-32,main.pt-32 { padding-top:48px; }
   .nav-shell { transition:background .25s,box-shadow .25s,top .25s,transform .25s; }
   .store-header.header-page { height:104px; }
 }
-@media (prefers-reduced-motion: reduce){ .bento-tile,.bento-img,.bento-arrow,.nav-shell,.magnetic-btn{transition:none} }
+
+@media (prefers-reduced-motion: reduce){ .bento-tile,.bento-img,.bento-arrow,.nav-shell,.magnetic-btn,.marquee-track{transition:none;animation:none} }
+
+/* Infinite Marquee Strip */
+@keyframes marquee-scroll {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+  width: 100%;
+  position: relative;
+}
+
+.marquee-track {
+  display: flex;
+  flex-shrink: 0;
+  width: max-content;
+  animation: marquee-scroll 22s linear infinite;
+  will-change: transform;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* Micro-interactions & Smooth Hover */
+.card-hover-lift {
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease;
+}
+.card-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 32px -10px rgba(0, 0, 0, 0.14);
+}
+
+.image-zoom-hover {
+  overflow: hidden;
+}
+.image-zoom-hover img {
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.image-zoom-hover:hover img {
+  transform: scale(1.05);
+}
+

@@ -9,6 +9,8 @@ import cargoImage from "@/assets/mens-cargo.jpg";
 import hoodieImage from "@/assets/mens-hoodie.jpg";
 import sneakerImage from "@/assets/mens-sneakers.jpg";
 import trouserImage from "@/assets/mens-trousers.jpg";
+import { formatMoney } from "./currency";
+
 
 export type Product = {
   id: string;
@@ -20,6 +22,7 @@ export type Product = {
   reviewCount: number;
   audience: string;
   category: string;
+  collection?: string | null;
   description: string;
   images: string[];
   colors: string[];
@@ -614,11 +617,9 @@ export function productPrice(
   return 0;
 }
 
-// Format prices using Pakistani Rupees.
+// Format prices using active currency (PKR default, supports USD, AED, GBP, EUR, SAR).
 export function formatPrice(price: number): string {
-  const safePrice = Number.isFinite(price) ? price : 0;
-
-  return `Rs. ${Math.round(safePrice).toLocaleString("en-PK")}`;
+  return formatMoney(price);
 }
 
 // Find a product by its slug.

@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.security import require_admin
+from app.core.security import hash_password, require_admin
 from app.core.utils import coerce, col_kind, slugify, to_dict
 from app import models as M
 from app.routers.orders import _email_bg
@@ -247,9 +247,145 @@ async def upload(file: UploadFile = File(...)):
 @router.get("/users")
 def users(db: Session = Depends(get_db)):
     roles = {}
-    for r in db.query(M.UserRole).all(): roles.setdefault(str(r.user_id), []).append(r.role)
-    return {"ok": True, "users": [{"id": str(u.id), "email": u.email, "created_at": u.created_at.isoformat(),
-                                   "roles": roles.get(str(u.id), [])} for u in db.query(M.User).all()]}
+    for r in db.query(M.UserRole).all():
+        roles.setdefault(str(r.user_id), []).append(r.role)
+
+    orders = db.query(M.Order).all()
+    stats_by_uid = {}
+    stats_by_email = {}
+    for o in orders:
+        tot = float(o.total or 0)
+        dt = o.created_at
+        if o.user_id:
+            uid = str(o.user_id)
+            s = stats_by_uid.setdefault(uid, {"count": 0, "total": 0.0, "last_order": None})
+            s["count"] += 1
+            if o.status != "cancelled": s["total"] += tot
+            if not s["last_order"] or (dt and dt > s["last_order"]): s["last_order"] = dt
+        if o.customer_email:
+            em = o.customer_email.strip().lower()
+            s = stats_by_email.setdefault(em, {"count": 0, "total": 0.0, "last_order": None})
+            s["count"] += 1
+            if o.status != "cancelled": s["total"] += tot
+            if not s["last_order"] or (dt and dt > s["last_order"]): s["last_order"] = dt
+
+    profiles = {str(p.id): p for p in db.query(M.Profile).all()}
+    all_users = db.query(M.User).order_by(M.User.created_at.desc()).all()
+
+    out = []
+    for u in all_users:
+        uid = str(u.id)
+        prof = profiles.get(uid)
+        em = u.email.strip().lower() if u.email else ""
+        su = stats_by_uid.get(uid)
+        se = stats_by_email.get(em)
+
+        cnt = (su["count"] if su else 0) or (se["count"] if se else 0)
+        tot = (su["total"] if su else 0.0) or (se["total"] if se else 0.0)
+        last_dt = (su["last_order"] if su else None) or (se["last_order"] if se else None)
+
+        out.append({
+            "id": uid,
+            "email": u.email,
+            "phone": u.phone or (prof.phone if prof else None),
+            "full_name": (prof.full_name if prof and prof.full_name else (u.email.split("@")[0] if u.email else "Customer")),
+            "city": prof.city if prof else None,
+            "address": prof.address if prof else None,
+            "is_verified": bool(u.is_verified),
+            "created_at": u.created_at.isoformat() if u.created_at else None,
+            "roles": roles.get(uid, ["user"]),
+            "orders_count": cnt,
+            "total_spent": round(tot, 2),
+            "last_order_at": last_dt.isoformat() if last_dt else None
+        })
+    return {"ok": True, "users": out}
+
+
+@router.post("/users")
+def create_user(body: dict, db: Session = Depends(get_db)):
+    email = (body.get("email") or "").strip().lower()
+    if not email:
+        raise HTTPException(400, "Email is required")
+    if db.query(M.User).filter(M.User.email == email).first():
+        raise HTTPException(409, "User with this email already exists")
+
+    password = body.get("password") or "Veloura@123"
+    phone = (body.get("phone") or "").strip() or None
+    full_name = (body.get("full_name") or "").strip() or None
+    is_verified = bool(body.get("is_verified", True))
+    role = body.get("role") or "user"
+    if role not in ("admin", "staff", "user"):
+        role = "user"
+
+    user = M.User(
+        email=email,
+        password_hash=hash_password(password),
+        phone=phone,
+        is_verified=is_verified
+    )
+    db.add(user)
+    db.flush()
+
+    db.add(M.UserRole(user_id=user.id, role=role))
+    db.add(M.Profile(id=user.id, email=email, full_name=full_name, phone=phone,
+                     city=body.get("city"), address=body.get("address")))
+    db.commit()
+    return {"ok": True, "id": str(user.id)}
+
+
+@router.put("/users/{uid}")
+def update_user(uid: uuid.UUID, body: dict, db: Session = Depends(get_db)):
+    user = db.get(M.User, uid)
+    if not user:
+        raise HTTPException(404, "User not found")
+
+    if "email" in body and body["email"]:
+        new_email = body["email"].strip().lower()
+        if new_email != user.email:
+            if db.query(M.User).filter(M.User.email == new_email).first():
+                raise HTTPException(409, "Email already in use")
+            user.email = new_email
+
+    if "phone" in body:
+        user.phone = body["phone"].strip() if body["phone"] else None
+    if "is_verified" in body:
+        user.is_verified = bool(body["is_verified"])
+    if body.get("password"):
+        user.password_hash = hash_password(body["password"])
+
+    prof = db.get(M.Profile, uid)
+    if not prof:
+        prof = M.Profile(id=uid, email=user.email)
+        db.add(prof)
+    if "full_name" in body: prof.full_name = body["full_name"]
+    if "phone" in body: prof.phone = body["phone"]
+    if "city" in body: prof.city = body["city"]
+    if "address" in body: prof.address = body["address"]
+
+    if "role" in body:
+        new_role = body["role"]
+        if new_role in ("admin", "staff", "user"):
+            db.query(M.UserRole).filter_by(user_id=uid).delete()
+            db.add(M.UserRole(user_id=uid, role=new_role))
+
+    db.commit()
+    return {"ok": True}
+
+
+@router.delete("/users/{uid}")
+def delete_user(uid: uuid.UUID, db: Session = Depends(get_db), me=Depends(require_admin)):
+    if uid == me.id:
+        raise HTTPException(400, "Cannot delete your own admin account")
+    user = db.get(M.User, uid)
+    if not user:
+        raise HTTPException(404, "User not found")
+
+    db.query(M.UserRole).filter_by(user_id=uid).delete()
+    db.query(M.Profile).filter_by(id=uid).delete()
+    db.query(M.Order).filter_by(user_id=uid).update({"user_id": None})
+    db.delete(user)
+    db.commit()
+    return {"ok": True}
 
 
 @router.post("/users/{uid}/role")

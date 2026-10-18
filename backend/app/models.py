@@ -35,6 +35,10 @@ class User(Base):
     id = pk()
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
+    phone = Column(String(50))
+    is_verified = Column(Boolean, default=False, nullable=False)
+    otp_code = Column(String(10))
+    otp_expires_at = Column(DateTime(timezone=True))
     created_at = created()
 
 

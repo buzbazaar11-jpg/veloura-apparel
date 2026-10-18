@@ -24,14 +24,41 @@ def event(body: dict, request: Request, db: Session = Depends(get_db)):
 @router.post("/lead")
 def lead(body: dict, db: Session = Depends(get_db)):
     sid = body.get("session_id")
-    if not sid: return {"ok": False, "error": "session_id required"}
-    row = db.query(CartLead).filter(CartLead.session_id == sid).first() or CartLead(session_id=sid)
+    phone = (body.get("phone") or "").strip()
+    email = (body.get("email") or "").strip().lower()
+
+    row = None
+    if sid:
+        row = db.query(CartLead).filter(CartLead.session_id == sid).first()
+    if not row and phone:
+        row = db.query(CartLead).filter(CartLead.phone == phone).order_by(CartLead.created_at.desc()).first()
+    if not row and email:
+        row = db.query(CartLead).filter(CartLead.email == email).order_by(CartLead.created_at.desc()).first()
+
+    if not row:
+        if not sid:
+            import uuid
+            sid = f"lead_{uuid.uuid4().hex[:12]}"
+        row = CartLead(session_id=sid)
+
     for k, v in coerce(CartLead, body).items():
-        if k in ("contacted", "notes"): continue
-        if v not in (None, "") or k in ("items", "item_count", "cart_value"): setattr(row, k, v)
-    if row.stage == "ordered" and body.get("stage") != "ordered": pass
-    db.add(row); db.commit()
-    return {"ok": True}
+        if k == "notes" and v:
+            row.notes = (row.notes + " | " + str(v)) if row.notes else str(v)
+            continue
+        if k in ("contacted",): continue
+        if v not in (None, "") or k in ("items", "item_count", "cart_value"):
+            setattr(row, k, v)
+
+    if row.stage == "ordered" and body.get("stage") != "ordered":
+        pass  # keep ordered status
+    else:
+        if body.get("stage"):
+            row.stage = body.get("stage")
+
+    db.add(row)
+    db.commit()
+    return {"ok": True, "lead_id": str(row.id), "session_id": row.session_id}
+
 
 
 @router.post("/meta")

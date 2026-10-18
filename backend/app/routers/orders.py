@@ -5,12 +5,13 @@ from decimal import Decimal
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel, EmailStr
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal, get_db
 from app.core.security import get_current_user
 from app.core.utils import to_dict
-from app.models import CartLead, Coupon, Order, PaymentSettings, Product
+from app.models import CartLead, Coupon, Order, PaymentSettings, Product, User
 from app.services.email import send_order_email
 from app.services import meta
 
@@ -88,8 +89,14 @@ def create_order(body: OrderIn, request: Request, bg: BackgroundTasks, db: Sessi
     total = float(subtotal) - discount + shipping
     a = body.attribution or {}
     now = datetime.now(timezone.utc)
+    uid = user.id if user else None
+    if not uid and body.customer_email:
+        matched_user = db.query(User).filter(func.lower(User.email) == body.customer_email.lower().strip()).first()
+        if matched_user:
+            uid = matched_user.id
+
     o = Order(order_number="VA" + now.strftime("%y%m%d") + secrets.token_hex(2).upper(),
-              user_id=user.id if user else None, customer_name=body.customer_name.strip()[:120],
+              user_id=uid, customer_name=body.customer_name.strip()[:120],
               customer_email=body.customer_email.lower(), customer_phone=body.customer_phone[:30],
               shipping_address=body.shipping_address[:500], city=body.city, payment_method=body.payment_method,
               notes=body.notes, items=items, subtotal=subtotal, discount=discount, shipping=shipping, total=total,

@@ -1,8 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 
 import { ShopPage } from "@/components/veloura/commerce";
 
+const shopSearchSchema = z.object({
+  category: z.string().optional(),
+  collection: z.string().optional(),
+  mode: z.enum(["all", "new", "best", "sale"]).optional(),
+  q: z.string().optional(),
+});
+
 export const Route = createFileRoute("/shop")({
+  validateSearch: (search: Record<string, unknown>) => shopSearchSchema.parse(search),
   head: () => ({
     meta: [
       { title: "Shop VEL0URA APPAREL" },
@@ -15,3 +24,4 @@ export const Route = createFileRoute("/shop")({
   }),
   component: ShopPage,
 });
+
