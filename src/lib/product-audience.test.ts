@@ -1,4 +1,5 @@
-import { describe, expect, test } from "bun:test";
+import { describe, test } from "node:test";
+import { deepStrictEqual, strictEqual } from "node:assert";
 import { matchesDepartment, resolveProductAudience } from "./product-audience";
 
 describe("strict shopping departments", () => {
@@ -9,16 +10,16 @@ describe("strict shopping departments", () => {
     { name: "Unassigned jacket", category: "Jackets" },
   ];
   test("Mens shows only mens products", () => {
-    expect(rows.filter(p => matchesDepartment(resolveProductAudience(p), "Mens")).map(p => p.name)).toEqual(["Men's jacket"]);
+    deepStrictEqual(rows.filter(p => matchesDepartment(resolveProductAudience(p), "Mens")).map(p => p.name), ["Men's jacket"]);
   });
   test("Womens shows only womens products", () => {
-    expect(rows.filter(p => matchesDepartment(resolveProductAudience(p), "Womens")).map(p => p.name)).toEqual(["Women's jacket"]);
+    deepStrictEqual(rows.filter(p => matchesDepartment(resolveProductAudience(p), "Womens")).map(p => p.name), ["Women's jacket"]);
   });
   test("Kids shows only kids products", () => {
-    expect(rows.filter(p => matchesDepartment(resolveProductAudience(p), "Kids")).map(p => p.name)).toEqual(["Kids jacket"]);
+    deepStrictEqual(rows.filter(p => matchesDepartment(resolveProductAudience(p), "Kids")).map(p => p.name), ["Kids jacket"]);
   });
   test("explicit category and tags override old mens fallback", () => {
-    expect(resolveProductAudience({ category: "Womens", name: "Shirt" }, "Men")).toBe("Womens");
-    expect(resolveProductAudience({ category: "Shirts", features: ["Kids"] }, "Men")).toBe("Kids");
+    strictEqual(resolveProductAudience({ category: "Womens", name: "Shirt" }, "Men"), "Womens");
+    strictEqual(resolveProductAudience({ category: "Shirts", features: ["Kids"] }, "Men"), "Kids");
   });
 });
