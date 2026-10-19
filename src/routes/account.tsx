@@ -295,7 +295,7 @@ function AccountPage() {
   async function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();
     const token = authStorage.getToken();
-    if (!token) return;
+    if (!token || !user) return;
 
     setSavingProfile(true);
     try {
@@ -304,9 +304,9 @@ function AccountPage() {
         toast.success("Profile information updated successfully!");
         setProfile(res.profile);
         const updatedUser: UserProfile = {
-          ...user!,
-          full_name: addrForm.full_name || user!.full_name,
-          phone: addrForm.phone || user!.phone,
+          ...user,
+          full_name: addrForm.full_name || user.full_name || null,
+          phone: addrForm.phone || user.phone || null,
         };
         setUser(updatedUser);
         authStorage.setUser(updatedUser);
@@ -362,7 +362,7 @@ function AccountPage() {
 
   // ── Authenticated User View (Advanced Customer Portal) ─────────────────────
   if (user) {
-    const displayName = profile?.full_name || user.full_name || user.email.split("@")[0];
+    const displayName = profile?.full_name || user.full_name || user.email.split("@")[0] || "Customer";
     const displayPhone = profile?.phone || user.phone;
     const avatarSrc = profile?.avatar_url || user.avatar_url;
     const initials = displayName

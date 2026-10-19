@@ -3,7 +3,6 @@ import { MobileShoppingNav } from "./mobile-shopping-nav";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { CustomerExtras, ShoppingConfidence } from "./customer-confidence";
-import { Magnetic, EditorialImage } from "./luxury-interactions";
 import { CouponInput, Price, Rating, QuickAdd, LiveReviews, ReviewForm } from "./shopping-ui";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
@@ -49,6 +48,7 @@ import {
 import { useVelouraStore, type CartItem, type Order } from "@/lib/veloura-store";
 import { useSettings, useHeroSlides, useBlogPosts, useProducts, useCollections, useDeals, useCoupons, apiEnabled, useCategories, usePopups } from "@/lib/api";
 import { assetUrl, fromBackend } from "@/lib/live-catalog";
+import { SHOP_DEPARTMENTS, normalizeAudience, matchesDepartment } from "@/lib/product-audience";
 import { api, authStorage } from "@/lib/api";
 import { useCurrency, CURRENCIES, getActiveCurrency, type CurrencyCode } from "@/lib/currency";
 
@@ -208,15 +208,14 @@ function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = useRouterState({ select: state => state.location.pathname });
+  const activeDepartment = useRouterState({ select: state => state.location.search['department'] });
   const home = pathname === '/';
   useEffect(() => { const update = () => setScrolled(window.scrollY > 48); update(); window.addEventListener('scroll', update, { passive: true }); return () => window.removeEventListener('scroll', update); }, []);
   useEffect(() => setMobileOpen(false), [pathname]);
   const { openSearch, openCart, cartCount, wishlist } = useVelouraStore();
   const { data: settingsData } = useSettings();
   const navItems = [
-    { label: 'Mens', to: '#' as const, icon: Home },
-    { label: 'Womens', to: '#' as const, icon: ShoppingBag },
-    { label: 'Kids', to: '#' as const, icon: ShoppingBag },
+    ...SHOP_DEPARTMENTS.map(department => ({ label: department, to: '/shop' as const, search: { department }, icon: department === 'Mens' ? Home : ShoppingBag })),
     { label: 'Orders', to: '/track' as const, icon: PackageCheck },
     { label: 'Wishlist', to: '/wishlist' as const, icon: Heart },
     { label: 'Account', to: '/account' as const, icon: UserRound },
@@ -235,10 +234,10 @@ function Navbar() {
 
         {/* Center: Navigation Links */}
         <div className="flex items-center justify-center gap-1.5 mx-auto">
-          {navItems.map(({ label, to }) => (
-            <Link key={label} to={to as any} className="nav-item-link inline-flex items-center gap-1.5">
-              <span>{label}</span>
-              {label === 'Wishlist' && wishlist.length > 0 && (
+          {navItems.map(item => (
+            <Link key={item.label} to={item.to} search={'search' in item ? item.search : {}} aria-current={pathname === '/shop' && activeDepartment === item.label ? 'page' : undefined} className="nav-item-link inline-flex items-center gap-1.5">
+              <span>{item.label}</span>
+              {item.label === 'Wishlist' && wishlist.length > 0 && (
                 <span className="ml-0.5 grid size-4 place-items-center rounded-full bg-primary text-[9px] text-primary-foreground font-bold">
                   {wishlist.length}
                 </span>
@@ -337,10 +336,11 @@ function Navbar() {
           </div>
 
           <div className="mt-5 flex flex-col divide-y divide-border/60">
-            {navItems.map(({ label, to, icon: Icon }) => (
+            {navItems.map(item => { const { label, to, icon: Icon } = item; return (
               <Link
                 key={label}
-                to={to as any}
+                to={to}
+                search={'search' in item ? item.search : {}}
                 onClick={() => setMobileOpen(false)}
                 className="py-3 px-3 rounded-lg text-[15px] font-bold tracking-wide sheet-nav-link transition-all flex items-center justify-between"
               >
@@ -354,7 +354,7 @@ function Navbar() {
                   </span>
                 )}
               </Link>
-            ))}
+            ); })}
             <Link to="/contact" onClick={() => setMobileOpen(false)} className="py-3 px-3 rounded-lg text-[15px] font-bold sheet-nav-link transition-all">
               Contact Concierge
             </Link>
@@ -1464,13 +1464,20 @@ export function ShopPage({ mode = "all", initialCategory = "All" }: { mode?: "al
   const liveProducts = productsData?.products?.map(fromBackend) ?? [];
   const routerState = useRouterState();
   const searchParams = (routerState.location.search || {}) as Record<string, string | undefined>;
-  const activeUrlCat = searchParams.category || initialCategory;
-  const [query, setQuery] = useState(searchParams.q || "");
+  const department = normalizeAudience(searchParams['department']);
+  const activeUrlCat = searchParams['category'] || initialCategory;
+  const [query, setQuery] = useState(searchParams['q'] || "");
   const [category, setCategory] = useState(activeUrlCat);
   useEffect(() => {
-    if (searchParams.category) setCategory(searchParams.category);
+    if (searchParams['category']) setCategory(searchParams['category']);
     else setCategory(initialCategory);
-  }, [searchParams.category, initialCategory]);
+    setQuery(searchParams['q'] || "");
+    setLimit(12);
+    setSize("All");
+    setColor("All");
+    setPrice("All");
+    setAvailability("All");
+  }, [searchParams['category'], searchParams['department'], searchParams['q'], initialCategory]);
   const [limit,setLimit]=useState(12);
   const [size, setSize] = useState("All");
   const [color, setColor] = useState("All");
@@ -1486,7 +1493,7 @@ export function ShopPage({ mode = "all", initialCategory = "All" }: { mode?: "al
       const matchesCategory =
         category === "All" ||
         product.category === category ||
-        product.audience === category ||
+        (normalizeAudience(category) != null && normalizeAudience(product.audience) === normalizeAudience(category)) ||
         normCat(product.category) === normCat(category) ||
         (normCat(category).includes("leather") && normCat(product.category).includes("leather")) ||
         (category === "New Arrivals" && product.newArrival) ||
@@ -1496,7 +1503,8 @@ export function ShopPage({ mode = "all", initialCategory = "All" }: { mode?: "al
       const matchesColor = color === "All" || product.colors.includes(color);
       const matchesPrice = price === "All" || (price === "Under Rs. 4,000" ? productPrice(product) < 4000 : price === "Rs. 4,000–8,000" ? productPrice(product) >= 4000 && productPrice(product) <= 8000 : productPrice(product) > 8000);
       const matchesAvailability = availability === "All" || (availability === "In Stock" ? product.stock > 0 : product.stock > 0 && product.stock < 8);
-      return matchesMode && matchesQuery && matchesCategory && matchesSize && matchesColor && matchesPrice && matchesAvailability;
+      const matchesAudience = !department || matchesDepartment(product.audience, department);
+      return matchesAudience && matchesMode && matchesQuery && matchesCategory && matchesSize && matchesColor && matchesPrice && matchesAvailability;
     });
     if (sort === "Newest") list = [...list].sort((a, b) => Number(b.newArrival) - Number(a.newArrival));
     if (sort === "Price: Low to High") list = [...list].sort((a, b) => productPrice(a) - productPrice(b));
@@ -1505,7 +1513,7 @@ export function ShopPage({ mode = "all", initialCategory = "All" }: { mode?: "al
     if (sort === "Best Rated") list = [...list].sort((a,b)=>b.rating-a.rating);
     if (sort === "Best Selling") list = [...list].sort((a,b)=>b.reviewCount-a.reviewCount);
     return list;
-  }, [query, category, size, color, price, availability, sort, mode]);
+  }, [liveProducts, department, query, category, size, color, price, availability, sort, mode]);
 
   const filters = (
     <FilterPanel
@@ -1531,7 +1539,7 @@ export function ShopPage({ mode = "all", initialCategory = "All" }: { mode?: "al
       <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="editorial-label">Shop</p>
-          <h1 className="mt-3 font-display text-6xl leading-none sm:text-8xl">{mode === "new" ? "NEW ARRIVALS" : mode === "best" ? "BEST SELLERS" : mode === "sale" ? "THE SALE EDIT" : "SHOP VEL0URA APPAREL"}</h1>
+          <h1 className="mt-3 font-display text-6xl leading-none sm:text-8xl">{department ? department.toUpperCase() : mode === "new" ? "NEW ARRIVALS" : mode === "best" ? "BEST SELLERS" : mode === "sale" ? "THE SALE EDIT" : "SHOP VEL0URA APPAREL"}</h1>
         </div>
         <p className="text-sm text-muted-foreground">{filtered.length} pieces</p>
       </div>
@@ -1582,7 +1590,7 @@ function FilterPanel(props: {
   return (
     <div className="sticky top-28 rounded-sm glass-panel p-4">
       <FilterInput label="Search" value={props.query} onChange={props.setQuery} />
-      <FilterSelect label="Category" value={props.category} onChange={props.setCategory} options={["All", "Men", "Sale", "New Arrivals", ...categories]} />
+      <FilterSelect label="Category" value={props.category} onChange={props.setCategory} options={["All", "Sale", "New Arrivals", ...categories]} />
       <FilterSelect label="Size" value={props.size} onChange={props.setSize} options={["All", ...sizes, "36", "37", "38", "39", "40", "41", "42", "43", "44", "ONE SIZE"]} />
       <FilterSelect label="Color" value={props.color} onChange={props.setColor} options={["All", ...colors]} />
       <FilterSelect label="Price" value={props.price} onChange={props.setPrice} options={["All", "Under Rs. 4,000", "Rs. 4,000–8,000", "Over Rs. 8,000"]} />
@@ -1672,7 +1680,7 @@ function RestockAlertModal({ product, selectedSize }: { product: Product; select
     if (!phone.trim()) return;
     setLoading(true);
     await api.trackLead({
-      name: name.trim() || undefined,
+      ...(name.trim() ? { name: name.trim() } : {}),
       phone: phone.trim(),
       stage: "waitlist",
       notes: `Restock alert requested for ${product.name} (Size: ${chosenSize})`,
@@ -1787,7 +1795,7 @@ function SaveBagToWhatsApp({ cart, liveProducts, cartTotal }: { cart: CartItem[]
 
     // Save lead into database!
     await api.trackLead({
-      name: name.trim() || undefined,
+      ...(name.trim() ? { name: name.trim() } : {}),
       phone: phone.trim(),
       stage: "cart",
       items: cart,
@@ -2362,7 +2370,7 @@ export function CheckoutPage() {
       }
     }
     return {
-      name: saved?.name || user?.name || "",
+      name: saved?.name || user?.full_name || "",
       email: saved?.email || user?.email || "",
       phone: saved?.phone || user?.phone || "",
       address: saved?.address || user?.address || "",

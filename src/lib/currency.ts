@@ -51,7 +51,7 @@ export function subscribeCurrency(callback: () => void) {
 }
 
 export function useCurrency(): [CurrencyCode, (code: CurrencyCode) => void] {
-  const currency = useSyncExternalStore(
+  const currency = useSyncExternalStore<CurrencyCode>(
     subscribeCurrency,
     () => currentCurrency,
     () => "PKR"
