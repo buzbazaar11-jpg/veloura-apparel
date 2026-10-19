@@ -1,4 +1,4 @@
-"""Public storefront API (read-only catalogue + settings)."""
+import time
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -11,6 +11,23 @@ from app.models import (BlogPost, Category, Collection, Coupon, Deal, Faq, HeroS
                         Product, Review, SiteSettings, TrustSection)
 
 router = APIRouter(prefix="/api/v1", tags=["public"])
+
+_CACHE: dict[str, tuple[float, any]] = {}
+
+def get_cache(key: str, ttl: float = 60.0):
+    item = _CACHE.get(key)
+    if item and (time.time() - item[0] < ttl):
+        return item[1]
+    return None
+
+def set_cache(key: str, val):
+    _CACHE[key] = (time.time(), val)
+
+def clear_cache(key: str | None = None):
+    if key:
+        _CACHE.pop(key, None)
+    else:
+        _CACHE.clear()
 
 
 def _active(db, model):
@@ -26,6 +43,9 @@ def health():
 def products(type: str | None = None, collection: str | None = None, category: str | None = None,
              featured: bool | None = None, new_arrival: bool | None = None,
              q: str | None = None, db: Session = Depends(get_db)):
+    cache_key = f"products:{type}:{collection}:{category}:{featured}:{new_arrival}:{q}"
+    cached = get_cache(cache_key, 60.0)
+    if cached: return cached
     qs = db.query(Product).filter(Product.active.is_(True))
     if type: qs = qs.filter(Product.product_type == type)
     if collection: qs = qs.filter(Product.collection == collection)
@@ -33,54 +53,98 @@ def products(type: str | None = None, collection: str | None = None, category: s
     if featured is not None: qs = qs.filter(Product.featured.is_(featured))
     if new_arrival is not None: qs = qs.filter(Product.new_arrival.is_(new_arrival))
     if q: qs = qs.filter(or_(Product.name.ilike(f"%{q}%"), Product.description.ilike(f"%{q}%")))
-    return {"ok": True, "products": [to_dict(p) for p in qs.order_by(Product.sort_order, Product.created_at.desc())]}
+    res = {"ok": True, "products": [to_dict(p) for p in qs.order_by(Product.sort_order, Product.created_at.desc())]}
+    set_cache(cache_key, res)
+    return res
 
 
 @router.get("/products/{slug}")
 def product(slug: str, db: Session = Depends(get_db)):
+    cached = get_cache(f"product:{slug}", 60.0)
+    if cached: return cached
     p = db.query(Product).filter(Product.slug == slug, Product.active.is_(True)).first()
     if not p:
         raise HTTPException(404, "Product not found")
     reviews = db.query(Review).filter(Review.product_id == p.id, Review.approved.is_(True)).all()
-    return {"ok": True, "product": to_dict(p), "reviews": [to_dict(r) for r in reviews]}
+    res = {"ok": True, "product": to_dict(p), "reviews": [to_dict(r) for r in reviews]}
+    set_cache(f"product:{slug}", res)
+    return res
 
 
 @router.get("/collections")
-def collections(db: Session = Depends(get_db)): return {"ok": True, "collections": _active(db, Collection)}
+def collections(db: Session = Depends(get_db)):
+    cached = get_cache("collections", 120.0)
+    if cached: return cached
+    res = {"ok": True, "collections": _active(db, Collection)}
+    set_cache("collections", res)
+    return res
 
 
 @router.get("/categories")
-def categories(db: Session = Depends(get_db)): return {"ok": True, "categories": _active(db, Category)}
+def categories(db: Session = Depends(get_db)):
+    cached = get_cache("categories", 120.0)
+    if cached: return cached
+    res = {"ok": True, "categories": _active(db, Category)}
+    set_cache("categories", res)
+    return res
 
 
 @router.get("/hero-slides")
-def hero(db: Session = Depends(get_db)): return {"ok": True, "slides": _active(db, HeroSlide)}
+def hero(db: Session = Depends(get_db)):
+    cached = get_cache("hero-slides", 60.0)
+    if cached: return cached
+    res = {"ok": True, "slides": _active(db, HeroSlide)}
+    set_cache("hero-slides", res)
+    return res
 
 
 @router.get("/faqs")
-def faqs(db: Session = Depends(get_db)): return {"ok": True, "faqs": _active(db, Faq)}
+def faqs(db: Session = Depends(get_db)):
+    cached = get_cache("faqs", 120.0)
+    if cached: return cached
+    res = {"ok": True, "faqs": _active(db, Faq)}
+    set_cache("faqs", res)
+    return res
 
 
 @router.get("/trust")
-def trust(db: Session = Depends(get_db)): return {"ok": True, "sections": _active(db, TrustSection)}
+def trust(db: Session = Depends(get_db)):
+    cached = get_cache("trust", 120.0)
+    if cached: return cached
+    res = {"ok": True, "sections": _active(db, TrustSection)}
+    set_cache("trust", res)
+    return res
 
 
 @router.get("/deals")
 def deals(db: Session = Depends(get_db)):
+    cached = get_cache("deals", 60.0)
+    if cached: return cached
     now = datetime.now(timezone.utc)
     rows = [d for d in db.query(Deal).filter(Deal.active.is_(True)).order_by(Deal.sort_order)
             if (not d.ends_at or d.ends_at >= now) and (not d.starts_at or d.starts_at <= now)]
-    return {"ok": True, "deals": [to_dict(d) for d in rows]}
+    res = {"ok": True, "deals": [to_dict(d) for d in rows]}
+    set_cache("deals", res)
+    return res
 
 
 @router.get("/popups")
-def popups(db: Session = Depends(get_db)): return {"ok": True, "popups": _active(db, Popup)}
+def popups(db: Session = Depends(get_db)):
+    cached = get_cache("popups", 120.0)
+    if cached: return cached
+    res = {"ok": True, "popups": _active(db, Popup)}
+    set_cache("popups", res)
+    return res
 
 
 @router.get("/reviews")
 def reviews(db: Session = Depends(get_db)):
+    cached = get_cache("reviews", 30.0)
+    if cached: return cached
     rows = db.query(Review).filter(Review.approved.is_(True)).order_by(Review.created_at.desc()).limit(100)
-    return {"ok": True, "reviews": [to_dict(r) for r in rows]}
+    res = {"ok": True, "reviews": [to_dict(r) for r in rows]}
+    set_cache("reviews", res)
+    return res
 
 
 @router.post("/reviews")
@@ -91,27 +155,40 @@ def submit_review(body: dict, db: Session = Depends(get_db)):
     r = Review(product_id=body.get("product_id") or None, customer_name=name[:100], rating=rating,
                title=(body.get("title") or "")[:200], body=(body.get("body") or "")[:3000], approved=False)
     db.add(r); db.commit()
+    clear_cache()
     return {"ok": True, "message": "Review submitted for approval"}
 
 
 @router.get("/blog")
 def blog(db: Session = Depends(get_db)):
+    cached = get_cache("blog", 120.0)
+    if cached: return cached
     rows = db.query(BlogPost).filter(BlogPost.published.is_(True)).order_by(BlogPost.published_at.desc())
-    return {"ok": True, "posts": [to_dict(p) for p in rows]}
+    res = {"ok": True, "posts": [to_dict(p) for p in rows]}
+    set_cache("blog", res)
+    return res
 
 
 @router.get("/blog/{slug}")
 def blog_post(slug: str, db: Session = Depends(get_db)):
+    cached = get_cache(f"blog:{slug}", 120.0)
+    if cached: return cached
     p = db.query(BlogPost).filter(BlogPost.slug == slug, BlogPost.published.is_(True)).first()
     if not p: raise HTTPException(404, "Post not found")
-    return {"ok": True, "post": to_dict(p)}
+    res = {"ok": True, "post": to_dict(p)}
+    set_cache(f"blog:{slug}", res)
+    return res
 
 
 @router.get("/settings")
 def site_settings(db: Session = Depends(get_db)):
+    cached = get_cache("settings", 120.0)
+    if cached: return cached
     s = db.query(SiteSettings).first()
     p = db.query(PaymentSettings).first()
-    return {"ok": True, "settings": to_dict(s) if s else {}, "payment": to_dict(p) if p else {}}
+    res = {"ok": True, "settings": to_dict(s) if s else {}, "payment": to_dict(p) if p else {}}
+    set_cache("settings", res)
+    return res
 
 
 @router.get("/coupons")

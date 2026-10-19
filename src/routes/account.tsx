@@ -790,7 +790,7 @@ function AccountPage() {
     <main className="mx-auto max-w-md px-5 pb-24 pt-32 sm:px-8">
       <div className="text-center mb-8">
         <Link to="/" className="inline-block">
-          <Logo className="size-20 mx-auto" />
+          <Logo className="mx-auto" />
         </Link>
         <h1 className="mt-4 font-display text-4xl sm:text-5xl font-bold uppercase tracking-tight text-foreground">
           {mode === "login" && "WELCOME BACK"}
@@ -799,7 +799,7 @@ function AccountPage() {
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {mode === "login" && "Sign in with your email and password to access your orders."}
-          {mode === "signup" && "Join VEL0URA APPAREL. Receive 6-digit OTP to verify and activate your account."}
+          {mode === "signup" && "Join VELOURA APPAREL. Receive 6-digit OTP to verify and activate your account."}
           {mode === "otp" && `Enter the 6-digit verification code sent to ${email}.`}
         </p>
       </div>

@@ -8,8 +8,9 @@ export function MobileShoppingNav() {
   const { wishlist, isCartOpen, isSearchOpen } = useVelouraStore();
   if (isCartOpen || isSearchOpen) return null;
   const items = [
-    { label: 'Home', to: '/' as const, icon: Home },
-    { label: 'Shop', to: '/shop' as const, icon: ShoppingBag },
+    { label: 'Mens', to: '#' as const, icon: Home },
+    { label: 'Womens', to: '#' as const, icon: ShoppingBag },
+    { label: 'Kids', to: '#' as const, icon: ShoppingBag },
     { label: 'Orders', to: '/track' as const, icon: PackageCheck },
     { label: 'Wishlist', to: '/wishlist' as const, icon: Heart },
     { label: 'Account', to: '/account' as const, icon: UserRound },
@@ -17,7 +18,7 @@ export function MobileShoppingNav() {
   return <nav aria-label="Mobile shopping navigation" className="mobile-shopping-nav">
     {items.map(({ label, to, icon: Icon }) => {
       const active = to === '/shop' ? ['/shop', '/product/', '/sale', '/new-arrivals', '/best-sellers', '/collections'].some(path => pathname.startsWith(path)) : to === '/track' ? pathname.startsWith('/track') || pathname.startsWith('/order/') : pathname === to;
-      return <Button asChild variant="ghost" key={to} className={`mobile-nav-item ${active ? 'mobile-nav-active' : ''}`}><Link to={to} aria-current={active ? 'page' : undefined}><span className="relative"><Icon className="size-5" />{label === 'Wishlist' && wishlist.length > 0 ? <span className="mobile-nav-count">{wishlist.length}</span> : null}</span><span>{label}</span></Link></Button>;
+      return <Button asChild variant="ghost" key={label} className={`mobile-nav-item ${active ? 'mobile-nav-active' : ''}`}><Link to={to as any} aria-current={active ? 'page' : undefined}><span className="relative"><Icon className="size-5" />{label === 'Wishlist' && wishlist.length > 0 ? <span className="mobile-nav-count">{wishlist.length}</span> : null}</span><span>{label}</span></Link></Button>;
     })}
   </nav>;
 }

@@ -9,6 +9,9 @@ import type { CartItem, Order } from "./veloura-store";
 export type SiteSettingsPayload = {
   brand_name?: string;
   brand_tagline?: string;
+  logo_url?: string;
+  logo_width?: number;
+  logo_height?: number;
   marquee_items?: string[];
   contact_email?: string;
   contact_phone?: string;
@@ -271,6 +274,36 @@ export function useSettings() {
   });
 }
 
+const initialHeroSlides: HeroSlidePayload[] = [
+  {
+    id: "slide-apparel-1",
+    eyebrow: "AUTUMN / WINTER 2026",
+    title: "THE MEN'S LEATHER & APPAREL EDIT",
+    description: "Mastercrafted genuine leather jackets, crisp layered overshirts, and relaxed tailored trousers built for modern everyday elegance.",
+    cta_label: "SHOP COLLECTION",
+    cta_href: "/collections",
+    image_url: "https://images.unsplash.com/photo-1548883354-7622d03aca27?auto=format&fit=crop&q=80&w=1600",
+  },
+  {
+    id: "slide-apparel-2",
+    eyebrow: "CONTEMPORARY SILHOUETTES",
+    title: "CURATED MEN'S OUTFITS",
+    description: "Effortless styling from day to night with premium natural fibers, considered drape, and unmatched hand-finished detailing.",
+    cta_label: "EXPLORE OUTFITS",
+    cta_href: "/shop",
+    image_url: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&q=80&w=1600",
+  },
+  {
+    id: "slide-apparel-3",
+    eyebrow: "EVERYDAY ESSENTIALS",
+    title: "SHIRTS, CHINOS & TAILORED DRAPE",
+    description: "Discover breathable Oxford weaves, heavy twill utility cuts, and clean tailored fits crafted for confidence.",
+    cta_label: "DISCOVER NOW",
+    cta_href: "/shop",
+    image_url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=1600",
+  },
+];
+
 export function useHeroSlides() {
   return useQuery({
     queryKey: ["hero-slides"],
@@ -280,7 +313,7 @@ export function useHeroSlides() {
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: false,
     enabled: apiEnabled,
-    placeholderData: { ok: true, slides: [] as HeroSlidePayload[] },
+    placeholderData: { ok: true, slides: initialHeroSlides },
   });
 }
 
@@ -388,6 +421,28 @@ export type CollectionPayload = {
   active?: boolean;
 };
 
+const initialBackendProducts: BackendProductPayload[] = products.map((p) => ({
+  id: p.id,
+  slug: p.slug,
+  name: p.name,
+  category: p.category,
+  collection: p.collection,
+  price: p.price,
+  sale_price: p.salePrice ?? null,
+  image_url: p.images[0] ?? "",
+  gallery: p.images.slice(1),
+  colors: p.colors,
+  sizes: p.sizes,
+  features: p.tags,
+  stock: p.stock,
+  description: p.description,
+  featured: p.featured,
+  new_arrival: p.newArrival,
+  rating: p.rating,
+  reviews: p.reviewCount,
+  active: true,
+}));
+
 export function useProducts() {
   return useQuery({
     queryKey: ["products"],
@@ -397,7 +452,7 @@ export function useProducts() {
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: false,
     enabled: apiEnabled,
-    placeholderData: { ok: true, products: [] as BackendProductPayload[] },
+    placeholderData: { ok: true, products: initialBackendProducts },
   });
 }
 

@@ -7,6 +7,8 @@ import { Magnetic, EditorialImage } from "./luxury-interactions";
 import { CouponInput, Price, Rating, QuickAdd, LiveReviews, ReviewForm } from "./shopping-ui";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
+  Home,
+  PackageCheck,
   UserRound,
   Truck,
   RotateCcw,
@@ -19,6 +21,7 @@ import {
   Check,
   ChevronDown,
   Heart,
+  MapPin,
   Menu,
   Minus,
   Plus,
@@ -78,7 +81,7 @@ export function Footer() {
     <footer className="border-t border-border bg-secondary">
       <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[1.4fr_2fr_1.2fr] lg:px-12">
         <div>
-          <Link to="/" aria-label="VEL0URA APPAREL home"><Logo className="size-28" /></Link>
+          <Link to="/" aria-label="VELOURA APPAREL home" className="inline-block"><Logo className="justify-start text-left" /></Link>
           {data?.settings?.brand_tagline ? (
             <p className="mt-5 max-w-sm text-sm leading-7 text-muted-foreground">
               {data.settings.brand_tagline}
@@ -210,26 +213,112 @@ function Navbar() {
   useEffect(() => setMobileOpen(false), [pathname]);
   const { openSearch, openCart, cartCount, wishlist } = useVelouraStore();
   const { data: settingsData } = useSettings();
-  const navItems = [["Home","/"],["Shop","/shop"],["Collections","/collections"],["New Arrivals","/new-arrivals"],["Best Sellers","/best-sellers"],["Sale","/sale"]] as const;
+  const navItems = [
+    { label: 'Mens', to: '#' as const, icon: Home },
+    { label: 'Womens', to: '#' as const, icon: ShoppingBag },
+    { label: 'Kids', to: '#' as const, icon: ShoppingBag },
+    { label: 'Orders', to: '/track' as const, icon: PackageCheck },
+    { label: 'Wishlist', to: '/wishlist' as const, icon: Heart },
+    { label: 'Account', to: '/account' as const, icon: UserRound },
+  ];
   return <header className={`store-header relative z-40 ${home ? 'header-home' : 'header-page'} ${scrolled ? 'is-scrolled' : ''}`}>
-    <div className="announcement bg-primary px-4 py-2 text-center text-primary-foreground">{settingsData?.settings?.brand_tagline ?? storeConfig.announcement}</div>
+    <div className="announcement bg-primary px-4 py-2 text-center text-primary-foreground font-semibold tracking-wider text-[11px] uppercase">
+      {settingsData?.settings?.brand_tagline ?? storeConfig.announcement}
+    </div>
     <nav aria-label="Main navigation" className="nav-shell">
-      <Link to="/" aria-label="VEL0URA APPAREL home" className="nav-logo focus-veloura"><Logo /></Link>
-      <div className="hidden min-w-0 items-center gap-5 xl:flex">{navItems.map(([label,path])=><Link key={label} to={path} className="text-xs font-semibold uppercase hover:text-sage">{label}</Link>)}</div>
-      <div className="nav-actions flex shrink-0 items-center gap-1">
-        <CurrencySelector className="hidden sm:inline-flex mr-1" />
-        <Button variant="ghost" size="icon" onClick={openSearch} aria-label="Search VEL0URA APPAREL"><Search /></Button>
-        <Button asChild variant="ghost" size="icon" className="hidden sm:inline-flex"><Link to="/account" aria-label="My Account"><UserRound /></Link></Button>
-        <Button asChild variant="ghost" size="icon" className="hidden xl:inline-flex"><Link to="/wishlist" aria-label={`Wishlist, ${wishlist.length} items`}><Heart /></Link></Button>
-        <Button variant="ghost" size="icon" onClick={openCart} aria-label={`Open cart, ${cartCount} items`} className="relative"><ShoppingBag />{cartCount ? <span className="absolute right-0 top-0 grid size-4 place-items-center rounded-full bg-primary text-[9px] text-primary-foreground">{cartCount}</span>:null}</Button>
+      {/* ─── DESKTOP VIEW (xl: Left Logo, Center Nav Links, Right Actions) ─── */}
+      <div className="hidden xl:flex items-center justify-between w-full gap-4">
+        {/* Left: Brand Logo */}
+        <Link to="/" aria-label="VELOURA home" className="nav-logo focus-veloura shrink-0 flex items-center justify-start">
+          <Logo />
+        </Link>
+
+        {/* Center: Navigation Links */}
+        <div className="flex items-center justify-center gap-1.5 mx-auto">
+          {navItems.map(({ label, to }) => (
+            <Link key={label} to={to as any} className="nav-item-link inline-flex items-center gap-1.5">
+              <span>{label}</span>
+              {label === 'Wishlist' && wishlist.length > 0 && (
+                <span className="ml-0.5 grid size-4 place-items-center rounded-full bg-primary text-[9px] text-primary-foreground font-bold">
+                  {wishlist.length}
+                </span>
+              )}
+            </Link>
+          ))}
+        </div>
+
+        {/* Right: Actions */}
+        <div className="nav-actions flex shrink-0 items-center justify-end gap-1.5">
+          <CurrencySelector className="mr-1" />
+          <Button variant="ghost" size="icon" onClick={openSearch} aria-label="Search VELOURA" className="nav-icon-btn">
+            <Search className="size-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={openCart} aria-label={`Open cart, ${cartCount} items`} className="relative nav-icon-btn">
+            <ShoppingBag className="size-4" />
+            {cartCount ? <span className="absolute right-0 top-0 grid size-4 place-items-center rounded-full bg-primary text-[9px] text-primary-foreground font-bold">{cartCount}</span> : null}
+          </Button>
+        </div>
       </div>
-      <Button variant="ghost" size="icon" className="menu-toggle xl:hidden" aria-label="Open menu" aria-expanded={mobileOpen} onClick={()=>setMobileOpen(true)}><Menu /></Button>
+
+      {/* ─── MOBILE VIEW (< xl: Left Menu + Search, Center Logo, Right MapPin + Cart) ─── */}
+      <div className="flex xl:hidden items-center justify-between w-full h-full gap-2">
+        {/* Left: Menu button + Search button */}
+        <div className="flex items-center gap-0.5 shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="menu-toggle nav-icon-btn size-10"
+            aria-label="Open menu"
+            aria-expanded={mobileOpen}
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu className="size-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={openSearch}
+            aria-label="Search VELOURA"
+            className="nav-icon-btn size-10"
+          >
+            <Search className="size-5" />
+          </Button>
+        </div>
+
+        {/* Center: Big Prominent Logo */}
+        <Link to="/" aria-label="VELOURA home" className="nav-logo focus-veloura flex items-center justify-center py-1 flex-1 min-w-0 text-center">
+          <Logo className="text-[28px] sm:text-[34px] tracking-[0.22em]" />
+        </Link>
+
+        {/* Right: MapPin (Location/Track) + Cart */}
+        <div className="flex items-center justify-end gap-0.5 shrink-0">
+          <Button asChild variant="ghost" size="icon" className="nav-icon-btn size-10" aria-label="Track order and location">
+            <Link to="/track">
+              <MapPin className="size-5" />
+            </Link>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={openCart}
+            aria-label={`Open cart, ${cartCount} items`}
+            className="relative nav-icon-btn size-10"
+          >
+            <ShoppingBag className="size-5" />
+            {cartCount ? (
+              <span className="absolute right-0.5 top-0.5 grid size-4 place-items-center rounded-full bg-primary text-[9px] text-primary-foreground font-bold">
+                {cartCount}
+              </span>
+            ) : null}
+          </Button>
+        </div>
+      </div>
     </nav>
     <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
       <SheetContent side="right" className="w-[85vw] max-w-[340px] p-0 flex flex-col justify-between bg-background border-l border-border z-50">
-        <SheetTitle className="sr-only">VEL0URA APPAREL menu</SheetTitle>
+        <SheetTitle className="sr-only">VELOURA menu</SheetTitle>
         <div className="flex flex-col h-full overflow-y-auto p-6">
-          <div className="flex items-center justify-between pb-4 border-b border-border">
+          <div className="flex items-center justify-center pb-4 border-b border-border">
             <Logo />
           </div>
 
@@ -248,33 +337,31 @@ function Navbar() {
           </div>
 
           <div className="mt-5 flex flex-col divide-y divide-border/60">
-            {navItems.map(([label, path]) => (
+            {navItems.map(({ label, to, icon: Icon }) => (
               <Link
                 key={label}
-                to={path}
+                to={to as any}
                 onClick={() => setMobileOpen(false)}
-                className="py-3 text-sm font-semibold tracking-wide hover:text-sage transition-colors"
+                className="py-3 px-3 rounded-lg text-[15px] font-bold tracking-wide sheet-nav-link transition-all flex items-center justify-between"
               >
-                {label}
+                <span className="flex items-center gap-3">
+                  <Icon className="size-4 text-muted-foreground" />
+                  <span>{label}</span>
+                </span>
+                {label === 'Wishlist' && wishlist.length > 0 && (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-primary text-primary-foreground font-bold">
+                    {wishlist.length}
+                  </span>
+                )}
               </Link>
             ))}
-            <Link to="/account" onClick={() => setMobileOpen(false)} className="py-3 text-sm font-semibold hover:text-sage transition-colors">
-              My Account & Orders
-            </Link>
-            <Link to="/track" onClick={() => setMobileOpen(false)} className="py-3 text-sm font-semibold hover:text-sage transition-colors">
-              Track Orders
-            </Link>
-            <Link to="/wishlist" onClick={() => setMobileOpen(false)} className="py-3 text-sm font-semibold hover:text-sage transition-colors flex items-center justify-between">
-              <span>Wishlist</span>
-              {wishlist.length > 0 && <span className="text-xs px-2 py-0.5 rounded-full bg-primary text-primary-foreground font-bold">{wishlist.length}</span>}
-            </Link>
-            <Link to="/contact" onClick={() => setMobileOpen(false)} className="py-3 text-sm font-semibold hover:text-sage transition-colors">
+            <Link to="/contact" onClick={() => setMobileOpen(false)} className="py-3 px-3 rounded-lg text-[15px] font-bold sheet-nav-link transition-all">
               Contact Concierge
             </Link>
           </div>
 
           <div className="mt-auto pt-6 border-t border-border/60 text-xs text-muted-foreground flex flex-col gap-1.5">
-            <p className="font-semibold text-foreground">VEL0URA APPAREL</p>
+            <p className="font-semibold text-foreground">VELOURA APPAREL</p>
             <p className="text-[11px]">Modern Men's Luxury & Couture</p>
             <a href="https://wa.me/923173712950" target="_blank" rel="noreferrer" className="text-sage font-semibold flex items-center gap-1.5 mt-1">
               💬 WhatsApp Concierge
@@ -994,7 +1081,21 @@ function HeroCarousel() {
  {slides.map((hero,i)=><img key={hero.headline || i} src={hero.image} alt={i===index ? `${hero.product ?? ''} seasonal campaign` : ""} aria-hidden={i!==index} width={1600} height={1200} loading={i===0?'eager':'lazy'} fetchPriority={i===0?'high':'auto'} className={`hero-image absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${i===index?'opacity-100':'opacity-0'}`} />)}
  <div className="hero-shade absolute inset-0" />
  <div className="hero-inner relative z-10 mx-auto flex h-full max-w-[1500px] flex-col justify-end text-primary-foreground">
- <div key={index} className="hero-stagger hero-copy"><p className="text-xs font-semibold uppercase">{slide.label}</p><h1 className="hero-title mt-5 font-display">VEL0URA<br />APPAREL</h1><p className="mt-5 text-xs font-semibold">{slide.headline}</p><p className="mt-3 max-w-md text-sm leading-6 text-primary-foreground/85">{slide.text}</p><div className="mt-7 flex flex-wrap gap-3"><Button asChild variant="secondary" size="lg"><Link to={slide.ctaPath}>{slide.cta}<ArrowRight /></Link></Button><Button asChild variant="outline" size="lg" className="hero-secondary border-primary-foreground/50 text-primary-foreground hover:text-foreground"><Link to="/collections">The Collection</Link></Button></div>{slide.badge ? <p className="mt-5 text-xs text-primary-foreground/85">{slide.badge}</p> : null}</div>
+ <div key={index} className="hero-stagger hero-copy">
+  <p className="text-xs font-bold uppercase tracking-[0.22em] text-white/90">{slide.label.toUpperCase()}</p>
+  <h1 className="hero-title mt-4 font-display uppercase tracking-tight text-white font-extrabold leading-[0.92]">VELOURA<br />APPAREL</h1>
+  <p className="mt-4 text-sm sm:text-base font-bold uppercase tracking-[0.16em] text-white/95">{slide.headline.toUpperCase()}</p>
+  <p className="mt-3 max-w-lg text-sm sm:text-base font-medium leading-relaxed text-white/85">{slide.text}</p>
+  <div className="mt-6 flex flex-wrap gap-3">
+    <Button asChild size="lg" className="bg-white text-black font-bold uppercase tracking-wider text-xs px-7 py-3.5 hover:bg-neutral-200 transition-colors shadow-lg">
+      <Link to={slide.ctaPath}>{slide.cta.toUpperCase()}<ArrowRight className="size-4 ml-1.5" /></Link>
+    </Button>
+    <Button asChild variant="outline" size="lg" className="border-2 border-white/80 text-white font-bold uppercase tracking-wider text-xs px-7 py-3.5 hover:bg-white hover:text-black transition-colors">
+      <Link to="/collections">THE COLLECTION</Link>
+    </Button>
+  </div>
+  {slide.badge ? <p className="mt-4 text-xs font-bold uppercase tracking-wider text-white/80">{slide.badge.toUpperCase()}</p> : null}
+ </div>
  <div className="mt-8 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-primary-foreground/30 pt-4"><div className="flex items-center gap-3"><span className="text-xs">{String(index+1).padStart(2,"0")} / {String(slides.length).padStart(2,"0")}</span>{slides.map((h,i)=><Button key={h.headline || i} variant="ghost" size="icon" className="size-7 hover:bg-primary/20" aria-label={`Go to slide ${i+1}`} aria-current={i===index} onClick={()=>setIndex(i)}><span className={`block h-0.5 w-5 ${i===index?'bg-primary-foreground':'bg-primary-foreground/40'}`} /></Button>)}</div><div className="flex"><Button variant="ghost" size="icon" className="text-primary-foreground" aria-label={paused?'Play hero slides':'Pause hero slides'} onClick={()=>setPaused(v=>!v)}>{paused?<Play />:<Pause />}</Button><Button variant="ghost" size="icon" className="text-primary-foreground" onClick={()=>go(-1)} aria-label="Previous hero slide"><ArrowLeft /></Button><Button variant="ghost" size="icon" className="text-primary-foreground" onClick={()=>go(1)} aria-label="Next hero slide"><ArrowRight /></Button></div></div>
  </div></section>;
 }

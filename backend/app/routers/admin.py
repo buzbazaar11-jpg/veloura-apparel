@@ -113,6 +113,8 @@ def put_singleton(name: str, body: dict, db: Session = Depends(get_db)):
     row = db.query(m).first() or m()
     for k, v in coerce(m, body).items(): setattr(row, k, v)
     db.add(row); db.commit()
+    from app.routers.public import clear_cache
+    clear_cache("settings")
     return {"ok": True, "row": to_dict(row)}
 
 

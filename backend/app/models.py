@@ -283,6 +283,8 @@ class SiteSettings(Base):
     id = pk()
     brand_name = Column(Text, nullable=False, default="Veloura Apparel"); brand_suffix = Column(Text)
     brand_tagline = Column(Text); logo_url = Column(Text)
+    logo_width = Column(Integer, nullable=True, default=240)
+    logo_height = Column(Integer, nullable=True, default=52)
     marquee_enabled = Column(Boolean, nullable=False, default=True); marquee_items = Column(J, nullable=False, default=list)
     featured_in = Column(J, nullable=False, default=list); warranty_years = Column(Integer, nullable=False, default=1)
     nav_links = Column(J, nullable=False, default=list); footer_links = Column(J, nullable=False, default=list)

@@ -13,6 +13,18 @@ from app.routers import admin, auth, orders, public, tracking
 Base.metadata.create_all(engine)
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 
+try:
+    from sqlalchemy import inspect, text
+    with engine.begin() as conn:
+        insp = inspect(conn)
+        cols = [c["name"] for c in insp.get_columns("site_settings")]
+        if "logo_width" not in cols:
+            conn.execute(text("ALTER TABLE site_settings ADD COLUMN logo_width INTEGER DEFAULT 240"))
+        if "logo_height" not in cols:
+            conn.execute(text("ALTER TABLE site_settings ADD COLUMN logo_height INTEGER DEFAULT 52"))
+except Exception:
+    pass
+
 app = FastAPI(title=settings.APP_NAME)
 app.add_middleware(CORSMiddleware, allow_origins=settings.cors_list, allow_credentials=False,
                    allow_methods=["*"], allow_headers=["*"])
