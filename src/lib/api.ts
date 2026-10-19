@@ -107,6 +107,9 @@ export type UserProfile = {
   full_name?: string | null;
   avatar_url?: string | null;
   is_verified?: boolean;
+  address?: string | null;
+  city?: string | null;
+  postal_code?: string | null;
 };
 
 export type AuthResponse = {
@@ -392,6 +395,8 @@ export type BackendProductPayload = {
   name: string;
   brand?: string;
   category: string | null;
+  audience?: string | null;
+  gender?: string | null;
   collection?: string | null;
   price: number;
   sale_price: number | null;
@@ -426,7 +431,8 @@ const initialBackendProducts: BackendProductPayload[] = products.map((p) => ({
   slug: p.slug,
   name: p.name,
   category: p.category,
-  collection: p.collection,
+  collection: p.collection ?? null,
+  audience: p.audience,
   price: p.price,
   sale_price: p.salePrice ?? null,
   image_url: p.images[0] ?? "",

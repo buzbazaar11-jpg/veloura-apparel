@@ -4,6 +4,7 @@
 import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { API_URL, apiEnabled, useProducts, type BackendProductPayload } from "./api";
 import { products, type Product } from "./veloura-data";
+import { resolveProductAudience } from "./product-audience";
 
 // ── Live catalog store: the exported `products` array is replaced in place with
 // database rows whenever they change; components subscribe via useCatalogVersion().
@@ -70,7 +71,7 @@ export function fromBackend(b: BackendProductPayload): Product {
     tags: b.features?.length ? b.features : (base?.tags ?? []),
     rating: base?.rating ?? Number(b.rating ?? 4.8),
     reviewCount: base?.reviewCount ?? Number(b.reviews ?? 0),
-    audience: "Men",
+    audience: resolveProductAudience(b, base?.audience),
     featured: b.featured ?? base?.featured ?? false,
     newArrival: b.new_arrival ?? base?.newArrival ?? false,
     bestSeller: base?.bestSeller ?? false,

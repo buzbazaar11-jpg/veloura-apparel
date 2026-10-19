@@ -15,3 +15,4 @@
 - Mobile shopping destinations live in the shared MobileShoppingNav; reserving bottom space and hiding it under shopping overlays prevents obscured content.
 - Catalog photography is assigned centrally by product category and tags; campaign images stay separate so product listings show the relevant item rather than unrelated models.
 - The FastAPI backend lives in /backend and is reached only through src/lib/api.ts when VITE_API_URL is set, so the storefront still works offline-first without it.
+- Shopping departments use the shop URL's department filter and shared audience normalization, keeping desktop/mobile navigation consistent and preventing cross-department product leakage.

@@ -1,4 +1,5 @@
 # Veloura luxury storefront updates
+- [x] Add Mens, Womens and Kids navigation with strictly separated product lists; desktop/mobile category switching verified.
 - [ ] Add restrained magnetic CTAs, image lens and detail crossfade, adaptive glass navigation, bag pulse and shipping progress, tactile selections.
 - [ ] Add shoppable editorial campaign and private access capsule; preserve branding, bento layout, existing shopping and demo checkout.
 - [ ] Verify desktop/mobile shopping, campaign pins, private access and COD confirmation.

@@ -16,7 +16,7 @@ export const Route = createFileRoute("/product/$slug")({
   },
   head: ({ loaderData }) => {
     if (!loaderData?.product) {
-      return { meta: [{ title: "Product — VEL0URA APPAREL" }, { name: "robots", content: "noindex" }] };
+      return { meta: [{ title: "Product — VELOURA APPAREL" }, { name: "description", content: "Discover VELOURA APPAREL product details and availability." }, { property: "og:title", content: "Product — VELOURA APPAREL" }, { property: "og:description", content: "Discover VELOURA APPAREL product details and availability." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { name: "robots", content: "noindex" }] };
     }
     return {
       meta: [
