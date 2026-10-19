@@ -14,7 +14,7 @@ export const Route = createFileRoute("/journal/$slug")({
   },
   head: ({ loaderData }) => {
     if (!loaderData) {
-      return { meta: [{ title: "Journal — VEL0URA APPAREL" }, { name: "robots", content: "noindex" }] };
+      return { meta: [{ title: "Story — VELOURA APPAREL Journal" }, { name: "description", content: "Fashion stories from the VELOURA APPAREL journal." }, { property: "og:title", content: "Story — VELOURA APPAREL Journal" }, { property: "og:description", content: "Fashion stories from the VELOURA APPAREL journal." }, { property: "og:type", content: "article" }, { name: "twitter:card", content: "summary_large_image" }, { name: "robots", content: "noindex" }] };
     }
     return {
       meta: [

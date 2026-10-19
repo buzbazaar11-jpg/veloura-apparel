@@ -22,4 +22,9 @@ describe("strict shopping departments", () => {
     strictEqual(resolveProductAudience({ category: "Womens", name: "Shirt" }, "Men"), "Womens");
     strictEqual(resolveProductAudience({ category: "Shirts", features: ["Kids"] }, "Men"), "Kids");
   });
+  test("unisex and unknown products do not leak into a department", () => {
+    strictEqual(resolveProductAudience({ gender: "Unisex" }, "Men"), "");
+    strictEqual(resolveProductAudience({ name: "Plain shirt" }), "");
+    strictEqual(resolveProductAudience({ name: "Girls dress" }), "Kids");
+  });
 });
