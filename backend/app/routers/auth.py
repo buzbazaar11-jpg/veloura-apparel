@@ -182,6 +182,14 @@ def login(c: LoginRequest, db: Session = Depends(get_db)):
     if not u or not verify_password(c.password, u.password_hash):
         raise HTTPException(401, "Invalid email or password")
 
+    # Admin and staff accounts should NEVER be locked out by customer email verification OTP
+    roles = user_roles(db, u.id)
+    if any(r in ("admin", "staff") for r in roles):
+        if not u.is_verified:
+            u.is_verified = True
+            db.commit()
+        return _session(db, u)
+
     # If user hasn't verified their account yet, send fresh OTP and require verification
     if not u.is_verified:
         otp = _generate_otp()

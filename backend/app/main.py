@@ -26,7 +26,7 @@ ADMIN_HTML = os.path.join(os.path.dirname(__file__), "admin_panel", "index.html"
 @app.get("/admin", include_in_schema=False)
 @app.get("/admin/{path:path}", include_in_schema=False)
 def admin_panel(path: str = ""):
-    return FileResponse(ADMIN_HTML)
+    return FileResponse(ADMIN_HTML, headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache"})
 
 
 @app.get("/", include_in_schema=False)
