@@ -526,11 +526,7 @@ export const articles: Article[] = [
   },
 ];
 
-export const heroSlides = [
-  { label: "THE MEN'S EDIT / AW26", headline: "GOOD STYLE. EVERY DAY.", product: "VEL0URA APPAREL men's jacket", text: "Clean tees. Easy layers. Better everyday fits. Find your next look, from weekday to weekend.", cta: "SHOP MEN'S EDIT", ctaPath: "/shop" as const, image: campaignOne },
-  { label: "MEN'S NEW ARRIVALS", headline: "YOUR NEXT EVERYDAY FIT.", product: "VEL0URA APPAREL men's shirts", text: "Relaxed shirts and considered layers. Pieces that work together, without overthinking it.", cta: "SHOP NEW ARRIVALS", ctaPath: "/new-arrivals" as const, image: campaignTwo },
-  { label: "THE MEN'S SALE EDIT", headline: "BETTER FITS. LESS SPEND.", product: "VEL0URA APPAREL menswear", text: "Save up to 30% on selected men's styles. Discover the pieces and see your savings before checkout.", cta: "SHOP THE DEALS", ctaPath: "/sale" as const, image: campaignOne },
-];export const storeConfig = {
+export const storeConfig = {
   currency: "PKR",
   freeShippingThreshold: 15000,
   standardShipping: 250,
@@ -627,58 +623,4 @@ export function getProductBySlug(
   slug: string
 ): Product | undefined {
   return products.find((product) => product.slug === slug);
-}
-
-// Recommend products with matching tags or moods.
-export function recommendProducts(
-  product: Product | null | undefined,
-  limit = 4
-): Product[] {
-  if (!product || !Number.isFinite(limit) || limit <= 0) {
-    return [];
-  }
-
-  const productTags = Array.isArray(product.tags)
-    ? product.tags
-    : [];
-
-  return products
-    .filter(
-      (candidate) =>
-        candidate &&
-        candidate.id !== product.id
-    )
-    .map((candidate) => {
-      const candidateTags = Array.isArray(candidate.tags)
-        ? candidate.tags
-        : [];
-
-      const matchingTags = candidateTags.filter((tag) =>
-        productTags.includes(tag)
-      ).length;
-
-      const matchingMood =
-        candidate.mood === product.mood ? 2 : 0;
-
-      return {
-        candidate,
-        score: matchingTags + matchingMood,
-      };
-    })
-    .sort(
-      (a, b) =>
-        b.score - a.score ||
-        productPrice(a.candidate) - productPrice(b.candidate)
-    )
-    .slice(0, Math.floor(limit))
-    .map(({ candidate }) => candidate);
-}
-
-// Get products matching a particular mood.
-export function productsForMood(
-  mood: Product["mood"]
-): Product[] {
-  return products
-    .filter((product) => product && product.mood === mood)
-    .slice(0, 6);
 }

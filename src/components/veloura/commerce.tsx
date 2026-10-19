@@ -3,6 +3,7 @@ import { MobileShoppingNav } from "./mobile-shopping-nav";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { CustomerExtras, ShoppingConfidence } from "./customer-confidence";
+import { Magnetic, EditorialImage } from "./luxury-interactions";
 import { CouponInput, Price, Rating, QuickAdd, LiveReviews, ReviewForm } from "./shopping-ui";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
@@ -149,6 +150,22 @@ export function Footer() {
           </div>
           {done ? <p className="mt-3 text-sm text-sage">You are now part of the VEL0URA APPAREL world.</p> : null}
         </form>
+      </div>
+      <div className="border-t border-border/60 py-6 px-5 sm:px-8 lg:px-12 bg-secondary/70">
+        <div className="mx-auto max-w-[1500px] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+          <p>© {new Date().getFullYear()} VEL0URA APPAREL. All rights reserved.</p>
+          <p className="flex items-center gap-1.5 font-medium">
+            <span>Powered by</span>
+            <a
+              href="https://amenterprise.tech"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-foreground hover:text-sage transition-colors underline underline-offset-4 tracking-wide"
+            >
+              AM Enterprises
+            </a>
+          </p>
+        </div>
       </div>
     </footer>
   );
@@ -1811,23 +1828,30 @@ export function ProductDetailPage({ product }: { product: Product }) {
           <p className="mt-6 text-sm text-muted-foreground">{product.stock < 8 ? `LOW STOCK — ${product.stock} LEFT` : "IN STOCK"}</p>
           <div className="mt-6 flex items-center gap-3">
             <Quantity value={quantity} onChange={setQuantity} />
-            <Button variant="editorial" className="flex-1" onClick={() => addToCart(product, selectedSize, selectedColor, quantity)}>
-              Add to Cart
-            </Button>
+            <Magnetic className="flex-1">
+              <Button variant="editorial" className="w-full" onClick={() => addToCart(product, selectedSize, selectedColor, quantity)}>
+                Add to Cart
+              </Button>
+            </Magnetic>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-3">
-            <Button
-              variant="sage"
-              onClick={() => {
-                addToCart(product, selectedSize, selectedColor, quantity);
-                navigate({ to: "/checkout" });
-              }}
-            >
-              Buy Now
-            </Button>
-            <Button variant="outline" onClick={() => toggleWishlist(product.id)}>
-              <Heart className={wished ? "fill-current text-sage" : ""} /> Wishlist
-            </Button>
+            <Magnetic>
+              <Button
+                variant="sage"
+                className="w-full"
+                onClick={() => {
+                  addToCart(product, selectedSize, selectedColor, quantity);
+                  navigate({ to: "/checkout" });
+                }}
+              >
+                Buy Now
+              </Button>
+            </Magnetic>
+            <Magnetic>
+              <Button variant="outline" className="w-full" onClick={() => toggleWishlist(product.id)}>
+                <Heart className={wished ? "fill-current text-sage" : ""} /> Wishlist
+              </Button>
+            </Magnetic>
           </div>
           <StylistConcierge product={product} selectedSize={selectedSize} selectedColor={selectedColor} />
           <ProductAccordions product={product} />
@@ -1860,7 +1884,25 @@ export function ProductDetailPage({ product }: { product: Product }) {
 function ProductGallery({ product }: { product: Product }) {
   const [image, setImage] = useState(0);
   const [zoom, setZoom] = useState(false);
+  const [lens, setLens] = useState(false);
   const touchStart = useRef<number | null>(null);
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== "mouse" || !window.matchMedia("(hover: hover)").matches) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+    const y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
+    event.currentTarget.style.setProperty("--lens-x", `${x * 100}%`);
+    event.currentTarget.style.setProperty("--lens-y", `${y * 100}%`);
+    event.currentTarget.style.setProperty("--lens-bg-x", `${70 - x * rect.width * 2.4}px`);
+    event.currentTarget.style.setProperty("--lens-bg-y", `${70 - y * rect.height * 2.4}px`);
+    event.currentTarget.style.setProperty("--lens-bg-width", `${rect.width * 2.4}px`);
+    event.currentTarget.style.setProperty("--lens-bg-height", `${rect.height * 2.4}px`);
+    setLens(true);
+  };
+
+  const currentSrc = product.images[image] || product.images[0];
+
   return (
     <div
       onTouchStart={(event) => (touchStart.current = event.touches[0]?.clientX ?? null)}
@@ -1872,12 +1914,37 @@ function ProductGallery({ product }: { product: Product }) {
         touchStart.current = null;
       }}
     >
-      <button className="group aspect-[4/5] w-full overflow-hidden rounded-sm bg-muted focus-veloura" onClick={() => setZoom((value) => !value)} aria-label="Zoom product image">
-        <img src={product.images[image]} alt={product.name} width={1200} height={1500} className={`h-full w-full object-cover transition-transform duration-500 ${zoom ? "scale-125" : "group-hover:scale-[1.03]"}`} />
-      </button>
+      <div
+        className="editorial-image group relative aspect-[4/5] w-full overflow-hidden rounded-sm bg-muted focus-veloura cursor-crosshair select-none"
+        onPointerMove={handlePointerMove}
+        onPointerLeave={() => setLens(false)}
+        onClick={() => setZoom((value) => !value)}
+        role="button"
+        tabIndex={0}
+        aria-label="Inspect fabric weave or zoom product image"
+      >
+        <img
+          src={currentSrc}
+          alt={product.name}
+          width={1200}
+          height={1500}
+          className={`h-full w-full object-cover transition-transform duration-500 ${zoom ? "scale-125" : "group-hover:scale-[1.02]"}`}
+        />
+        <span className={`fabric-lens ${lens ? "is-active" : ""}`} aria-hidden="true">
+          <img src={currentSrc} alt="" />
+        </span>
+        <div className="absolute bottom-3 left-3 pointer-events-none rounded-full bg-background/85 px-3 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md opacity-80 group-hover:opacity-100 transition-opacity border border-border shadow-xs">
+          🔍 Hover to inspect fabric & weave
+        </div>
+      </div>
       <div className="mt-4 grid grid-cols-3 gap-3">
         {product.images.map((src, index) => (
-          <button key={src} onClick={() => setImage(index)} className={`aspect-[4/5] overflow-hidden rounded-sm focus-veloura ${index === image ? "ring-2 ring-sage" : ""}`} aria-label={`Show image ${index + 1}`}>
+          <button
+            key={src}
+            onClick={() => setImage(index)}
+            className={`aspect-[4/5] overflow-hidden rounded-sm focus-veloura transition-all ${index === image ? "ring-2 ring-sage scale-102" : "opacity-80 hover:opacity-100"}`}
+            aria-label={`Show image ${index + 1}`}
+          >
             <img src={src} alt={`${product.name} thumbnail ${index + 1}`} width={320} height={400} loading="lazy" className="h-full w-full object-cover" />
           </button>
         ))}

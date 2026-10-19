@@ -434,3 +434,50 @@ main > .pt-32,main.pt-32 { padding-top:96px; }
   transform: scale(1.05);
 }
 
+/* Luxury Magnetic Physics */
+.luxury-magnetic {
+  display: inline-block;
+  transform: translate3d(var(--magnet-x, 0px), var(--magnet-y, 0px), 0px);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+}
+
+/* Ultra-Luxury Fabric Inspection Lens */
+.editorial-image {
+  position: relative;
+  overflow: hidden;
+}
+
+.fabric-lens {
+  position: absolute;
+  top: var(--lens-y, 50%);
+  left: var(--lens-x, 50%);
+  width: 140px;
+  height: 140px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.35), inset 0 0 12px rgba(0, 0, 0, 0.2);
+  z-index: 20;
+  background-color: var(--secondary);
+}
+
+.fabric-lens.is-active {
+  opacity: 1;
+}
+
+.fabric-lens img {
+  position: absolute;
+  left: var(--lens-bg-x, 0px);
+  top: var(--lens-bg-y, 0px);
+  width: var(--lens-bg-width, 1000px);
+  height: var(--lens-bg-height, 1000px);
+  max-width: none;
+  object-fit: cover;
+}
+
+

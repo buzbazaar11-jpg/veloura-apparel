@@ -14,10 +14,11 @@ def main(email: str, password: str):
     email = email.lower().strip()
     u = db.query(M.User).filter(M.User.email == email).first()
     if not u:
-        u = M.User(email=email, password_hash=hash_password(password)); db.add(u); db.flush()
+        u = M.User(email=email, password_hash=hash_password(password), is_verified=True); db.add(u); db.flush()
         db.add(M.Profile(id=u.id, email=email))
     else:
         u.password_hash = hash_password(password)
+        u.is_verified = True
     for role in ("admin", "user"):
         if not db.query(M.UserRole).filter_by(user_id=u.id, role=role).first():
             db.add(M.UserRole(user_id=u.id, role=role))
