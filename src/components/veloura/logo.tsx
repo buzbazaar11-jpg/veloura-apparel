@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSettings } from "@/lib/api";
 import { assetUrl } from "@/lib/live-catalog";
 
@@ -12,6 +12,8 @@ interface LogoProps {
 export function Logo({ className = '', imageSrc, text, forceText = false }: LogoProps) {
   const { data: settingsData } = useSettings();
   const [imageError, setImageError] = useState(false);
+  const rawLogo = imageSrc ?? settingsData?.settings?.logo_url ?? null;
+  useEffect(() => setImageError(false), [rawLogo]);
   
   // Dynamic image support: prop imageSrc or site settings logo_url
   const activeImage = !forceText && !imageError

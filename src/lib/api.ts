@@ -268,10 +268,10 @@ export function useSettings() {
   return useQuery({
     queryKey: ["settings"],
     queryFn: () => request<{ ok: boolean; settings: SiteSettingsPayload; payment: PaymentSettingsPayload }>("/settings"),
-    staleTime: STALE_SLOW,
-    refetchInterval: apiEnabled ? POLL_SLOW : false,
+    staleTime: 2000,
+    refetchInterval: apiEnabled ? 3000 : false,
     refetchIntervalInBackground: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     enabled: apiEnabled,
     placeholderData: { ok: true, settings: {} as SiteSettingsPayload, payment: {} as PaymentSettingsPayload },
   });
