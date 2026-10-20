@@ -807,12 +807,14 @@
       gap: 16px;
       align-items: start
     }
+
     .pos-scan-bar {
       display: flex;
       gap: 10px;
       margin-bottom: 14px;
       align-items: center
     }
+
     .pos-scan-bar input {
       flex: 1;
       font-size: 15px;
@@ -822,9 +824,11 @@
       background: #EFF6FF;
       max-width: none
     }
+
     .pos-scan-bar input:focus {
-      box-shadow: 0 0 0 4px rgba(59,130,246,.15)
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, .15)
     }
+
     .pos-items {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
@@ -833,23 +837,35 @@
       overflow-y: auto;
       padding-right: 4px
     }
+
     .qrc {
       padding: 12px;
       text-align: center;
       cursor: pointer;
       transition: .15s box-shadow, .15s transform
     }
+
     .qrc:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 24px -8px rgba(15,23,42,.18)
+      box-shadow: 0 8px 24px -8px rgba(15, 23, 42, .18)
     }
+
     .qrc .qr {
       display: flex;
       justify-content: center;
       margin: 6px 0
     }
-    .qrc .qr svg { width: 96px; height: 96px }
-    .qrc svg.bc { width: 100%; height: 44px }
+
+    .qrc .qr svg {
+      width: 96px;
+      height: 96px
+    }
+
+    .qrc svg.bc {
+      width: 100%;
+      height: 44px
+    }
+
     .code {
       font-family: ui-monospace, monospace;
       font-weight: 800;
@@ -857,6 +873,7 @@
       letter-spacing: .06em;
       color: var(--in)
     }
+
     .bill-row {
       display: grid;
       grid-template-columns: 1fr auto auto;
@@ -865,11 +882,13 @@
       padding: 10px 0;
       border-bottom: 1px dashed var(--line)
     }
+
     .qty {
       display: flex;
       align-items: center;
       gap: 4px
     }
+
     .qty button {
       width: 28px;
       height: 28px;
@@ -879,15 +898,30 @@
       display: grid;
       place-items: center
     }
-    .qty b { min-width: 22px; text-align: center }
+
+    .qty b {
+      min-width: 22px;
+      text-align: center
+    }
+
     .bill-panel {
       position: sticky;
       top: 78px;
       max-height: calc(100vh - 100px);
       overflow-y: auto
     }
-    .bill-panel .card { padding: 18px }
-    .pay-methods { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 }
+
+    .bill-panel .card {
+      padding: 18px
+    }
+
+    .pay-methods {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 10px 0
+    }
+
     .pay-methods button {
       flex: 1;
       padding: 8px;
@@ -897,17 +931,20 @@
       color: var(--mut);
       border: 1.5px solid var(--line)
     }
+
     .pay-methods button.on {
       background: var(--ink);
       color: #fff;
       border-color: var(--ink)
     }
+
     .tot-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 5px 0
     }
+
     .tot-row.big {
       font-size: 20px;
       font-weight: 800;
@@ -915,16 +952,30 @@
       border-top: 2px solid var(--line);
       margin-top: 4px
     }
-    #printArea { display: none }
+
+    #printArea {
+      display: none
+    }
 
     @media(max-width:1100px) {
-      .pos { grid-template-columns: 1fr }
-      .bill-panel { position: static }
-      .pos-items { max-height: 420px }
+      .pos {
+        grid-template-columns: 1fr
+      }
+
+      .bill-panel {
+        position: static
+      }
+
+      .pos-items {
+        max-height: 420px
+      }
     }
 
     @media print {
-      body > *:not(#printArea) { display: none !important }
+      body>*:not(#printArea) {
+        display: none !important
+      }
+
       #printArea {
         display: block !important;
         font-family: 'Courier New', monospace;
@@ -936,20 +987,95 @@
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact
       }
-      #printArea .ph { text-align: center; margin-bottom: 4mm }
-      #printArea .ph .brand { font-size: 15px; font-weight: 900; letter-spacing: .1em }
-      #printArea .ph .sub { font-size: 10px; color: #444; margin:1mm 0 }
-      #printArea .pr { display: flex; justify-content: space-between; padding: 1mm 0; gap:4mm }
-      #printArea .pr span:first-child { flex:1 }
-      #printArea .pr span:last-child { text-align:right; white-space:nowrap }
-      #printArea .pr.hd { font-weight: 700; border-bottom: 1px solid #000; margin-bottom: 1mm; font-size:10px }
-      #printArea hr { border: 0; border-top: 1px dashed #000; margin: 2.5mm 0 }
-      #printArea .tot-pr { display: flex; justify-content: space-between; padding: 1mm 0 }
-      #printArea .tot-pr.big { font-size: 14px; font-weight: 900; border-top: 2px solid #000; padding-top: 2mm; margin-top:1mm }
-      #printArea .footer { text-align: center; margin-top: 3mm; font-size: 9.5px; color: #555; border-top:1px dashed #000; padding-top:2mm }
-      #printArea .qr-wrap { display: flex; justify-content: center; margin: 2mm 0 }
-      #printArea .qr-wrap svg { width: 22mm !important; height: 22mm !important }
-      #printArea .receipt-logo { display:block; margin:0 auto 2mm; max-height:14mm; max-width:50mm; object-fit:contain }
+
+      #printArea .ph {
+        text-align: center;
+        margin-bottom: 4mm
+      }
+
+      #printArea .ph .brand {
+        font-size: 15px;
+        font-weight: 900;
+        letter-spacing: .1em
+      }
+
+      #printArea .ph .sub {
+        font-size: 10px;
+        color: #444;
+        margin: 1mm 0
+      }
+
+      #printArea .pr {
+        display: flex;
+        justify-content: space-between;
+        padding: 1mm 0;
+        gap: 4mm
+      }
+
+      #printArea .pr span:first-child {
+        flex: 1
+      }
+
+      #printArea .pr span:last-child {
+        text-align: right;
+        white-space: nowrap
+      }
+
+      #printArea .pr.hd {
+        font-weight: 700;
+        border-bottom: 1px solid #000;
+        margin-bottom: 1mm;
+        font-size: 10px
+      }
+
+      #printArea hr {
+        border: 0;
+        border-top: 1px dashed #000;
+        margin: 2.5mm 0
+      }
+
+      #printArea .tot-pr {
+        display: flex;
+        justify-content: space-between;
+        padding: 1mm 0
+      }
+
+      #printArea .tot-pr.big {
+        font-size: 14px;
+        font-weight: 900;
+        border-top: 2px solid #000;
+        padding-top: 2mm;
+        margin-top: 1mm
+      }
+
+      #printArea .footer {
+        text-align: center;
+        margin-top: 3mm;
+        font-size: 9.5px;
+        color: #555;
+        border-top: 1px dashed #000;
+        padding-top: 2mm
+      }
+
+      #printArea .qr-wrap {
+        display: flex;
+        justify-content: center;
+        margin: 2mm 0
+      }
+
+      #printArea .qr-wrap svg {
+        width: 22mm !important;
+        height: 22mm !important
+      }
+
+      #printArea .receipt-logo {
+        display: block;
+        margin: 0 auto 2mm;
+        max-height: 14mm;
+        max-width: 50mm;
+        object-fit: contain
+      }
+
       #printArea .lbl {
         display: inline-block;
         text-align: center;
@@ -959,12 +1085,40 @@
         page-break-inside: avoid;
         vertical-align: top
       }
-      #printArea .lbl .lbl-brand { font-size: 8px; font-weight: 900; letter-spacing: .1em }
-      #printArea .lbl svg { display:block; margin:0 auto }
-      #printArea .lbl svg.bc { height: 10mm }
-      #printArea .lbl .lbl-code { font-size: 8px; font-weight: 700; font-family: monospace; margin: 1mm 0 }
-      #printArea .lbl .lbl-name { font-size: 7.5px; max-width:42mm; word-break:break-word }
-      #printArea .lbl .lbl-price { font-size: 10px; font-weight: 900; margin-top:1mm }
+
+      #printArea .lbl .lbl-brand {
+        font-size: 8px;
+        font-weight: 900;
+        letter-spacing: .1em
+      }
+
+      #printArea .lbl svg {
+        display: block;
+        margin: 0 auto
+      }
+
+      #printArea .lbl svg.bc {
+        height: 10mm
+      }
+
+      #printArea .lbl .lbl-code {
+        font-size: 8px;
+        font-weight: 700;
+        font-family: monospace;
+        margin: 1mm 0
+      }
+
+      #printArea .lbl .lbl-name {
+        font-size: 7.5px;
+        max-width: 42mm;
+        word-break: break-word
+      }
+
+      #printArea .lbl .lbl-price {
+        font-size: 10px;
+        font-weight: 900;
+        margin-top: 1mm
+      }
     }
   </style>
 </head>
@@ -993,12 +1147,12 @@
     function logout() { TOKEN = null; localStorage.removeItem("va_admin_token"); render(); }
 
     const MENU = [
-      ["Overview",  [["dashboard","Dashboard","◎"],["pos","POS terminal","⌸"],["orders","Orders","▤"],["cart_leads","Leads","◌"]]],
-      ["Catalog",   [["products","Products","▦"],["collections","Collections","◫"],["categories","Categories","⌗"]]],
-      ["Marketing", [["hero_slides","Hero slides","▭"],["deals","Deals","✦"],["coupons","Coupons","%"],["popups","Popups","◳"]]],
-      ["Content",   [["reviews","Reviews","★"],["blog_posts","Journal","✎"],["faqs","FAQs","?"],["trust_sections","Trust","◇"]]],
-      ["Insights",  [["order_emails","Emails sent","✉"],["analytics_events","Analytics","∿"],["meta_event_log","Meta events","ⓜ"],["profiles","Customers","☺"],["users","Users & roles","⚑"]]],
-      ["Settings",  [["site_settings","Store settings","⚙"],["payment_settings","Payments","₨"],["pos_settings","POS & Receipt","🧾"],["meta_settings","Meta pixel","◈"]]]
+      ["Overview", [["dashboard", "Dashboard", "◎"], ["pos", "POS terminal", "⌸"], ["orders", "Orders", "▤"], ["cart_leads", "Leads", "◌"]]],
+      ["Catalog", [["products", "Products", "▦"], ["collections", "Collections", "◫"], ["categories", "Categories", "⌗"]]],
+      ["Marketing", [["hero_slides", "Hero slides", "▭"], ["deals", "Deals", "✦"], ["coupons", "Coupons", "%"], ["popups", "Popups", "◳"]]],
+      ["Content", [["reviews", "Reviews", "★"], ["blog_posts", "Journal", "✎"], ["faqs", "FAQs", "?"], ["trust_sections", "Trust", "◇"]]],
+      ["Insights", [["order_emails", "Emails sent", "✉"], ["analytics_events", "Analytics", "∿"], ["meta_event_log", "Meta events", "ⓜ"], ["profiles", "Customers", "☺"], ["users", "Users & roles", "⚑"]]],
+      ["Settings", [["site_settings", "Store settings", "⚙"], ["payment_settings", "Payments", "₨"], ["pos_settings", "POS & Receipt", "🧾"], ["meta_settings", "Meta pixel", "◈"]]]
     ];
     const LABEL = Object.fromEntries(MENU.flatMap(g => g[1]).map(([k, l]) => [k, l]));
 
@@ -1166,7 +1320,7 @@
         const q = qrcode(0, "M");
         q.addData(String(txt || "VA")); q.make();
         return q.createSvgTag({ cellSize: cell, margin: 1, scalable: true });
-      } catch(e) { return `<small style="font-size:10px;color:#999">${esc(String(txt))}</small>`; }
+      } catch (e) { return `<small style="font-size:10px;color:#999">${esc(String(txt))}</small>`; }
     };
 
     // Barcode SVG via JsBarcode lib (always uses VA code for barcode)
@@ -1205,7 +1359,7 @@
             <div class="pos-scan-bar">
               <input id="scan" placeholder="🔍  Barcode scan / type VA- code or name…" autocomplete="off" autofocus>
               ${salesmen.length ? `<select id="sman" title="Salesman" style="max-width:160px">
-                ${salesmen.map(s => `<option ${s===POS_SALESMAN?"selected":""}>${esc(s)}</option>`).join("")}
+                ${salesmen.map(s => `<option ${s === POS_SALESMAN ? "selected" : ""}>${esc(s)}</option>`).join("")}
               </select>` : `<input id="smanInp" placeholder="Salesman name" style="max-width:150px" value="${esc(POS_SALESMAN)}">`}
               <button class="ghost" id="btnLabels" title="Print all product labels">🖨 Labels</button>
             </div>
@@ -1278,7 +1432,7 @@
                 ${cfg.label_show_barcode !== false ? barSvg(p.code, 32) : ""}
                 <div class="code" style="margin-top:4px">${esc(p.code)}</div>
                 <b style="display:block;margin-top:3px;font-size:12px;line-height:1.3">${esc(p.name)}</b>
-                <div class="mut" style="font-size:11px;margin:3px 0">${esc(p.category||"")} · ${p.stock??0} in stock</div>
+                <div class="mut" style="font-size:11px;margin:3px 0">${esc(p.category || "")} · ${p.stock ?? 0} in stock</div>
                 <div style="font-size:13px;font-weight:800;color:var(--in)">${rs(p.unit)}</div>
                 <button class="ghost sm" style="margin-top:7px;width:100%;font-size:11px" data-lbl="${esc(p.code)}">🖨 Label</button>
               </div>`).join("")
@@ -1339,7 +1493,7 @@
           ${recv && cfg.show_cash_recv !== false ? `
             <div class="tot-row"><span class="mut">Cash received</span><b>${rs(recv)}</b></div>
             ${cfg.show_change !== false ? `<div class="tot-row"><span class="mut">Change</span>
-            <b style="color:${change>=0?"var(--em2)":"var(--cr)"}">${change>=0?rs(change):"⚠ Short "+rs(-change)}</b></div>` : ""}` : ""}`;
+            <b style="color:${change >= 0 ? "var(--em2)" : "var(--cr)"}">${change >= 0 ? rs(change) : "⚠ Short " + rs(-change)}</b></div>` : ""}` : ""}`;
       };
 
       // ── Scanner: Enter = add ──
@@ -1350,7 +1504,7 @@
         // Strip URL if someone scans a full URL QR
         const codeFromUrl = v.includes("/PRODUCT/") ? "VA-" + v.split("/").pop().toUpperCase() : v;
         const exact = items.find(p => p.code === v || p.code === codeFromUrl);
-        const list = items.filter(p => p.code.includes(v) || (p.name||"").toUpperCase().includes(v));
+        const list = items.filter(p => p.code.includes(v) || (p.name || "").toUpperCase().includes(v));
         const hit = exact || (list.length === 1 ? list[0] : null);
         if (hit) { addItem(hit.code); e.target.value = ""; drawItems(); }
         else toast(list.length > 1 ? "Multiple matches — click one" : "Product not found");
@@ -1374,8 +1528,8 @@
         const t = totals();
         const no = "VA-POS-" + Date.now().toString(36).toUpperCase().slice(-6);
         const now = new Date();
-        const dateStr = now.toLocaleDateString("en-PK", { day:"2-digit", month:"short", year:"numeric" });
-        const timeStr = now.toLocaleTimeString("en-PK", { hour:"2-digit", minute:"2-digit" });
+        const dateStr = now.toLocaleDateString("en-PK", { day: "2-digit", month: "short", year: "numeric" });
+        const timeStr = now.toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit" });
         const recv = Number($("#recv")?.value) || 0;
         const customer = $("#cust")?.value?.trim() || "Walk-in";
         const salesman = getSalesman();
@@ -1383,7 +1537,7 @@
         $("#printArea").innerHTML = `
           <div class="ph">
             ${cfg.logo_url ? `<img src="${esc(cfg.logo_url)}" style="height:14mm;margin-bottom:2mm;display:block;margin-left:auto;margin-right:auto">` : ""}
-            <div class="brand">${esc(cfg.store_name||"VELOURA APPAREL")}</div>
+            <div class="brand">${esc(cfg.store_name || "VELOURA APPAREL")}</div>
             ${cfg.store_tagline ? `<div class="sub">${esc(cfg.store_tagline)}</div>` : ""}
             ${cfg.store_address ? `<div class="sub">${esc(cfg.store_address)}</div>` : ""}
             ${cfg.store_phone ? `<div class="sub">📞 ${esc(cfg.store_phone)}</div>` : ""}
@@ -1400,14 +1554,14 @@
           <div class="pr hd"><span>Item</span><span>Qty</span><span>Total</span></div>
           ${BILL.map(l => `
             <div class="pr"><span>${esc(l.name)}<br><small style="opacity:.7">${esc(l.code)} · ${rs(l.unit)}</small></span>
-            <span style="text-align:center">${l.qty}</span><span>${rs(l.unit*l.qty)}</span></div>
+            <span style="text-align:center">${l.qty}</span><span>${rs(l.unit * l.qty)}</span></div>
           `).join("")}
           <hr>
           <div class="tot-pr"><span>Subtotal</span><span>${rs(t.sub)}</span></div>
           ${t.d && cfg.show_discount !== false ? `<div class="tot-pr"><span>Discount</span><span>−${rs(t.d)}</span></div>` : ""}
           <div class="tot-pr big"><span>TOTAL</span><span>${rs(t.total)}</span></div>
           ${recv && cfg.show_cash_recv !== false ? `<div class="tot-pr"><span>Cash</span><span>${rs(recv)}</span></div>` : ""}
-          ${recv && cfg.show_change !== false ? `<div class="tot-pr"><span>Change</span><span>${rs(Math.max(0,recv-t.total))}</span></div>` : ""}
+          ${recv && cfg.show_change !== false ? `<div class="tot-pr"><span>Change</span><span>${rs(Math.max(0, recv - t.total))}</span></div>` : ""}
           <hr>
           ${cfg.receipt_note ? `<div style="text-align:center;margin:2mm 0;font-size:11px">${esc(cfg.receipt_note)}</div>` : ""}
           ${cfg.show_footer_qr !== false ? `<div class="qr-wrap">${qrSvg(no, 2)}</div>` : ""}
@@ -1431,12 +1585,12 @@
       const widthMm = cfg.label_paper_width_mm || 50;
       $("#printArea").innerHTML = list.map(p => `
         <div class="lbl" style="width:${widthMm}mm">
-          ${cfg.label_show_logo !== false ? `<div class="lbl-brand">${esc((cfg.store_name||"VELOURA APPAREL").split(" ")[0])}</div>` : ""}
+          ${cfg.label_show_logo !== false ? `<div class="lbl-brand">${esc((cfg.store_name || "VELOURA APPAREL").split(" ")[0])}</div>` : ""}
           ${cfg.label_show_qr !== false ? `<div>${qrSvg(qrContent(p), 2)}</div>` : ""}
           ${cfg.label_show_barcode !== false ? barSvg(p.code, 28) : ""}
           <div class="lbl-code">${esc(p.code)}</div>
-          <div class="lbl-name">${esc((p.name||"").slice(0,28))}</div>
-          ${cfg.label_show_price !== false ? `<div class="lbl-price">${rs(Number(p.sale_price||p.price)||0)}</div>` : ""}
+          <div class="lbl-name">${esc((p.name || "").slice(0, 28))}</div>
+          ${cfg.label_show_price !== false ? `<div class="lbl-price">${rs(Number(p.sale_price || p.price) || 0)}</div>` : ""}
         </div>`).join("");
       window.print();
     }
@@ -1514,7 +1668,7 @@
         try {
           const cfgRes = await api("/settings/pos_settings");
           POS_CFG = cfgRes.row || {};
-        } catch(e) {}
+        } catch (e) { }
       }
       const cfg = POS_CFG || {};
       const dateStr = new Date(o.created_at || Date.now()).toLocaleDateString();
@@ -1753,7 +1907,7 @@
             $("#m_sel_status").value = "confirmed";
             btnApprove.style.display = "none";
             if (window.REFRESH_ORDERS) window.REFRESH_ORDERS();
-          } catch(e) {
+          } catch (e) {
             toast("Error: " + e.message);
             btnApprove.disabled = false;
             btnApprove.textContent = "✓ Approve Order";
@@ -1772,7 +1926,7 @@
           toast("Status updated to " + newSt);
           if (btnApprove && newSt !== "pending") btnApprove.style.display = "none";
           if (window.REFRESH_ORDERS) window.REFRESH_ORDERS();
-        } catch(e) { toast("Error: " + e.message); }
+        } catch (e) { toast("Error: " + e.message); }
       };
 
       // Bind Tracking
@@ -1785,7 +1939,7 @@
           o.tracking_number = tracking;
           toast("Tracking information saved!");
           if (window.REFRESH_ORDERS) window.REFRESH_ORDERS();
-        } catch(e) { toast("Error: " + e.message); }
+        } catch (e) { toast("Error: " + e.message); }
       };
 
       // Bind Resend Email
@@ -1795,7 +1949,7 @@
         try {
           await api(`/admin/orders/${o.id}/email`, { method: "POST", body: JSON.stringify({ template: t }) });
           toast("Email queued to " + o.customer_email);
-        } catch(e) { toast("Error: " + e.message); }
+        } catch (e) { toast("Error: " + e.message); }
       };
     }
 
@@ -1842,7 +1996,7 @@
           if (o) o.status = "confirmed";
           toast(`Order #${o?.order_number || id} approved & confirmed!`);
           if (window.REFRESH_ORDERS) window.REFRESH_ORDERS();
-        } catch(e) {
+        } catch (e) {
           toast("Error: " + e.message);
           b.disabled = false;
           b.textContent = "✓ Approve";
@@ -1899,7 +2053,7 @@
           all.length = 0;
           all.push(...res.orders);
           draw();
-        } catch(e) {}
+        } catch (e) { }
       };
       $("#main").innerHTML = `<div class="bar"><input id="oq" placeholder="Search order #, name, phone…"></div><div class="tabs">${["", ...STATUSES].map(s => `<button data-f="${s}" class="${s === OF ? "on" : ""}">${s || "All"} · ${s ? all.filter(o => o.status === s).length : all.length}</button>`).join("")}</div><div class="tw" id="otbl"></div>`;
       $$("[data-f]").forEach(b => b.onclick = () => { OF = b.dataset.f; $$("[data-f]").forEach(x => x.classList.toggle("on", x === b)); draw(); });
@@ -2093,25 +2247,25 @@
     })();
 
     /* ── helpers ── */
-    const DATE_COLS = new Set(["starts_at","ends_at","expires_at","published_at","feature_ends_at","estimated_delivery","last_sync_at"]);
-    const SKIP_COLS = new Set(["id","created_at","updated_at","used_count","purchase_event_id","idempotency_key","utm_source","utm_medium","utm_campaign","utm_content","utm_term","fbclid","fbp","fbc","attribution","status_history"]);
-    const TEXTAREA_COLS = new Set(["description","content","body","answer","message","notes","excerpt","seo_description","address","payment_note","warranty_note"]);
-    const JSON_ARRAY_COLS = new Set(["gallery","videos","images","colors","sizes","features","top_notes","heart_notes","base_notes","bullets","marquee_items","featured_in","nav_links","footer_links","salesman_list"]);
-    const IMG_COLS = new Set(["image_url","logo_url","avatar_url","feature_image_url","hero_video_url","video_wrist_url","video_showcase_url","video_ugc_url"]);
+    const DATE_COLS = new Set(["starts_at", "ends_at", "expires_at", "published_at", "feature_ends_at", "estimated_delivery", "last_sync_at"]);
+    const SKIP_COLS = new Set(["id", "created_at", "updated_at", "used_count", "purchase_event_id", "idempotency_key", "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbclid", "fbp", "fbc", "attribution", "status_history"]);
+    const TEXTAREA_COLS = new Set(["description", "content", "body", "answer", "message", "notes", "excerpt", "seo_description", "address", "payment_note", "warranty_note"]);
+    const JSON_ARRAY_COLS = new Set(["gallery", "videos", "images", "colors", "sizes", "features", "top_notes", "heart_notes", "base_notes", "bullets", "marquee_items", "featured_in", "nav_links", "footer_links", "salesman_list"]);
+    const IMG_COLS = new Set(["image_url", "logo_url", "avatar_url", "feature_image_url", "hero_video_url", "video_wrist_url", "video_showcase_url", "video_ugc_url"]);
 
     function fmtDateForInput(v, dt = false) {
       if (!v) return "";
-      try { const d = new Date(v); return dt ? d.toISOString().slice(0,16) : d.toISOString().slice(0,10); } catch { return ""; }
+      try { const d = new Date(v); return dt ? d.toISOString().slice(0, 16) : d.toISOString().slice(0, 10); } catch { return ""; }
     }
 
     /* ── Tag-chip input for JSON arrays ── */
     function buildTagInput(id, arr) {
-      let items = Array.isArray(arr) ? [...arr] : (arr ? String(arr).split(",").map(x=>x.trim()).filter(Boolean) : []);
+      let items = Array.isArray(arr) ? [...arr] : (arr ? String(arr).split(",").map(x => x.trim()).filter(Boolean) : []);
       const wrap = document.createElement("div");
       wrap.className = "tag-wrap"; wrap.id = id;
       wrap.dataset.kind = "tags";
       const render = () => {
-        wrap.innerHTML = items.map((t,i)=>`<span class="tag">${esc(t)}<button type="button" data-ri="${i}">×</button></span>`).join("");
+        wrap.innerHTML = items.map((t, i) => `<span class="tag">${esc(t)}<button type="button" data-ri="${i}">×</button></span>`).join("");
         const inp = document.createElement("input");
         inp.placeholder = "Add item, press Enter";
         inp.onkeydown = e => {
@@ -2122,7 +2276,7 @@
           }
         };
         wrap.appendChild(inp);
-        wrap.querySelectorAll("[data-ri]").forEach(b => b.onclick = () => { items.splice(Number(b.dataset.ri),1); render(); });
+        wrap.querySelectorAll("[data-ri]").forEach(b => b.onclick = () => { items.splice(Number(b.dataset.ri), 1); render(); });
         inp.focus();
       };
       render();
@@ -2141,34 +2295,34 @@
         if (!urls.length) return;
         if (multi) {
           const g = document.createElement("div"); g.className = "gal-grid";
-          urls.forEach((u,i) => { g.innerHTML += `<div class="gi"><img src="${esc(u)}"><button class="rm" data-ri="${i}" type="button">×</button></div>`; });
+          urls.forEach((u, i) => { g.innerHTML += `<div class="gi"><img src="${esc(u)}"><button class="rm" data-ri="${i}" type="button">×</button></div>`; });
           wrap.insertBefore(g, wrap.querySelector(".img-up"));
-          g.querySelectorAll("[data-ri]").forEach(b => b.onclick = () => { urls.splice(Number(b.dataset.ri),1); renderPrev(); });
+          g.querySelectorAll("[data-ri]").forEach(b => b.onclick = () => { urls.splice(Number(b.dataset.ri), 1); renderPrev(); });
         } else {
           const d = document.createElement("div"); d.className = "img-prev";
           d.innerHTML = `<img src="${esc(urls[0])}"><button class="rm" type="button">×</button>`;
-          d.querySelector(".rm").onclick = () => { urls=[]; renderPrev(); };
+          d.querySelector(".rm").onclick = () => { urls = []; renderPrev(); };
           wrap.insertBefore(d, wrap.querySelector(".img-up"));
         }
       };
 
       const upDiv = document.createElement("div"); upDiv.className = "img-up";
-      upDiv.innerHTML = `<input type="file" accept="image/*,video/*" ${multi?"multiple":""}><div class="ico">🖼</div><div class="lbl"><b>Click to upload</b> or drag & drop<br><span style="font-size:11px">JPG, PNG, WebP, GIF</span></div>`;
+      upDiv.innerHTML = `<input type="file" accept="image/*,video/*" ${multi ? "multiple" : ""}><div class="ico">🖼</div><div class="lbl"><b>Click to upload</b> or drag & drop<br><span style="font-size:11px">JPG, PNG, WebP, GIF</span></div>`;
       const fileInp = upDiv.querySelector("input");
-      upDiv.onclick = e => { if(e.target !== fileInp) fileInp.click(); };
+      upDiv.onclick = e => { if (e.target !== fileInp) fileInp.click(); };
       fileInp.onchange = async () => {
         upDiv.innerHTML = `<div class="ico">⏳</div><div class="lbl">Uploading…</div>`;
         try {
           for (const file of fileInp.files) {
             const fd = new FormData(); fd.append("file", file);
-            const {url} = await api("/admin/upload",{method:"POST",body:fd});
+            const { url } = await api("/admin/upload", { method: "POST", body: fd });
             if (multi) urls.push(url); else urls = [url];
           }
           toast("Uploaded ✓");
-        } catch(e) { toast("Upload failed: "+e.message); }
-        upDiv.innerHTML = `<input type="file" accept="image/*,video/*" ${multi?"multiple":""}><div class="ico">🖼</div><div class="lbl"><b>Click to upload</b> or drag & drop</div>`;
+        } catch (e) { toast("Upload failed: " + e.message); }
+        upDiv.innerHTML = `<input type="file" accept="image/*,video/*" ${multi ? "multiple" : ""}><div class="ico">🖼</div><div class="lbl"><b>Click to upload</b> or drag & drop</div>`;
         upDiv.querySelector("input").onchange = fileInp.onchange;
-        upDiv.onclick = e => { if(e.target!==upDiv.querySelector("input")) upDiv.querySelector("input").click(); };
+        upDiv.onclick = e => { if (e.target !== upDiv.querySelector("input")) upDiv.querySelector("input").click(); };
         renderPrev();
       };
 
@@ -2184,8 +2338,8 @@
       const wrap = document.createElement("div"); wrap.className = "star-pick"; wrap.id = id; wrap.dataset.kind = "stars";
       let cur = Number(val) || 5;
       const render = () => {
-        wrap.innerHTML = [1,2,3,4,5].map(n=>`<button type="button" class="${n<=cur?"on":""}" data-v="${n}">★</button>`).join("");
-        wrap.querySelectorAll("button").forEach(b => { b.onmouseenter=()=>{ wrap.querySelectorAll("button").forEach((x,i)=>x.classList.toggle("on",i<Number(b.dataset.v))); }; b.onmouseleave=render; b.onclick=()=>{ cur=Number(b.dataset.v); render(); }; });
+        wrap.innerHTML = [1, 2, 3, 4, 5].map(n => `<button type="button" class="${n <= cur ? "on" : ""}" data-v="${n}">★</button>`).join("");
+        wrap.querySelectorAll("button").forEach(b => { b.onmouseenter = () => { wrap.querySelectorAll("button").forEach((x, i) => x.classList.toggle("on", i < Number(b.dataset.v))); }; b.onmouseleave = render; b.onclick = () => { cur = Number(b.dataset.v); render(); }; });
       };
       render();
       wrap._getVal = () => cur;
@@ -2195,216 +2349,238 @@
     /* ── MODULE-SPECIFIC FORM LAYOUTS ── */
     const FORMS = {
       products: (row) => [
-        { title:"Basic Info", cols:"half", fields:[
-          {n:"name",label:"Product name",req:true}, {n:"brand",label:"Brand"}, {n:"slug",label:"URL slug",hint:"auto-set if blank"},
-          {n:"category",label:"Category"}, {n:"collection",label:"Collection"}, {n:"product_type",label:"Type",kind:"select",opts:["watch","perfume","apparel","accessory"]},
-          {n:"badge",label:"Badge (e.g. New, Hot)"}
-        ]},
-        { title:"Pricing & Stock", cols:"third", fields:[
-          {n:"price",label:"Price (Rs)",req:true,kind:"num"}, {n:"sale_price",label:"Sale price",kind:"num"}, {n:"compare_at",label:"Compare at",kind:"num"},
-          {n:"stock",label:"Stock qty",kind:"int"}, {n:"rating",label:"Rating",kind:"num"}, {n:"sort_order",label:"Sort order",kind:"int"}
-        ]},
-        { title:"Media", cols:"full", fields:[
-          {n:"image_url",label:"Main image",kind:"img"}, {n:"gallery",label:"Gallery images (multiple)",kind:"gallery"}
-        ]},
-        { title:"Description & SEO", cols:"full", fields:[
-          {n:"description",label:"Description",kind:"textarea-tall"},
-          {n:"seo_title",label:"SEO title"},{n:"seo_description",label:"SEO description",kind:"textarea"},{n:"seo_keywords",label:"SEO keywords"}
-        ]},
-        { title:"Variants", cols:"half", fields:[
-          {n:"colors",label:"Colors",kind:"tags"}, {n:"sizes",label:"Sizes",kind:"tags"}, {n:"features",label:"Features",kind:"tags"}
-        ]},
-        { title:"Status", cols:"third", fields:[
-          {n:"active",label:"Active (visible in store)",kind:"bool"}, {n:"featured",label:"Featured",kind:"bool"}, {n:"new_arrival",label:"New Arrival",kind:"bool"}
-        ]}
+        {
+          title: "Basic Info", cols: "half", fields: [
+            { n: "name", label: "Product name", req: true }, { n: "brand", label: "Brand" }, { n: "slug", label: "URL slug", hint: "auto-set if blank" },
+            { n: "category", label: "Category" }, { n: "collection", label: "Collection" }, { n: "product_type", label: "Type", kind: "select", opts: ["watch", "perfume", "apparel", "accessory"] },
+            { n: "badge", label: "Badge (e.g. New, Hot)" }
+          ]
+        },
+        {
+          title: "Pricing & Stock", cols: "third", fields: [
+            { n: "price", label: "Price (Rs)", req: true, kind: "num" }, { n: "sale_price", label: "Sale price", kind: "num" }, { n: "compare_at", label: "Compare at", kind: "num" },
+            { n: "stock", label: "Stock qty", kind: "int" }, { n: "rating", label: "Rating", kind: "num" }, { n: "sort_order", label: "Sort order", kind: "int" }
+          ]
+        },
+        {
+          title: "Media", cols: "full", fields: [
+            { n: "image_url", label: "Main image", kind: "img" }, { n: "gallery", label: "Gallery images (multiple)", kind: "gallery" }
+          ]
+        },
+        {
+          title: "Description & SEO", cols: "full", fields: [
+            { n: "description", label: "Description", kind: "textarea-tall" },
+            { n: "seo_title", label: "SEO title" }, { n: "seo_description", label: "SEO description", kind: "textarea" }, { n: "seo_keywords", label: "SEO keywords" }
+          ]
+        },
+        {
+          title: "Variants", cols: "half", fields: [
+            { n: "colors", label: "Colors", kind: "tags" }, { n: "sizes", label: "Sizes", kind: "tags" }, { n: "features", label: "Features", kind: "tags" }
+          ]
+        },
+        {
+          title: "Status", cols: "third", fields: [
+            { n: "active", label: "Active (visible in store)", kind: "bool" }, { n: "featured", label: "Featured", kind: "bool" }, { n: "new_arrival", label: "New Arrival", kind: "bool" }
+          ]
+        }
       ],
       collections: (row) => [
-        { title:"Collection Details", cols:"half", fields:[
-          {n:"name",label:"Collection name",req:true},{n:"slug",label:"URL slug"},{n:"tagline",label:"Tagline"},{n:"sort_order",label:"Sort order",kind:"int"}
-        ]},
-        { title:"Cover Image", cols:"full", fields:[{n:"image_url",label:"Cover image",kind:"img"}]},
-        { title:"Status", cols:"full", fields:[{n:"active",label:"Active",kind:"bool"}]}
+        {
+          title: "Collection Details", cols: "half", fields: [
+            { n: "name", label: "Collection name", req: true }, { n: "slug", label: "URL slug" }, { n: "tagline", label: "Tagline" }, { n: "sort_order", label: "Sort order", kind: "int" }
+          ]
+        },
+        { title: "Cover Image", cols: "full", fields: [{ n: "image_url", label: "Cover image", kind: "img" }] },
+        { title: "Status", cols: "full", fields: [{ n: "active", label: "Active", kind: "bool" }] }
       ],
       categories: (row) => [
-        { title:"Category Details", cols:"half", fields:[
-          {n:"name",label:"Name",req:true},{n:"slug",label:"URL slug"},{n:"description",label:"Description",kind:"textarea"},{n:"sort_order",label:"Sort order",kind:"int"}
-        ]},
-        { title:"Category Image", cols:"full", fields:[{n:"image_url",label:"Image",kind:"img"}]},
-        { title:"Status", cols:"full", fields:[{n:"active",label:"Active",kind:"bool"}]}
+        {
+          title: "Category Details", cols: "half", fields: [
+            { n: "name", label: "Name", req: true }, { n: "slug", label: "URL slug" }, { n: "description", label: "Description", kind: "textarea" }, { n: "sort_order", label: "Sort order", kind: "int" }
+          ]
+        },
+        { title: "Category Image", cols: "full", fields: [{ n: "image_url", label: "Image", kind: "img" }] },
+        { title: "Status", cols: "full", fields: [{ n: "active", label: "Active", kind: "bool" }] }
       ],
       hero_slides: (row) => [
-        { title:"Slide Content", cols:"half", fields:[
-          {n:"title",label:"Headline",req:true},{n:"eyebrow",label:"Eyebrow label"},{n:"title_accent",label:"Accent word"},
-          {n:"description",label:"Body text",kind:"textarea"},{n:"cta_label",label:"CTA button text"},{n:"cta_href",label:"CTA link"}
-        ]},
-        { title:"Slide Image / Video", cols:"full", fields:[
-          {n:"image_url",label:"Background image",kind:"img"},{n:"video_url",label:"Background video URL (optional)"}
-        ]},
-        { title:"Settings", cols:"third", fields:[
-          {n:"sort_order",label:"Order",kind:"int"},{n:"active",label:"Active",kind:"bool"}
-        ]}
+        {
+          title: "Slide Content", cols: "half", fields: [
+            { n: "title", label: "Headline", req: true }, { n: "eyebrow", label: "Eyebrow label" }, { n: "title_accent", label: "Accent word" },
+            { n: "description", label: "Body text", kind: "textarea" }, { n: "cta_label", label: "CTA button text" }, { n: "cta_href", label: "CTA link" }
+          ]
+        },
+        {
+          title: "Slide Image / Video", cols: "full", fields: [
+            { n: "image_url", label: "Background image", kind: "img" }, { n: "video_url", label: "Background video URL (optional)" }
+          ]
+        },
+        {
+          title: "Settings", cols: "third", fields: [
+            { n: "sort_order", label: "Order", kind: "int" }, { n: "active", label: "Active", kind: "bool" }
+          ]
+        }
       ],
       deals: (row) => [
-        { title:"Deal Info", cols:"half", fields:[
-          {n:"title",label:"Title",req:true},{n:"slug",label:"URL slug"},{n:"subtitle",label:"Subtitle"},{n:"badge",label:"Badge"},
-          {n:"description",label:"Description",kind:"textarea"},{n:"code",label:"Coupon code (optional)"}
-        ]},
-        { title:"Discount & CTA", cols:"half", fields:[
-          {n:"discount_percent",label:"Discount %",kind:"int"},{n:"cta_label",label:"Button label"},{n:"cta_href",label:"Button link"}
-        ]},
-        { title:"Schedule", cols:"half", fields:[
-          {n:"starts_at",label:"Starts at",kind:"datetime"},{n:"ends_at",label:"Ends at",kind:"datetime"}
-        ]},
-        { title:"Banner Image", cols:"full", fields:[{n:"image_url",label:"Banner image",kind:"img"}]},
-        { title:"Status", cols:"full", fields:[{n:"active",label:"Active",kind:"bool"},{n:"sort_order",label:"Sort order",kind:"int"}]}
+        {
+          title: "Deal Info", cols: "half", fields: [
+            { n: "title", label: "Title", req: true }, { n: "slug", label: "URL slug" }, { n: "subtitle", label: "Subtitle" }, { n: "badge", label: "Badge" },
+            { n: "description", label: "Description", kind: "textarea" }, { n: "code", label: "Coupon code (optional)" }
+          ]
+        },
+        {
+          title: "Discount & CTA", cols: "half", fields: [
+            { n: "discount_percent", label: "Discount %", kind: "int" }, { n: "cta_label", label: "Button label" }, { n: "cta_href", label: "Button link" }
+          ]
+        },
+        {
+          title: "Schedule", cols: "half", fields: [
+            { n: "starts_at", label: "Starts at", kind: "datetime" }, { n: "ends_at", label: "Ends at", kind: "datetime" }
+          ]
+        },
+        { title: "Banner Image", cols: "full", fields: [{ n: "image_url", label: "Banner image", kind: "img" }] },
+        { title: "Status", cols: "full", fields: [{ n: "active", label: "Active", kind: "bool" }, { n: "sort_order", label: "Sort order", kind: "int" }] }
       ],
       coupons: (row) => [
-        { title:"Coupon Details", cols:"half", fields:[
-          {n:"code",label:"Coupon code",req:true,hint:"e.g. SAVE20"},{n:"description",label:"Description",kind:"textarea"},
-          {n:"discount_type",label:"Discount type",kind:"select",opts:["percent","fixed"]},
-          {n:"discount_value",label:"Discount value",req:true,kind:"num",hint:"% or Rs amount"},
-          {n:"min_order",label:"Min order amount",kind:"num"},{n:"usage_limit",label:"Usage limit",kind:"int",hint:"blank = unlimited"},
-          {n:"expires_at",label:"Expires at",kind:"datetime"}
-        ]},
-        { title:"Status", cols:"full", fields:[{n:"active",label:"Active",kind:"bool"}]}
+        {
+          title: "Coupon Details", cols: "half", fields: [
+            { n: "code", label: "Coupon code", req: true, hint: "e.g. SAVE20" }, { n: "description", label: "Description", kind: "textarea" },
+            { n: "discount_type", label: "Discount type", kind: "select", opts: ["percent", "fixed"] },
+            { n: "discount_value", label: "Discount value", req: true, kind: "num", hint: "% or Rs amount" },
+            { n: "min_order", label: "Min order amount", kind: "num" }, { n: "usage_limit", label: "Usage limit", kind: "int", hint: "blank = unlimited" },
+            { n: "expires_at", label: "Expires at", kind: "datetime" }
+          ]
+        },
+        { title: "Status", cols: "full", fields: [{ n: "active", label: "Active", kind: "bool" }] }
       ],
       faqs: (row) => [
-        { title:"FAQ", cols:"full", fields:[
-          {n:"question",label:"Question",req:true,kind:"textarea"},{n:"answer",label:"Answer",req:true,kind:"textarea-tall"},
-          {n:"category",label:"Category (e.g. Shipping, Returns)"},{n:"sort_order",label:"Sort order",kind:"int"},{n:"active",label:"Active",kind:"bool"}
-        ]}
+        {
+          title: "FAQ", cols: "full", fields: [
+            { n: "question", label: "Question", req: true, kind: "textarea" }, { n: "answer", label: "Answer", req: true, kind: "textarea-tall" },
+            { n: "category", label: "Category (e.g. Shipping, Returns)" }, { n: "sort_order", label: "Sort order", kind: "int" }, { n: "active", label: "Active", kind: "bool" }
+          ]
+        }
       ],
       trust_sections: (row) => [
-        { title:"Trust Item", cols:"half", fields:[
-          {n:"group_name",label:"Group",req:true},{n:"heading",label:"Heading",req:true},{n:"body",label:"Body text",kind:"textarea"},
-          {n:"icon",label:"Icon (emoji or URL)"},{n:"sort_order",label:"Sort order",kind:"int"},{n:"active",label:"Active",kind:"bool"}
-        ]},
-        { title:"Bullet Points", cols:"full", fields:[{n:"bullets",label:"Bullet points",kind:"tags"}]}
+        {
+          title: "Trust Item", cols: "half", fields: [
+            { n: "group_name", label: "Group", req: true }, { n: "heading", label: "Heading", req: true }, { n: "body", label: "Body text", kind: "textarea" },
+            { n: "icon", label: "Icon (emoji or URL)" }, { n: "sort_order", label: "Sort order", kind: "int" }, { n: "active", label: "Active", kind: "bool" }
+          ]
+        },
+        { title: "Bullet Points", cols: "full", fields: [{ n: "bullets", label: "Bullet points", kind: "tags" }] }
       ],
       popups: (row) => [
-        { title:"Popup Content", cols:"half", fields:[
-          {n:"title",label:"Title",req:true},{n:"message",label:"Message",kind:"textarea"},{n:"badge",label:"Badge"},
-          {n:"coupon_code",label:"Coupon code"},{n:"cta_label",label:"Button label"},{n:"cta_href",label:"Button link"}
-        ]},
-        { title:"Image", cols:"full", fields:[{n:"image_url",label:"Popup image",kind:"img"}]},
-        { title:"Behaviour", cols:"half", fields:[
-          {n:"trigger_type",label:"Trigger",kind:"select",opts:["delay","exit","scroll"]},
-          {n:"frequency",label:"Frequency",kind:"select",opts:["session","once","always"]},
-          {n:"delay_seconds",label:"Delay (seconds)",kind:"int"},
-          {n:"starts_at",label:"Starts at",kind:"datetime"},{n:"ends_at",label:"Ends at",kind:"datetime"},
-          {n:"sort_order",label:"Sort order",kind:"int"},{n:"active",label:"Active",kind:"bool"}
-        ]}
+        {
+          title: "Popup Content", cols: "half", fields: [
+            { n: "title", label: "Title", req: true }, { n: "message", label: "Message", kind: "textarea" }, { n: "badge", label: "Badge" },
+            { n: "coupon_code", label: "Coupon code" }, { n: "cta_label", label: "Button label" }, { n: "cta_href", label: "Button link" }
+          ]
+        },
+        { title: "Image", cols: "full", fields: [{ n: "image_url", label: "Popup image", kind: "img" }] },
+        {
+          title: "Behaviour", cols: "half", fields: [
+            { n: "trigger_type", label: "Trigger", kind: "select", opts: ["delay", "exit", "scroll"] },
+            { n: "frequency", label: "Frequency", kind: "select", opts: ["session", "once", "always"] },
+            { n: "delay_seconds", label: "Delay (seconds)", kind: "int" },
+            { n: "starts_at", label: "Starts at", kind: "datetime" }, { n: "ends_at", label: "Ends at", kind: "datetime" },
+            { n: "sort_order", label: "Sort order", kind: "int" }, { n: "active", label: "Active", kind: "bool" }
+          ]
+        }
       ],
       reviews: (row) => [
-        { title:"Review", cols:"half", fields:[
-          {n:"customer_name",label:"Customer name",req:true},{n:"customer_role",label:"Role / title"},
-          {n:"title",label:"Review title"},{n:"body",label:"Review text",kind:"textarea-tall"}
-        ]},
-        { title:"Rating", cols:"full", fields:[{n:"rating",label:"Rating (1–5)",kind:"stars"}]},
-        { title:"Status", cols:"half", fields:[
-          {n:"approved",label:"Approved (show on store)",kind:"bool"},{n:"featured",label:"Featured",kind:"bool"}
-        ]}
+        {
+          title: "Review", cols: "half", fields: [
+            { n: "customer_name", label: "Customer name", req: true }, { n: "customer_role", label: "Role / title" },
+            { n: "title", label: "Review title" }, { n: "body", label: "Review text", kind: "textarea-tall" }
+          ]
+        },
+        { title: "Rating", cols: "full", fields: [{ n: "rating", label: "Rating (1–5)", kind: "stars" }] },
+        {
+          title: "Status", cols: "half", fields: [
+            { n: "approved", label: "Approved (show on store)", kind: "bool" }, { n: "featured", label: "Featured", kind: "bool" }
+          ]
+        }
       ],
       blog_posts: (row) => [
-        { title:"Post Details", cols:"half", fields:[
-          {n:"title",label:"Title",req:true},{n:"slug",label:"URL slug"},{n:"author",label:"Author"},{n:"category",label:"Category"},
-          {n:"excerpt",label:"Excerpt",kind:"textarea"},{n:"published_at",label:"Publish date",kind:"date"}
-        ]},
-        { title:"Cover Image", cols:"full", fields:[{n:"image_url",label:"Cover image",kind:"img"}]},
-        { title:"Content (Markdown)", cols:"full", fields:[{n:"content",label:"Content",kind:"textarea-tall"}]},
-        { title:"Status", cols:"full", fields:[{n:"published",label:"Published",kind:"bool"}]}
+        {
+          title: "Post Details", cols: "half", fields: [
+            { n: "title", label: "Title", req: true }, { n: "slug", label: "URL slug" }, { n: "author", label: "Author" }, { n: "category", label: "Category" },
+            { n: "excerpt", label: "Excerpt", kind: "textarea" }, { n: "published_at", label: "Publish date", kind: "date" }
+          ]
+        },
+        { title: "Cover Image", cols: "full", fields: [{ n: "image_url", label: "Cover image", kind: "img" }] },
+        { title: "Content (Markdown)", cols: "full", fields: [{ n: "content", label: "Content", kind: "textarea-tall" }] },
+        { title: "Status", cols: "full", fields: [{ n: "published", label: "Published", kind: "bool" }] }
       ],
     };
 
-    // ── site_settings handled by singleton() with custom FORMS spec ──
-    FORMS.site_settings = (row) => [
-<<<<<<< HEAD
-      { title:"Brand Identity", cols:"half", fields:[
-        {n:"brand_name",    label:"Brand Name",    hint:"e.g. VELOURA (shown if no logo image)"},
-        {n:"brand_name_size", label:"Brand Name Size (px)", kind:"int", hint:"Font size in pixels for brand name"},
-        {n:"brand_tagline", label:"Tagline",       hint:"e.g. Modern Essentials. Everyday Style."},
-        {n:"brand_tagline_size", label:"Tagline Size (px)", kind:"int", hint:"Font size in pixels for tagline"},
-      ]},
-      { title:"Storefront Logo & Size Adjustment", cols:"half", fields:[
-        {n:"logo_url",      label:"Logo Image (Upload or URL)", kind:"img", hint:"Leave empty to use brand name text"},
-        {n:"logo_width",    label:"Logo Width (pixels)",  kind:"int", hint:"Width in pixels (e.g. 240)"},
-        {n:"logo_height",   label:"Logo Height (pixels)", kind:"int", hint:"Height in pixels (e.g. 52)"},
-=======
-      { title:"Storefront Logo & Size", cols:"half", fields:[
-        {n:"logo_url",      label:"Logo Image (Upload or URL)", kind:"img"},
-        {n:"logo_height",   label:"Logo Size (pixels)", kind:"int", hint:"Bigger number = bigger logo (e.g. 40 small, 60 medium, 90 large). Width adjusts automatically."},
->>>>>>> f53c3c8253e0cbe66d02ea962d0a8cd9029e9086
-      ]},
-      { title:"Contact Details", cols:"half", fields:[
-        {n:"contact_email",   label:"Contact Email",   hint:"e.g. contact@veloura.com"},
-        {n:"contact_phone",   label:"Contact Phone",   hint:"e.g. +92 317 371 2950"},
-        {n:"whatsapp_number", label:"WhatsApp Number", hint:"e.g. 923173712950"},
-        {n:"address",         label:"Store Address",   hint:"e.g. Lahore, Pakistan"},
-      ]},
-      { title:"Social Media Links", cols:"half", fields:[
-        {n:"instagram_url", label:"Instagram URL"},
-        {n:"facebook_url",  label:"Facebook URL"},
-        {n:"tiktok_url",    label:"TikTok URL"},
-        {n:"youtube_url",   label:"YouTube URL"},
-      ]},
-      { title:"Marquee Announcement Bar", cols:"full", fields:[
-        {n:"marquee_enabled", label:"Enable Top Announcement Marquee", kind:"bool"},
-        {n:"marquee_items",   label:"Announcement Chips", kind:"tags", hint:"Add announcement phrases as chips"},
-      ]}
-    ];
 
-    // ── pos_settings handled by singleton() with custom FORMS spec ──
-    FORMS.pos_settings = (row) => [
-      { title:"Store Header (shown on receipt & labels)", cols:"half", fields:[
-        {n:"store_name",    label:"Store name",    hint:"e.g. VELOURA APPAREL"},
-        {n:"store_tagline", label:"Tagline",        hint:"e.g. Modern Essentials. Everyday Style."},
-        {n:"store_address", label:"Address",        hint:"e.g. Shop 12, Main Market, Lahore"},
-        {n:"store_phone",   label:"Phone",          hint:"e.g. +92 317 371 2950"},
-        {n:"store_email",   label:"Email",          hint:"e.g. orders@veloura.pk"},
-        {n:"store_website", label:"Website",        hint:"e.g. www.veloura.pk"},
-      ]},
-      { title:"Logo", cols:"full", fields:[
-        {n:"logo_url", label:"Logo image (shown on receipt)", kind:"img"}
-      ]},
-      { title:"Receipt — show / hide fields", cols:"third", fields:[
-        {n:"show_receipt_no",    label:"Receipt number",    kind:"bool"},
-        {n:"show_date",          label:"Date",              kind:"bool"},
-        {n:"show_time",          label:"Time",              kind:"bool"},
-        {n:"show_salesman",      label:"Salesman name",     kind:"bool"},
-        {n:"show_customer",      label:"Customer name",     kind:"bool"},
-        {n:"show_payment_method",label:"Payment method",    kind:"bool"},
-        {n:"show_discount",      label:"Discount line",     kind:"bool"},
-        {n:"show_cash_recv",     label:"Cash received",     kind:"bool"},
-        {n:"show_change",        label:"Change amount",     kind:"bool"},
-        {n:"show_footer_qr",     label:"Footer QR code",   kind:"bool"},
-        {n:"show_barcode_on_receipt",label:"Item barcode on receipt",kind:"bool"},
-      ]},
-      { title:"Receipt — footer text", cols:"half", fields:[
-        {n:"receipt_note", label:"Thank-you note",   hint:"e.g. Thank you for shopping with us!"},
-        {n:"footer_line1", label:"Footer line 1",    hint:"e.g. Software by AM Enterprises"},
-        {n:"footer_line2", label:"Footer line 2",    hint:"e.g. +92 317 371 2950"},
-        {n:"footer_line3", label:"Footer line 3",    hint:"e.g. www.veloura.pk"},
-      ]},
-      { title:"Salesman list", cols:"full", fields:[
-        {n:"salesman_list", label:"Salesmen (one per chip — add names)", kind:"tags", hint:"These appear in the POS salesman dropdown"}
-      ]},
-      { title:"Label / Barcode settings", cols:"third", fields:[
-        {n:"label_show_logo",    label:"Show brand name",  kind:"bool"},
-        {n:"label_show_qr",      label:"Show QR code",     kind:"bool"},
-        {n:"label_show_barcode", label:"Show barcode",     kind:"bool"},
-        {n:"label_show_price",   label:"Show price",       kind:"bool"},
-        {n:"label_paper_width_mm",label:"Label width (mm)",kind:"int", hint:"40, 50 or 60"},
-      ]},
-      { title:"Smart QR — customer scan URL", cols:"full", fields:[
-        {n:"qr_product_url_base", label:"Product URL base", hint:"e.g. https://veloura.pk/product/ — customer scans QR → this URL + product slug opens in browser"}
-      ]},
-    ];
+        // ── pos_settings handled by singleton() with custom FORMS spec ──
+        FORMS.pos_settings = (row) => [
+          {
+            title: "Store Header (shown on receipt & labels)", cols: "half", fields: [
+              { n: "store_name", label: "Store name", hint: "e.g. VELOURA APPAREL" },
+              { n: "store_tagline", label: "Tagline", hint: "e.g. Modern Essentials. Everyday Style." },
+              { n: "store_address", label: "Address", hint: "e.g. Shop 12, Main Market, Lahore" },
+              { n: "store_phone", label: "Phone", hint: "e.g. +92 317 371 2950" },
+              { n: "store_email", label: "Email", hint: "e.g. orders@veloura.pk" },
+              { n: "store_website", label: "Website", hint: "e.g. www.veloura.pk" },
+            ]
+          },
+          {
+            title: "Logo", cols: "full", fields: [
+              { n: "logo_url", label: "Logo image (shown on receipt)", kind: "img" }
+            ]
+          },
+          {
+            title: "Receipt — show / hide fields", cols: "third", fields: [
+              { n: "show_receipt_no", label: "Receipt number", kind: "bool" },
+              { n: "show_date", label: "Date", kind: "bool" },
+              { n: "show_time", label: "Time", kind: "bool" },
+              { n: "show_salesman", label: "Salesman name", kind: "bool" },
+              { n: "show_customer", label: "Customer name", kind: "bool" },
+              { n: "show_payment_method", label: "Payment method", kind: "bool" },
+              { n: "show_discount", label: "Discount line", kind: "bool" },
+              { n: "show_cash_recv", label: "Cash received", kind: "bool" },
+              { n: "show_change", label: "Change amount", kind: "bool" },
+              { n: "show_footer_qr", label: "Footer QR code", kind: "bool" },
+              { n: "show_barcode_on_receipt", label: "Item barcode on receipt", kind: "bool" },
+            ]
+          },
+          {
+            title: "Receipt — footer text", cols: "half", fields: [
+              { n: "receipt_note", label: "Thank-you note", hint: "e.g. Thank you for shopping with us!" },
+              { n: "footer_line1", label: "Footer line 1", hint: "e.g. Software by AM Enterprises" },
+              { n: "footer_line2", label: "Footer line 2", hint: "e.g. +92 317 371 2950" },
+              { n: "footer_line3", label: "Footer line 3", hint: "e.g. www.veloura.pk" },
+            ]
+          },
+          {
+            title: "Salesman list", cols: "full", fields: [
+              { n: "salesman_list", label: "Salesmen (one per chip — add names)", kind: "tags", hint: "These appear in the POS salesman dropdown" }
+            ]
+          },
+          {
+            title: "Label / Barcode settings", cols: "third", fields: [
+              { n: "label_show_logo", label: "Show brand name", kind: "bool" },
+              { n: "label_show_qr", label: "Show QR code", kind: "bool" },
+              { n: "label_show_barcode", label: "Show barcode", kind: "bool" },
+              { n: "label_show_price", label: "Show price", kind: "bool" },
+              { n: "label_paper_width_mm", label: "Label width (mm)", kind: "int", hint: "40, 50 or 60" },
+            ]
+          },
+          {
+            title: "Smart QR — customer scan URL", cols: "full", fields: [
+              { n: "qr_product_url_base", label: "Product URL base", hint: "e.g. https://veloura.pk/product/ — customer scans QR → this URL + product slug opens in browser" }
+            ]
+          },
+        ];
 
-    /* ── Render one section ── */
-    function renderSection(sec, row, ro) {
-      const fields = sec.fields.map(f => renderField(f, row[f.n], ro)).join("");
-      return `<div class="msec"><div class="msec-title">${esc(sec.title)}</div><div class="mrow ${sec.cols || ""}">${fields}</div></div>`;
-    }
+        /* ── Render one section ── */
+        function renderSection(sec, row, ro) {
+        const fields = sec.fields.map(f => renderField(f, row[f.n], ro)).join("");
+        return `<div class="msec"><div class="msec-title">${esc(sec.title)}</div><div class="mrow ${sec.cols || ""}">${fields}</div></div>`;
+      }
 
     /* ── Render one field (returns HTML string for simple fields, or mounts widget) ── */
     const WIDGET_FIELDS = new Set(); // stores field names that need widget (not innerHTML)
@@ -2412,38 +2588,38 @@
     function renderField(f, v, ro) {
       const id = "f_" + f.n;
       const dis = ro || SKIP_COLS.has(f.n) ? "disabled" : "";
-      const label = `<label>${f.label || f.n.replace(/_/g," ")}${f.req?`<span class="req">*</span>`:""}</label>`;
+      const label = `<label>${f.label || f.n.replace(/_/g, " ")}${f.req ? `<span class="req">*</span>` : ""}</label>`;
       const hint = f.hint ? `<span class="hint">${esc(f.hint)}</span>` : "";
       const kind = f.kind || (DATE_COLS.has(f.n) ? "datetime" : TEXTAREA_COLS.has(f.n) ? "textarea" : JSON_ARRAY_COLS.has(f.n) ? "tags" : IMG_COLS.has(f.n) ? "img" : "text");
 
       // Widgets that need JS — mark them, render placeholder div
       if (kind === "img" || kind === "gallery" || kind === "tags" || kind === "stars") {
         WIDGET_FIELDS.add(f.n);
-        return `<div class="mf"><label>${f.label || f.n.replace(/_/g," ")}${f.req?`<span class="req">*</span>`:""}</label><div id="${id}_wrap" data-widget="${kind}" data-val='${esc(JSON.stringify(v??null))}' data-multi="${kind==="gallery"?1:""}" data-ro="${ro?1:""}"></div>${hint}</div>`;
+        return `<div class="mf"><label>${f.label || f.n.replace(/_/g, " ")}${f.req ? `<span class="req">*</span>` : ""}</label><div id="${id}_wrap" data-widget="${kind}" data-val='${esc(JSON.stringify(v ?? null))}' data-multi="${kind === "gallery" ? 1 : ""}" data-ro="${ro ? 1 : ""}"></div>${hint}</div>`;
       }
 
       let inp = "";
       if (kind === "bool") {
         const checked = v === true || v === "true" ? "checked" : "";
-        inp = `<div class="sw-wrap"><label>${esc(f.label || f.n.replace(/_/g," "))}</label><label class="sw"><input type="checkbox" id="${id}" ${checked} ${dis}><span class="sw-sl"></span></label></div>`;
+        inp = `<div class="sw-wrap"><label>${esc(f.label || f.n.replace(/_/g, " "))}</label><label class="sw"><input type="checkbox" id="${id}" ${checked} ${dis}><span class="sw-sl"></span></label></div>`;
         return `<div class="mf" data-bool="1">${inp}${hint}</div>`;
       }
       if (kind === "select") {
-        inp = `<select id="${id}" ${dis}>${(f.opts||[]).map(o=>`<option value="${esc(o)}" ${o===(v||"")?"selected":""}>${esc(o)}</option>`).join("")}</select>`;
+        inp = `<select id="${id}" ${dis}>${(f.opts || []).map(o => `<option value="${esc(o)}" ${o === (v || "") ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
       } else if (kind === "textarea" || kind === "textarea-tall") {
-        inp = `<textarea id="${id}" ${dis} class="${kind==="textarea-tall"?"tall":""}" placeholder="${esc(f.hint||f.label||f.n.replace(/_/g,' '))}">${esc(v??'')}</textarea>`;
+        inp = `<textarea id="${id}" ${dis} class="${kind === "textarea-tall" ? "tall" : ""}" placeholder="${esc(f.hint || f.label || f.n.replace(/_/g, ' '))}">${esc(v ?? '')}</textarea>`;
       } else if (kind === "date") {
-        inp = `<input type="date" id="${id}" value="${fmtDateForInput(v,false)}" ${dis}>`;
+        inp = `<input type="date" id="${id}" value="${fmtDateForInput(v, false)}" ${dis}>`;
       } else if (kind === "datetime") {
-        inp = `<input type="datetime-local" id="${id}" value="${fmtDateForInput(v,true)}" ${dis}>`;
+        inp = `<input type="datetime-local" id="${id}" value="${fmtDateForInput(v, true)}" ${dis}>`;
       } else if (kind === "num") {
-        inp = `<input type="number" id="${id}" step="any" value="${esc(v??'')}" placeholder="${esc(f.hint||'0')}" ${dis}>`;
+        inp = `<input type="number" id="${id}" step="any" value="${esc(v ?? '')}" placeholder="${esc(f.hint || '0')}" ${dis}>`;
       } else if (kind === "int") {
-        inp = `<input type="number" id="${id}" step="1" value="${esc(v??'')}" placeholder="${esc(f.hint||'0')}" ${dis}>`;
+        inp = `<input type="number" id="${id}" step="1" value="${esc(v ?? '')}" placeholder="${esc(f.hint || '0')}" ${dis}>`;
       } else if (kind === "json") {
-        inp = `<textarea id="${id}" ${dis} placeholder="JSON array or object">${esc(v==null?'':JSON.stringify(v,null,1))}</textarea>`;
+        inp = `<textarea id="${id}" ${dis} placeholder="JSON array or object">${esc(v == null ? '' : JSON.stringify(v, null, 1))}</textarea>`;
       } else {
-        inp = `<input type="text" id="${id}" value="${esc(v??'')}" placeholder="${esc(f.hint||f.label||f.n.replace(/_/g,' '))}" ${dis}>`;
+        inp = `<input type="text" id="${id}" value="${esc(v ?? '')}" placeholder="${esc(f.hint || f.label || f.n.replace(/_/g, ' '))}" ${dis}>`;
       }
       return `<div class="mf">${label}${inp}${hint}</div>`;
     }
@@ -2452,14 +2628,14 @@
     function mountWidgets() {
       document.querySelectorAll("[data-widget]").forEach(wrap => {
         const kind = wrap.dataset.widget;
-        const id = wrap.id.replace(/_wrap$/,"");
+        const id = wrap.id.replace(/_wrap$/, "");
         let val; try { val = JSON.parse(wrap.dataset.val); } catch { val = null; }
         const ro = wrap.dataset.ro === "1";
-        if (ro) { wrap.innerHTML = `<span class="mut" style="font-size:12px">${esc(String(val??''))}</span>`; return; }
+        if (ro) { wrap.innerHTML = `<span class="mut" style="font-size:12px">${esc(String(val ?? ''))}</span>`; return; }
         let widget;
         if (kind === "img") widget = buildImageUploader(id, val, false);
         else if (kind === "gallery") widget = buildImageUploader(id, val, true);
-        else if (kind === "tags") widget = buildTagInput(id, Array.isArray(val)?val:val?[val]:[]);
+        else if (kind === "tags") widget = buildTagInput(id, Array.isArray(val) ? val : val ? [val] : []);
         else if (kind === "stars") widget = buildStarRating(id, val);
         if (widget) wrap.replaceWith(widget);
       });
@@ -2520,7 +2696,7 @@
         const cols = meta.columns.filter(c => !SKIP_COLS.has(c.name));
         const fields = cols.map(c => {
           const kind = DATE_COLS.has(c.name) ? (c.name.includes("_at") ? "datetime" : "date") : TEXTAREA_COLS.has(c.name) ? "textarea" : c.kind;
-          return renderField({n:c.name, label:c.name.replace(/_/g," "), kind, req:c.required}, row[c.name], ro);
+          return renderField({ n: c.name, label: c.name.replace(/_/g, " "), kind, req: c.required }, row[c.name], ro);
         }).join("");
         bodyHtml = `<div class="msec"><div class="mrow">${fields}</div></div>`;
       }
@@ -2528,7 +2704,7 @@
       $("#mbody").innerHTML = `
         <div class="mhdr">
           <div style="display:flex;align-items:center;gap:10px">
-            <h2>${isNew?"Add new":"Edit"} ${esc(LABEL[name]||name.replace(/_/g," "))}</h2>
+            <h2>${isNew ? "Add new" : "Edit"} ${esc(LABEL[name] || name.replace(/_/g, " "))}</h2>
             <span class="badge" style="background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(236,72,153,.08));color:var(--in)">${badgeText}</span>
           </div>
           <button class="cl" id="cl" title="Close">✕</button>
@@ -2557,17 +2733,17 @@
               method: row.id ? "PUT" : "POST", body: JSON.stringify(data)
             });
             close(); toast("✓ Saved — live on store"); render();
-          } catch(e) { toast("⚠ " + e.message); btn.classList.remove("saving"); btn.textContent = "Save changes"; }
+          } catch (e) { toast("⚠ " + e.message); btn.classList.remove("saving"); btn.textContent = "Save changes"; }
         };
       }
 
       if ($("#del")) {
         $("#del").onclick = async () => {
-          if (!confirm(`Delete this ${LABEL[name]||name}? This cannot be undone.`)) return;
+          if (!confirm(`Delete this ${LABEL[name] || name}? This cannot be undone.`)) return;
           try {
             await api(`/admin/r/${name}/${row.id}`, { method: "DELETE" });
             close(); toast("Deleted"); render();
-          } catch(e) { toast(e.message); }
+          } catch (e) { toast(e.message); }
         };
       }
     }
@@ -2586,12 +2762,12 @@
         const cols = meta.columns.filter(c => !SKIP_COLS.has(c.name));
         const fields = cols.map(c => {
           const kind = DATE_COLS.has(c.name) ? "datetime" : TEXTAREA_COLS.has(c.name) ? "textarea" : IMG_COLS.has(c.name) ? "img" : JSON_ARRAY_COLS.has(c.name) ? "tags" : c.kind;
-          return renderField({n:c.name, label:c.name.replace(/_/g," "), kind, hint:""}, row[c.name], false);
+          return renderField({ n: c.name, label: c.name.replace(/_/g, " "), kind, hint: "" }, row[c.name], false);
         }).join("");
         bodyHtml = `<div class="msec"><div class="mrow">${fields}</div></div>`;
       }
 
-      $("#main").innerHTML = `<div class="card"><div class="mhdr" style="position:static;border-radius:12px 12px 0 0"><h2>${esc(LABEL[name]||name.replace(/_/g," "))}</h2></div><div class="mbody">${bodyHtml}</div><div class="mfooter" style="position:static;border-radius:0 0 12px 12px"><button id="sv" style="background:linear-gradient(135deg,var(--in),var(--pk))">Save settings</button></div></div>`;
+      $("#main").innerHTML = `<div class="card"><div class="mhdr" style="position:static;border-radius:12px 12px 0 0"><h2>${esc(LABEL[name] || name.replace(/_/g, " "))}</h2></div><div class="mbody">${bodyHtml}</div><div class="mfooter" style="position:static;border-radius:0 0 12px 12px"><button id="sv" style="background:linear-gradient(135deg,var(--in),var(--pk))">Save settings</button></div></div>`;
       mountWidgets();
 
       $("#sv").onclick = async () => {
@@ -2632,7 +2808,7 @@
           toast("✓ Settings saved — live on store");
           // Reload POS config cache if pos_settings saved
           if (name === "pos_settings") POS_CFG = out;
-        } catch(e) { toast("⚠ " + e.message); }
+        } catch (e) { toast("⚠ " + e.message); }
         btn.classList.remove("saving"); btn.textContent = "Save settings";
       };
     }
@@ -2643,7 +2819,7 @@
       const renderUsers = () => {
         const filtered = allUsers.filter(u => {
           const q = filterQ.toLowerCase();
-          const matchQ = !q || (u.full_name||"").toLowerCase().includes(q) || (u.email||"").toLowerCase().includes(q) || (u.phone||"").toLowerCase().includes(q) || (u.city||"").toLowerCase().includes(q);
+          const matchQ = !q || (u.full_name || "").toLowerCase().includes(q) || (u.email || "").toLowerCase().includes(q) || (u.phone || "").toLowerCase().includes(q) || (u.city || "").toLowerCase().includes(q);
           const matchRole = filterRole === "all" || u.roles.includes(filterRole);
           const matchVer = filterVer === "all" || (filterVer === "verified" ? u.is_verified : !u.is_verified);
           return matchQ && matchRole && matchVer;
@@ -2657,7 +2833,7 @@
         $("#main").innerHTML = `
           <div class="kpis">
             <div class="card kpi" style="--g:var(--in)"><div class="l"><span class="dot">☺</span>Registered Customers</div><b>${totalUsers}</b><small>Total customer accounts</small></div>
-            <div class="card kpi" style="--g:var(--em)"><div class="l"><span class="dot">✓</span>OTP Verified</div><b>${verifiedUsers}</b><small>${totalUsers ? Math.round(verifiedUsers/totalUsers*100) : 0}% verification rate</small></div>
+            <div class="card kpi" style="--g:var(--em)"><div class="l"><span class="dot">✓</span>OTP Verified</div><b>${verifiedUsers}</b><small>${totalUsers ? Math.round(verifiedUsers / totalUsers * 100) : 0}% verification rate</small></div>
             <div class="card kpi" style="--g:var(--co)"><div class="l"><span class="dot">▤</span>Customer Orders</div><b>${totalOrders}</b><small>Total orders linked to users</small></div>
             <div class="card kpi" style="--g:var(--am)"><div class="l"><span class="dot">₨</span>Customer Revenue</div><b>${rs(totalSpent)}</b><small>Lifetime customer volume</small></div>
           </div>
@@ -2667,15 +2843,15 @@
               <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
                 <input id="u_search" placeholder="Search by name, email, phone, city…" value="${esc(filterQ)}" style="min-width:280px">
                 <select id="u_role">
-                  <option value="all" ${filterRole==="all"?"selected":""}>All Roles</option>
-                  <option value="user" ${filterRole==="user"?"selected":""}>Customers</option>
-                  <option value="admin" ${filterRole==="admin"?"selected":""}>Admins</option>
-                  <option value="staff" ${filterRole==="staff"?"selected":""}>Staff</option>
+                  <option value="all" ${filterRole === "all" ? "selected" : ""}>All Roles</option>
+                  <option value="user" ${filterRole === "user" ? "selected" : ""}>Customers</option>
+                  <option value="admin" ${filterRole === "admin" ? "selected" : ""}>Admins</option>
+                  <option value="staff" ${filterRole === "staff" ? "selected" : ""}>Staff</option>
                 </select>
                 <select id="u_ver">
-                  <option value="all" ${filterVer==="all"?"selected":""}>All Statuses</option>
-                  <option value="verified" ${filterVer==="verified"?"selected":""}>Verified Only</option>
-                  <option value="unverified" ${filterVer==="unverified"?"selected":""}>Unverified Only</option>
+                  <option value="all" ${filterVer === "all" ? "selected" : ""}>All Statuses</option>
+                  <option value="verified" ${filterVer === "verified" ? "selected" : ""}>Verified Only</option>
+                  <option value="unverified" ${filterVer === "unverified" ? "selected" : ""}>Unverified Only</option>
                 </select>
               </div>
               <button id="u_add" style="background:linear-gradient(135deg,var(--in),var(--pk));display:flex;align-items:center;gap:6px">
@@ -2698,10 +2874,10 @@
                 </thead>
                 <tbody>
                   ${filtered.length === 0 ? `<tr><td colspan="7" class="empty">No customers found matching your criteria.</td></tr>` : filtered.map(u => {
-                    const initials = (u.full_name || u.email || "U").split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
-                    const cleanPhone = (u.phone || "").replace(/[^0-9]/g, "");
-                    const waLink = cleanPhone ? (cleanPhone.startsWith("92") ? cleanPhone : (cleanPhone.startsWith("0") ? "92" + cleanPhone.slice(1) : cleanPhone)) : null;
-                    return `
+          const initials = (u.full_name || u.email || "U").split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
+          const cleanPhone = (u.phone || "").replace(/[^0-9]/g, "");
+          const waLink = cleanPhone ? (cleanPhone.startsWith("92") ? cleanPhone : (cleanPhone.startsWith("0") ? "92" + cleanPhone.slice(1) : cleanPhone)) : null;
+          return `
                       <tr>
                         <td>
                           <div style="display:flex;align-items:center;gap:12px">
@@ -2726,8 +2902,8 @@
                         </td>
                         <td>
                           ${u.is_verified ?
-                            `<span class="chip s-paid" style="display:inline-flex;align-items:center;gap:4px">✓ Verified</span>` :
-                            `<span class="chip s-off" style="color:#D97706;background:#FEF3C7;display:inline-flex;align-items:center;gap:4px">⏳ Unverified</span>`}
+              `<span class="chip s-paid" style="display:inline-flex;align-items:center;gap:4px">✓ Verified</span>` :
+              `<span class="chip s-off" style="color:#D97706;background:#FEF3C7;display:inline-flex;align-items:center;gap:4px">⏳ Unverified</span>`}
                         </td>
                         <td>
                           ${u.roles.map(r => `<span class="chip ${r === 'admin' ? 's-processing' : (r === 'staff' ? 's-partial' : 's-off')}">${r === 'user' ? 'customer' : r}</span>`).join(' ') || '—'}
@@ -2747,7 +2923,7 @@
                         </td>
                       </tr>
                     `;
-                  }).join("")}
+        }).join("")}
                 </tbody>
               </table>
             </div>

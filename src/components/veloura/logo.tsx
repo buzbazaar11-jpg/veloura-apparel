@@ -21,7 +21,6 @@ export function Logo({ className = '', imageSrc, text, forceText = false }: Logo
     : null;
   const brandName = text ?? settingsData?.settings?.brand_name ?? 'VELOURA';
 
-  const customWidth = undefined as number | undefined;
   const customHeight = settingsData?.settings?.logo_height;
 
   if (activeImage) {
@@ -36,19 +35,34 @@ export function Logo({ className = '', imageSrc, text, forceText = false }: Logo
     );
   }
 
-  const fontSizeStyle = customHeight ? { fontSize: `${Math.round(customHeight * 0.62)}px` } : {};
-  const widthStyle = customWidth ? { maxWidth: `${customWidth}px` } : {};
+  // Text rendering with separate brand name and tagline, each with independent size
+  const brandNameSize = settingsData?.settings?.brand_name_size;
+  const taglineSize = settingsData?.settings?.brand_tagline_size;
+  const brandTagline = settingsData?.settings?.brand_tagline ?? '';
+
+  const nameStyle: React.CSSProperties = brandNameSize
+    ? { fontSize: `${brandNameSize}px`, letterSpacing: '0.22em' }
+    : { letterSpacing: '0.22em' };
+  const taglineStyle: React.CSSProperties = taglineSize
+    ? { fontSize: `${taglineSize}px`, letterSpacing: '0.15em' }
+    : { letterSpacing: '0.15em' };
 
   return (
-    <span
-      className={`brand-wordmark font-display font-black tracking-[0.22em] ${!customHeight ? 'text-[26px] sm:text-3xl md:text-4xl lg:text-[36px]' : ''} uppercase select-none transition-all duration-200 inline-flex items-center justify-center text-center leading-none ${className}`}
-      style={{
-        letterSpacing: '0.22em',
-        ...fontSizeStyle,
-        ...widthStyle,
-      }}
-    >
-      {brandName}
-    </span>
+    <div className={`flex flex-col items-center justify-center leading-none ${className}`}>
+      <span
+        className={`brand-wordmark font-display font-black tracking-[0.22em] ${!brandNameSize ? 'text-[26px] sm:text-3xl md:text-4xl lg:text-[36px]' : ''} uppercase select-none transition-all duration-200`}
+        style={nameStyle}
+      >
+        {brandName}
+      </span>
+      {brandTagline && (
+        <span
+          className={`brand-tagline font-display font-medium tracking-[0.15em] ${!taglineSize ? 'text-[10px] sm:text-xs' : ''} uppercase select-none transition-all duration-200 mt-0.5`}
+          style={taglineStyle}
+        >
+          {brandTagline}
+        </span>
+      )}
+    </div>
   );
 }

@@ -259,7 +259,7 @@ html, body { max-width:100%; }
 h1,h2,h3 { overflow-wrap:break-word; }
 .brand-logo { width:84px; height:84px; object-fit:contain; flex-shrink:0; background:transparent; }
 .announcement { font-size:10px; line-height:16px; }
-.nav-shell { height:94px; display:flex; align-items:center; justify-content:space-between; gap:20px; padding:0 36px; }
+.nav-shell { min-height:94px; height:auto; display:flex; align-items:center; justify-content:space-between; gap:20px; padding:8px 36px; }
 .store-header.header-home { height:32px; }
 .store-header.header-page { height:134px; }
 .nav-shell { position:fixed; top:44px; left:24px; right:24px; width:auto; max-width:1452px; margin-inline:auto; border:1px solid transparent; border-radius:8px; transition:background .25s,box-shadow .25s,top .25s; }
@@ -283,11 +283,11 @@ h1,h2,h3 { overflow-wrap:break-word; }
 [role=dialog] { overflow-y:auto; }
 [role=dialog] > div { max-height:100svh; overflow-y:auto; }
 main > .pt-32,main.pt-32 { padding-top:96px; }
-@media(max-width:1279px){.nav-shell{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:78px}.hero-title{font-size:72px}.veloura-hero{min-height:520px}}
-@media(max-width:767px){.nav-shell{padding:0 12px;height:72px;gap:4px}.veloura-hero{height:auto;min-height:540px}.hero-inner{min-height:540px;padding:100px 22px 22px}.hero-title{font-size:48px;line-height:1}.hero-copy{max-width:400px}.hero-image{object-position:58% center}.hero-shade{background:linear-gradient(0deg,var(--primary) 0%,color-mix(in oklab,var(--primary) 55%,transparent) 60%,transparent)}.hero-copy .h-12{min-height:44px;height:auto;padding:12px 16px;font-size:10px}.store-section{padding:44px 20px}.search-result>span:last-child{grid-column:2}.search-result>span{font-size:12px}[role=dialog] h2{font-size:32px}.size-28.brand-logo{width:112px;height:112px}main h1.text-6xl{font-size:42px}.store-section h2{font-size:36px}.sale-banner h2{font-size:42px}.store-section .grid>article{min-width:0}.grid-cols-\[100px_1fr\]{grid-template-columns:60px minmax(0,1fr)}.grid-cols-\[96px_1fr\]{grid-template-columns:60px minmax(0,1fr)}}
+@media(max-width:1279px){.nav-shell{display:flex;align-items:center;justify-content:space-between;padding:0 20px;min-height:78px;height:auto}.hero-title{font-size:72px}.veloura-hero{min-height:520px}}
+@media(max-width:767px){.nav-shell{padding:0 12px;min-height:72px;height:auto;gap:4px}.veloura-hero{height:auto;min-height:540px}.hero-inner{min-height:540px;padding:100px 22px 22px}.hero-title{font-size:48px;line-height:1}.hero-copy{max-width:400px}.hero-image{object-position:58% center}.hero-shade{background:linear-gradient(0deg,var(--primary) 0%,color-mix(in oklab,var(--primary) 55%,transparent) 60%,transparent)}.hero-copy .h-12{min-height:44px;height:auto;padding:12px 16px;font-size:10px}.store-section{padding:44px 20px}.search-result>span:last-child{grid-column:2}.search-result>span{font-size:12px}[role=dialog] h2{font-size:32px}.size-28.brand-logo{width:112px;height:112px}main h1.text-6xl{font-size:42px}.store-section h2{font-size:36px}.sale-banner h2{font-size:42px}.store-section .grid>article{min-width:0}.grid-cols-\[100px_1fr\]{grid-template-columns:60px minmax(0,1fr)}.grid-cols-\[96px_1fr\]{grid-template-columns:60px minmax(0,1fr)}}
 @media(max-width:374px){.hero-title{font-size:40px}.hero-inner{padding-inline:18px}.announcement{font-size:9px}.hero-copy .mt-7{gap:8px}.hero-inner>.mt-8{margin-top:22px}.store-section{padding-inline:16px}}
 @media(prefers-reduced-motion:reduce){.hero-stagger>*{animation:none;opacity:1}}
-@media(max-width:767px){.nav-shell{left:12px;right:12px;top:44px;height:76px}.store-header.header-page{height:124px}.veloura-hero{min-height:640px;height:auto}.hero-inner{min-height:640px;padding:140px 22px 22px}.hero-title{font-size:56px}.hero-copy .mt-5{margin-top:16px}.whatsapp-float{right:16px;bottom:max(16px,env(safe-area-inset-bottom));width:50px;height:50px}.store-section>div.mb-8{grid-template-columns:minmax(0,1fr);gap:12px}.store-section>div.mb-8>div:last-child{justify-self:start}.header-home:not(.is-scrolled) .nav-shell{background:transparent}.offer-popup{padding:24px}}
+@media(max-width:767px){.nav-shell{left:12px;right:12px;top:44px;min-height:76px;height:auto}.store-header.header-page{height:124px}.veloura-hero{min-height:640px;height:auto}.hero-inner{min-height:640px;padding:140px 22px 22px}.hero-title{font-size:56px}.hero-copy .mt-5{margin-top:16px}.whatsapp-float{right:16px;bottom:max(16px,env(safe-area-inset-bottom));width:50px;height:50px}.store-section>div.mb-8{grid-template-columns:minmax(0,1fr);gap:12px}.store-section>div.mb-8>div:last-child{justify-self:start}.header-home:not(.is-scrolled) .nav-shell{background:transparent}.offer-popup{padding:24px}}
 
 /* Men's shopping navigation and campaign layout */
 :root {
@@ -307,13 +307,23 @@ main > .pt-32,main.pt-32 { padding-top:96px; }
   line-height: 1;
 }
 
+/* Ensure logo never overflows the navbar */
+.nav-logo {
+  overflow: hidden;
+  max-height: 100%;
+}
+.nav-logo .brand-logo-img {
+  max-height: calc(100% - 8px);
+}
+
 /* Nav Shell Layout */
 .nav-shell {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 86px;
-  padding: 0 28px;
+  min-height: 86px;
+  height: auto;
+  padding: 8px 28px;
   width: auto;
 }
 
@@ -378,11 +388,11 @@ main > .pt-32,main.pt-32 { padding-top:96px; }
 .mens-editorial { min-height:430px; }
 
 @media(max-width:1279px) and (min-width:768px) {
-  .nav-shell { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; height: 76px; }
+  .nav-shell { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; min-height: 76px; height: auto; }
 }
 @media(max-width:767px) {
   body { padding-bottom:calc(66px + env(safe-area-inset-bottom)); }
-  .nav-shell { display: flex; align-items: center; justify-content: space-between; height: 70px; top: 44px; padding: 0 12px; }
+  .nav-shell { display: flex; align-items: center; justify-content: space-between; min-height: 70px; height: auto; top: 44px; padding: 0 12px; }
   .header-home:not(.is-scrolled) .nav-shell,.header-page .nav-shell,.is-scrolled .nav-shell { background:var(--mobile-glass); color:var(--foreground); backdrop-filter:blur(24px); border-color:var(--mobile-glass-border); box-shadow:var(--shadow-navigation); }
   .store-header.header-page { height:116px; }
   .is-scrolled .nav-shell { top:8px; }

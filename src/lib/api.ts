@@ -8,7 +8,9 @@ import type { CartItem, Order } from "./veloura-store";
 
 export type SiteSettingsPayload = {
   brand_name?: string;
+  brand_name_size?: number;
   brand_tagline?: string;
+  brand_tagline_size?: number;
   logo_url?: string;
   logo_width?: number;
   logo_height?: number;
