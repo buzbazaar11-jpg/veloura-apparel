@@ -2320,7 +2320,9 @@
     FORMS.site_settings = (row) => [
       { title:"Brand Identity", cols:"half", fields:[
         {n:"brand_name",    label:"Brand Name",    hint:"e.g. VELOURA (shown if no logo image)"},
+        {n:"brand_name_size", label:"Brand Name Size (px)", kind:"int", hint:"Font size in pixels for brand name"},
         {n:"brand_tagline", label:"Tagline",       hint:"e.g. Modern Essentials. Everyday Style."},
+        {n:"brand_tagline_size", label:"Tagline Size (px)", kind:"int", hint:"Font size in pixels for tagline"},
       ]},
       { title:"Storefront Logo & Size Adjustment", cols:"half", fields:[
         {n:"logo_url",      label:"Logo Image (Upload or URL)", kind:"img", hint:"Leave empty to use brand name text"},
