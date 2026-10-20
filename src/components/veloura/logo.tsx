@@ -21,7 +21,7 @@ export function Logo({ className = '', imageSrc, text, forceText = false }: Logo
     : null;
   const brandName = text ?? settingsData?.settings?.brand_name ?? 'VELOURA';
 
-  const customWidth = settingsData?.settings?.logo_width;
+  const customWidth = undefined as number | undefined;
   const customHeight = settingsData?.settings?.logo_height;
 
   if (activeImage) {
@@ -30,11 +30,8 @@ export function Logo({ className = '', imageSrc, text, forceText = false }: Logo
         src={activeImage}
         alt={brandName}
         onError={() => setImageError(true)}
-        style={{
-          ...(customHeight ? { height: `${customHeight}px`, maxHeight: `${customHeight}px` } : {}),
-          ...(customWidth ? { width: `${customWidth}px`, maxWidth: `${customWidth}px` } : {}),
-        }}
-        className={`brand-logo-img w-auto object-contain select-none transition-all duration-200 ${!customHeight ? 'h-11 sm:h-13 md:h-15 lg:h-16 max-h-[58px]' : ''} ${!customWidth ? 'max-w-[220px] sm:max-w-[260px]' : ''} ${className}`}
+        style={customHeight ? { height: `${customHeight}px`, maxHeight: "none", width: "auto", maxWidth: "none" } : undefined}
+        className={`brand-logo-img w-auto object-contain select-none transition-all duration-200 ${!customHeight ? 'h-11 sm:h-13 md:h-15 lg:h-16 max-h-[58px] max-w-[220px] sm:max-w-[260px]' : ''} ${className}`}
       />
     );
   }

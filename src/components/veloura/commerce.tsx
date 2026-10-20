@@ -82,11 +82,7 @@ export function Footer() {
       <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[1.4fr_2fr_1.2fr] lg:px-12">
         <div>
           <Link to="/" aria-label="VELOURA APPAREL home" className="inline-block"><Logo className="justify-start text-left" /></Link>
-          {data?.settings?.brand_tagline ? (
-            <p className="mt-5 max-w-sm text-sm leading-7 text-muted-foreground">
-              {data.settings.brand_tagline}
-            </p>
-          ) : apiEnabled ? null : (
+          {apiEnabled ? null : (
             <p className="mt-5 max-w-sm text-sm leading-7 text-muted-foreground">
               Modern essentials focused on clean silhouettes, thoughtful details and effortless style.
             </p>
@@ -222,7 +218,7 @@ function Navbar() {
   ];
   return <header className={`store-header relative z-40 ${home ? 'header-home' : 'header-page'} ${scrolled ? 'is-scrolled' : ''}`}>
     <div className="announcement bg-primary px-4 py-2 text-center text-primary-foreground font-semibold tracking-wider text-[11px] uppercase">
-      {settingsData?.settings?.brand_tagline ?? storeConfig.announcement}
+      {storeConfig.announcement}
     </div>
     <nav aria-label="Main navigation" className="nav-shell">
       {/* ─── DESKTOP VIEW (xl: Left Logo, Center Nav Links, Right Actions) ─── */}

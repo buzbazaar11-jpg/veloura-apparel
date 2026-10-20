@@ -2318,6 +2318,7 @@
 
     // ── site_settings handled by singleton() with custom FORMS spec ──
     FORMS.site_settings = (row) => [
+<<<<<<< HEAD
       { title:"Brand Identity", cols:"half", fields:[
         {n:"brand_name",    label:"Brand Name",    hint:"e.g. VELOURA (shown if no logo image)"},
         {n:"brand_name_size", label:"Brand Name Size (px)", kind:"int", hint:"Font size in pixels for brand name"},
@@ -2328,6 +2329,11 @@
         {n:"logo_url",      label:"Logo Image (Upload or URL)", kind:"img", hint:"Leave empty to use brand name text"},
         {n:"logo_width",    label:"Logo Width (pixels)",  kind:"int", hint:"Width in pixels (e.g. 240)"},
         {n:"logo_height",   label:"Logo Height (pixels)", kind:"int", hint:"Height in pixels (e.g. 52)"},
+=======
+      { title:"Storefront Logo & Size", cols:"half", fields:[
+        {n:"logo_url",      label:"Logo Image (Upload or URL)", kind:"img"},
+        {n:"logo_height",   label:"Logo Size (pixels)", kind:"int", hint:"Bigger number = bigger logo (e.g. 40 small, 60 medium, 90 large). Width adjusts automatically."},
+>>>>>>> f53c3c8253e0cbe66d02ea962d0a8cd9029e9086
       ]},
       { title:"Contact Details", cols:"half", fields:[
         {n:"contact_email",   label:"Contact Email",   hint:"e.g. contact@veloura.com"},
