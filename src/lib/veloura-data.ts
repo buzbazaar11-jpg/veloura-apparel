@@ -1,14 +1,15 @@
-import campaignOne from "@/assets/mens-campaign-street.jpg";
-import campaignTwo from "@/assets/mens-campaign-everyday.jpg";
-import campaignThree from "@/assets/mens-overshirt.jpg";
-import campaignFour from "@/assets/mens-accessories.jpg";
-import jacketImage from "@/assets/mens-jacket.jpg";
-import teeImage from "@/assets/mens-tee.jpg";
-import shirtImage from "@/assets/mens-shirt.jpg";
-import cargoImage from "@/assets/mens-cargo.jpg";
-import hoodieImage from "@/assets/mens-hoodie.jpg";
-import sneakerImage from "@/assets/mens-sneakers.jpg";
-import trouserImage from "@/assets/mens-trousers.jpg";
+// ── Cloudinary CDN images (auto-optimized, global CDN) ──────────────────────
+const campaignOne   = "https://res.cloudinary.com/zwikhwxn/image/upload/f_auto,q_auto/veloura/assets/mens-campaign-street.jpg";
+const campaignTwo   = "https://res.cloudinary.com/zwikhwxn/image/upload/f_auto,q_auto/veloura/assets/mens-campaign-everyday.jpg";
+const campaignThree = "https://res.cloudinary.com/zwikhwxn/image/upload/f_auto,q_auto/veloura/assets/mens-overshirt.jpg";
+const campaignFour  = "https://res.cloudinary.com/zwikhwxn/image/upload/f_auto,q_auto/veloura/assets/mens-accessories.jpg";
+const jacketImage   = "https://res.cloudinary.com/zwikhwxn/image/upload/f_auto,q_auto/veloura/assets/mens-jacket.jpg";
+const teeImage      = "https://res.cloudinary.com/zwikhwxn/image/upload/f_auto,q_auto/veloura/assets/mens-tee.jpg";
+const shirtImage    = "https://res.cloudinary.com/zwikhwxn/image/upload/f_auto,q_auto/veloura/assets/mens-shirt.jpg";
+const cargoImage    = "https://res.cloudinary.com/zwikhwxn/image/upload/f_auto,q_auto/veloura/assets/mens-cargo.jpg";
+const hoodieImage   = "https://res.cloudinary.com/zwikhwxn/image/upload/f_auto,q_auto/veloura/assets/mens-hoodie.jpg";
+const sneakerImage  = "https://res.cloudinary.com/zwikhwxn/image/upload/f_auto,q_auto/veloura/assets/mens-sneakers.jpg";
+const trouserImage  = "https://res.cloudinary.com/zwikhwxn/image/upload/f_auto,q_auto/veloura/assets/mens-trousers.jpg";
 import { formatMoney } from "./currency";
 
 

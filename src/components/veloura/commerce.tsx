@@ -1,4 +1,4 @@
-import { Logo } from "./logo";
+﻿import { Logo } from "./logo";
 import { MobileShoppingNav } from "./mobile-shopping-nav";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -32,8 +32,8 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import bannerDrop from "@/assets/mens-campaign-everyday.jpg";
-import bannerAccessories from "@/assets/mens-accessories.jpg";
+const bannerDrop        = "https://res.cloudinary.com/zwikhwxn/image/upload/f_auto,q_auto/veloura/assets/mens-campaign-everyday.jpg";
+const bannerAccessories = "https://res.cloudinary.com/zwikhwxn/image/upload/f_auto,q_auto/veloura/assets/mens-accessories.jpg";
 import {
   articles,
   campaignImages,
